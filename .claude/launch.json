@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kassa-web",
+      "runtimeExecutable": "/Users/gurbanowdadebay/Developer/flutter/bin/flutter",
+      "runtimeArgs": ["run", "-d", "chrome", "--web-port=9090"],
+      "port": 9090,
+      "autoPort": false
+    }
+  ]
+}
