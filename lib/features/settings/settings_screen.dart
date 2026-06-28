@@ -8,7 +8,9 @@ import '../../controllers/database_controller.dart';
 import '../../controllers/products_controller.dart';
 import '../../controllers/theme_controller.dart';
 import '../../controllers/locale_controller.dart';
+import '../../controllers/auth_controller.dart';
 import '../../core/constants/color_constants.dart';
+import 'action_log_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -30,79 +32,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     final users = await _db.getAllUsers();
-    if (mounted) setState(() { _users = users; _loading = false; });
+    if (mounted)
+      setState(() {
+        _users = users;
+        _loading = false;
+      });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.bgSurface : const Color(0xFFF4F4F8);
+    final isAdmin = AuthController.to.isAdmin;
+
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
 
     return Scaffold(
       backgroundColor: bg,
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary2))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(28),
+              padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Page title ────────────────────────────────────────────
+                  // ── Page title ─────────────────────────────────────────
                   Text(
                     'set_title'.tr,
                     style: TextStyle(
                       fontFamily: 'Gilroy',
                       fontWeight: FontWeight.w800,
                       fontSize: 24,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: titleColor,
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Two-column layout ─────────────────────────────────────
+                  // ── 3-column grid ──────────────────────────────────────
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left column — Appearance + Language + Categories
-                      SizedBox(
-                        width: 320,
+                      // Col 1 — Appearance + Language + Action log
+                      Expanded(
+                        flex: 3,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _SectionLabel('set_theme'.tr),
-                            const SizedBox(height: 8),
+                            _SectionHeader(
+                              icon: HugeIcons.strokeRoundedPaintBoard,
+                              label: 'set_theme'.tr,
+                            ),
+                            const SizedBox(height: 10),
                             _AppearanceCard(),
-                            const SizedBox(height: 20),
-                            _SectionLabel('set_language'.tr),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 24),
+                            _SectionHeader(
+                              icon: HugeIcons.strokeRoundedLanguageCircle,
+                              label: 'set_language'.tr,
+                            ),
+                            const SizedBox(height: 10),
                             _LanguageCard(),
-                            const SizedBox(height: 20),
-                            _SectionLabel('set_categories'.tr),
-                            const SizedBox(height: 8),
+                            if (isAdmin) ...[
+                              const SizedBox(height: 24),
+                              _SectionHeader(
+                                icon: HugeIcons.strokeRoundedTask01,
+                                label: 'log_title'.tr,
+                              ),
+                              const SizedBox(height: 10),
+                              _ActionLogNavCard(),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+
+                      // Col 2 — Categories
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SectionHeader(
+                              icon: HugeIcons.strokeRoundedGrid,
+                              label: 'set_categories'.tr,
+                            ),
+                            const SizedBox(height: 10),
                             _CategoryCard(),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 28),
 
-                      // Right column — Users
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(children: [
-                              _SectionLabel('set_users'.tr),
-                              const Spacer(),
-                              _AddUserBtn(onTap: () => _showForm()),
-                            ]),
-                            const SizedBox(height: 8),
-                            ..._users.map((u) => _UserTile(
-                              user: u,
-                              onEdit: () => _showForm(user: u),
-                            )),
-                          ],
+                      // Col 3 — Users (admin only)
+                      if (isAdmin) ...[
+                        const SizedBox(width: 20),
+                        Expanded(
+                          flex: 4,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _SectionHeader(
+                                    icon: HugeIcons.strokeRoundedUserGroup,
+                                    label: 'set_users'.tr,
+                                  ),
+                                  const Spacer(),
+                                  _AddUserBtn(onTap: () => _showForm()),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              ..._users.map((u) => _UserTile(
+                                    user: u,
+                                    onEdit: () => _showForm(user: u),
+                                  )),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ],
@@ -116,7 +162,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ── Shared label ──────────────────────────────────────────────────────────────
+// ── Section header with icon ──────────────────────────────────────────────────
+class _SectionHeader extends StatelessWidget {
+  final dynamic icon;
+  final String label;
+  const _SectionHeader({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        HugeIcon(
+          icon: icon,
+          size: 15,
+          color: isDark ? AppColors.textGrey : const Color(0xFF64748B),
+        ),
+        const SizedBox(width: 7),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontFamily: 'Gilroy',
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            letterSpacing: 0.8,
+            color: isDark ? AppColors.textGrey : const Color(0xFF64748B),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Keep for backward compat (used nowhere else but just in case)
 class _SectionLabel extends StatelessWidget {
   final String text;
   const _SectionLabel(this.text);
@@ -143,7 +222,7 @@ class _AppearanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeCtrl = ThemeController.to;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor   = isDark ? AppColors.bgCard : Colors.white;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
 
     return Container(
@@ -224,7 +303,7 @@ class _AppearanceCard extends StatelessWidget {
 // ── Language card ─────────────────────────────────────────────────────────────
 class _LanguageCard extends StatelessWidget {
   static const _locales = [
-    (code: 'ru', label: 'Русский',   flag: 'assets/icons/ruflag.svg'),
+    (code: 'ru', label: 'Русский', flag: 'assets/icons/ruflag.svg'),
     (code: 'tk', label: 'Türkmençe', flag: 'assets/icons/tmflag.svg'),
   ];
 
@@ -232,7 +311,7 @@ class _LanguageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final localeCtrl = LocaleController.to;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor   = isDark ? AppColors.bgCard : Colors.white;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
 
     return Container(
@@ -261,9 +340,7 @@ class _LanguageCard extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: selected
-                      ? AppColors.primary.withAlpha(20)
-                      : Colors.transparent,
+                  color: selected ? AppColors.primary.withAlpha(20) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: selected ? AppColors.primary2 : Colors.transparent,
@@ -301,7 +378,7 @@ class _LanguageCard extends StatelessWidget {
                           color: AppColors.primary2,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.check_rounded, size: 13, color: Colors.white),
+                        child: HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, size: 13, color: Colors.white),
                       ),
                   ],
                 ),
@@ -319,8 +396,14 @@ class _CategoryCard extends StatelessWidget {
   const _CategoryCard();
 
   static const _palette = [
-    '#E8724A', '#187bff', '#3ead2c', '#fedb00',
-    '#FF3B30', '#9B59B6', '#1ABC9C', '#E67E22',
+    '#E8724A',
+    '#187bff',
+    '#3ead2c',
+    '#fedb00',
+    '#FF3B30',
+    '#9B59B6',
+    '#1ABC9C',
+    '#E67E22',
   ];
 
   @override
@@ -329,8 +412,11 @@ class _CategoryCard extends StatelessWidget {
     final bg = isDark ? AppColors.bgCard : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
 
+    final ctrl = Get.isRegistered<ProductsController>()
+        ? Get.find<ProductsController>()
+        : Get.put(ProductsController());
+
     return Obx(() {
-      final ctrl = Get.find<ProductsController>();
       final cats = ctrl.categories;
 
       return Container(
@@ -347,16 +433,15 @@ class _CategoryCard extends StatelessWidget {
               final color = _hexColor(cat.color);
               return Container(
                 decoration: BoxDecoration(
-                  border: e.key < cats.length - 1
-                      ? Border(bottom: BorderSide(color: borderColor))
-                      : null,
+                  border: e.key < cats.length - 1 ? Border(bottom: BorderSide(color: borderColor)) : null,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
                     children: [
                       Container(
-                        width: 12, height: 12,
+                        width: 12,
+                        height: 12,
                         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                       ),
                       const SizedBox(width: 10),
@@ -364,19 +449,21 @@ class _CategoryCard extends StatelessWidget {
                         child: Text(
                           cat.name,
                           style: TextStyle(
-                            fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13,
+                            fontFamily: 'Gilroy',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                             color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                       ),
                       _CatIconBtn(
-                        icon: Icons.edit_outlined,
+                        hugeIcon: HugeIcons.strokeRoundedEdit02,
                         color: AppColors.primary2,
                         onTap: () => _showCatDialog(context, ctrl, cat: cat),
                       ),
                       const SizedBox(width: 4),
                       _CatIconBtn(
-                        icon: Icons.delete_outline_rounded,
+                        hugeIcon: HugeIcons.strokeRoundedDelete02,
                         color: AppColors.red,
                         onTap: () => _confirmDelete(context, ctrl, cat),
                       ),
@@ -386,8 +473,7 @@ class _CategoryCard extends StatelessWidget {
               );
             }),
             // Add button
-            if (cats.isNotEmpty)
-              Divider(color: borderColor, height: 1),
+            if (cats.isNotEmpty) Divider(color: borderColor, height: 1),
             InkWell(
               onTap: () => _showCatDialog(context, ctrl),
               borderRadius: BorderRadius.vertical(
@@ -399,19 +485,22 @@ class _CategoryCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      width: 24, height: 24,
+                      width: 24,
+                      height: 24,
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Icon(Icons.add_rounded, size: 15, color: AppColors.primary2),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 15, color: AppColors.primary2),
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Kategori Ekle',
+                      'set_cat_add'.tr,
                       style: const TextStyle(
-                        fontFamily: 'Gilroy', fontWeight: FontWeight.w600,
-                        fontSize: 13, color: AppColors.primary2,
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: AppColors.primary2,
                       ),
                     ),
                   ],
@@ -456,20 +545,21 @@ class _CategoryCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(color: AppColors.primary.withAlpha(20), borderRadius: BorderRadius.circular(9)),
-                      child: const Icon(Icons.category_outlined, size: 16, color: AppColors.primary2),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedGrid, size: 16, color: AppColors.primary2),
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      cat == null ? 'Yeni Kategori' : 'Kategoriyi Düzenle',
+                      cat == null ? 'set_cat_new'.tr : 'set_cat_edit'.tr,
                       style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w800, fontSize: 16, color: textColor),
                     ),
                     const Spacer(),
                     GestureDetector(
                       onTap: Get.back,
                       child: Container(
-                        width: 28, height: 28,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(color: Colors.grey.withAlpha(20), borderRadius: BorderRadius.circular(7)),
-                        child: const Icon(Icons.close_rounded, size: 15, color: AppColors.textGrey),
+                        child: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 15, color: AppColors.textGrey),
                       ),
                     ),
                   ],
@@ -489,7 +579,7 @@ class _CategoryCard extends StatelessWidget {
                       controller: nameCtrl,
                       style: TextStyle(fontFamily: 'Gilroy', fontSize: 14, color: textColor),
                       decoration: InputDecoration(
-                        labelText: 'Kategori Adı',
+                        labelText: 'set_cat_name'.tr,
                         labelStyle: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
                         filled: true,
                         fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
@@ -501,7 +591,7 @@ class _CategoryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     // Color picker
-                    Text('Renk', style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.textGrey : const Color(0xFF64748B))),
+                    Text('set_cat_color'.tr, style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.textGrey : const Color(0xFF64748B))),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -513,7 +603,8 @@ class _CategoryCard extends StatelessWidget {
                           onTap: () => setState(() => selectedColor = hex),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 120),
-                            width: 30, height: 30,
+                            width: 30,
+                            height: 30,
                             decoration: BoxDecoration(
                               color: color,
                               shape: BoxShape.circle,
@@ -523,7 +614,7 @@ class _CategoryCard extends StatelessWidget {
                               ),
                               boxShadow: sel ? [BoxShadow(color: color.withAlpha(120), blurRadius: 6)] : [],
                             ),
-                            child: sel ? const Icon(Icons.check_rounded, size: 14, color: Colors.white) : null,
+                            child: sel ? HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, size: 14, color: Colors.white) : null,
                           ),
                         );
                       }).toList(),
@@ -540,7 +631,7 @@ class _CategoryCard extends StatelessWidget {
                               side: BorderSide(color: Colors.grey.withAlpha(60)),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                            child: const Text('İptal', style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                            child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -561,8 +652,7 @@ class _CategoryCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                            child: Text(cat == null ? 'Ekle' : 'Kaydet',
-                                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                            child: Text(cat == null ? 'gen_add'.tr : 'gen_save'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],
@@ -594,23 +684,22 @@ class _CategoryCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 48, height: 48,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(color: AppColors.red.withAlpha(15), shape: BoxShape.circle),
-              child: const Icon(Icons.delete_outline_rounded, color: AppColors.red, size: 24),
+              child: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.red, size: 24),
             ),
             const SizedBox(height: 12),
             Text(
-              '"${cat.name}" silinecek',
+              '"${cat.name}" ${'set_cat_delete_title'.tr}',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 15,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF0F172A)),
             ),
             const SizedBox(height: 6),
             Text(
-              'Bu kategorideki ürünler kategorisiz kalır.',
+              'set_cat_delete_body'.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Gilroy', fontSize: 12,
-                  color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
+              style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
             ),
             const SizedBox(height: 20),
             Row(children: [
@@ -622,19 +711,22 @@ class _CategoryCard extends StatelessWidget {
                     side: BorderSide(color: Colors.grey.withAlpha(60)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('İptal', style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                  child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton(
-                  onPressed: () async { await ctrl.deleteCategory(cat.id); Get.back(); },
+                  onPressed: () async {
+                    await ctrl.deleteCategory(cat.id);
+                    Get.back();
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.red,
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Sil', style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                  child: Text('gen_delete'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
                 ),
               ),
             ]),
@@ -651,19 +743,21 @@ class _CategoryCard extends StatelessWidget {
 }
 
 class _CatIconBtn extends StatelessWidget {
-  final IconData icon;
+  final dynamic hugeIcon;
   final Color color;
   final VoidCallback onTap;
-  const _CatIconBtn({required this.icon, required this.color, required this.onTap});
+  const _CatIconBtn({this.hugeIcon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 28, height: 28,
-        decoration: BoxDecoration(color: color.withAlpha(15), borderRadius: BorderRadius.circular(7)),
-        child: Icon(icon, size: 15, color: color),
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(color: color.withAlpha(15), borderRadius: BorderRadius.circular(6)),
+        alignment: Alignment.center,
+        child: HugeIcon(icon: hugeIcon ?? HugeIcons.strokeRoundedEdit02, size: 14, color: color),
       ),
     );
   }
@@ -683,7 +777,7 @@ class _AddUserBtn extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
-      icon: const Icon(Icons.person_add_rounded, size: 16),
+      icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserAdd01, size: 16, color: Colors.white),
       label: Text(
         'set_add_user'.tr,
         style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13),
@@ -708,7 +802,7 @@ class _UserTileState extends State<_UserTile> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor   = isDark ? AppColors.bgCard : Colors.white;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
     final isAdmin = widget.user.role == 'admin';
     final roleColor = isAdmin ? AppColors.primary2 : AppColors.blue;
@@ -721,9 +815,7 @@ class _UserTileState extends State<_UserTile> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _hovered
-              ? (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF))
-              : cardColor,
+          color: _hovered ? (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF)) : cardColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: _hovered ? AppColors.primary.withAlpha(60) : borderColor,
@@ -749,9 +841,7 @@ class _UserTileState extends State<_UserTile> {
               ),
               child: Center(
                 child: HugeIcon(
-                  icon: isAdmin
-                      ? HugeIcons.strokeRoundedShieldUser
-                      : HugeIcons.strokeRoundedUser,
+                  icon: isAdmin ? HugeIcons.strokeRoundedShieldUser : HugeIcons.strokeRoundedUser,
                   color: roleColor,
                   size: 20,
                 ),
@@ -777,12 +867,12 @@ class _UserTileState extends State<_UserTile> {
                     children: [
                       _MetaChip(
                         label: 'PIN: ${widget.user.pin}',
-                        icon: Icons.lock_outline_rounded,
+                        hugeIcon: HugeIcons.strokeRoundedLock,
                       ),
                       const SizedBox(width: 6),
                       _MetaChip(
                         label: isAdmin ? 'set_role_admin'.tr : 'set_role_cashier'.tr,
-                        icon: isAdmin ? Icons.admin_panel_settings_rounded : Icons.point_of_sale_rounded,
+                        hugeIcon: isAdmin ? HugeIcons.strokeRoundedShield02 : HugeIcons.strokeRoundedCashier,
                         color: roleColor,
                       ),
                     ],
@@ -806,9 +896,9 @@ class _UserTileState extends State<_UserTile> {
 
 class _MetaChip extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final dynamic hugeIcon;
   final Color? color;
-  const _MetaChip({required this.label, required this.icon, this.color});
+  const _MetaChip({required this.label, required this.hugeIcon, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -816,7 +906,7 @@ class _MetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 11, color: c),
+        HugeIcon(icon: hugeIcon, size: 11, color: c),
         const SizedBox(width: 3),
         Text(label, style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: c)),
       ],
@@ -915,7 +1005,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
   final _form = GlobalKey<FormState>();
   final _db = Get.find<DatabaseController>().db;
   late final _name = TextEditingController(text: widget.user?.name ?? '');
-  late final _pin  = TextEditingController(text: widget.user?.pin ?? '');
+  late final _pin = TextEditingController(text: widget.user?.pin ?? '');
   String _role = 'cashier';
   bool _active = true;
   bool _saving = false;
@@ -923,12 +1013,16 @@ class _UserFormDialogState extends State<_UserFormDialog> {
   @override
   void initState() {
     super.initState();
-    _role   = widget.user?.role ?? 'cashier';
+    _role = widget.user?.role ?? 'cashier';
     _active = widget.user?.isActive ?? true;
   }
 
   @override
-  void dispose() { _name.dispose(); _pin.dispose(); super.dispose(); }
+  void dispose() {
+    _name.dispose();
+    _pin.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -981,7 +1075,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                 _FormField(
                   controller: _name,
                   label: 'set_name'.tr,
-                  icon: Icons.person_outline_rounded,
+                  hugeIcon: HugeIcons.strokeRoundedUser,
                   validator: (v) => v?.isEmpty == true ? 'gen_required'.tr : null,
                 ),
                 const SizedBox(height: 14),
@@ -990,7 +1084,7 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                 _FormField(
                   controller: _pin,
                   label: 'set_pin'.tr,
-                  icon: Icons.lock_outline_rounded,
+                  hugeIcon: HugeIcons.strokeRoundedLock,
                   keyboardType: TextInputType.number,
                   obscure: true,
                   validator: (v) {
@@ -1090,7 +1184,7 @@ class _CloseBtn extends StatelessWidget {
           color: Colors.grey.withAlpha(20),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textGrey),
+        child: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 16, color: AppColors.textGrey),
       ),
     );
   }
@@ -1099,7 +1193,7 @@ class _CloseBtn extends StatelessWidget {
 class _FormField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final dynamic hugeIcon;
   final bool obscure;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
@@ -1107,7 +1201,7 @@ class _FormField extends StatelessWidget {
   const _FormField({
     required this.controller,
     required this.label,
-    required this.icon,
+    required this.hugeIcon,
     this.obscure = false,
     this.keyboardType,
     this.validator,
@@ -1125,7 +1219,10 @@ class _FormField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
-        prefixIcon: Icon(icon, size: 18, color: AppColors.textGrey),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: HugeIcon(icon: hugeIcon, size: 18, color: AppColors.textGrey),
+        ),
         filled: true,
         fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1168,7 +1265,7 @@ class _RoleSelector extends StatelessWidget {
             _RoleChip(
               value: 'cashier',
               label: 'set_role_cashier'.tr,
-              icon: Icons.point_of_sale_rounded,
+              hugeIcon: HugeIcons.strokeRoundedCashier,
               color: AppColors.blue,
               selected: selected == 'cashier',
               onTap: () => onSelect('cashier'),
@@ -1178,7 +1275,7 @@ class _RoleSelector extends StatelessWidget {
             _RoleChip(
               value: 'admin',
               label: 'set_role_admin'.tr,
-              icon: Icons.admin_panel_settings_rounded,
+              hugeIcon: HugeIcons.strokeRoundedShield02,
               color: AppColors.primary2,
               selected: selected == 'admin',
               onTap: () => onSelect('admin'),
@@ -1194,14 +1291,19 @@ class _RoleSelector extends StatelessWidget {
 class _RoleChip extends StatelessWidget {
   final String value;
   final String label;
-  final IconData icon;
+  final dynamic hugeIcon;
   final Color color;
   final bool selected;
   final VoidCallback onTap;
   final bool isDark;
   const _RoleChip({
-    required this.value, required this.label, required this.icon,
-    required this.color, required this.selected, required this.onTap, required this.isDark,
+    required this.value,
+    required this.label,
+    required this.hugeIcon,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+    required this.isDark,
   });
 
   // Resolved solid color for light-mode-visible chips
@@ -1219,25 +1321,19 @@ class _RoleChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected
-              ? activeColor
-              : (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF)),
+          color: selected ? activeColor : (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF)),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: selected
-                ? activeColor
-                : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+            color: selected ? activeColor : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
             width: 1.5,
           ),
-          boxShadow: selected
-              ? [BoxShadow(color: activeColor.withAlpha(60), blurRadius: 8, offset: const Offset(0, 3))]
-              : [],
+          boxShadow: selected ? [BoxShadow(color: activeColor.withAlpha(60), blurRadius: 8, offset: const Offset(0, 3))] : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
+            HugeIcon(
+              icon: hugeIcon,
               size: 15,
               color: selected ? Colors.white : AppColors.textGrey,
             ),
@@ -1253,7 +1349,7 @@ class _RoleChip extends StatelessWidget {
             ),
             if (selected) ...[
               const SizedBox(width: 6),
-              const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+              HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, size: 14, color: Colors.white),
             ],
           ],
         ),
@@ -1296,6 +1392,62 @@ class _ActiveToggle extends StatelessWidget {
               activeColor: AppColors.green,
               inactiveThumbColor: AppColors.red,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Action Log Navigation Card ─────────────────────────────────────────────
+class _ActionLogNavCard extends StatelessWidget {
+  const _ActionLogNavCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.bgCard : Colors.white;
+    final border = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+
+    return GestureDetector(
+      onTap: () => Get.to(() => const ActionLogScreen()),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: border),
+          boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 8, offset: const Offset(0, 2))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.purple.withAlpha(isDark ? 50 : 25),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.purple, size: 20),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('log_title'.tr, style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14, color: isDark ? AppColors.textWhite : const Color(0xFF0F172A))),
+                  const SizedBox(height: 2),
+                  Text('log_subtitle'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey)),
+                ],
+              ),
+            ),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowRight01,
+              color: isDark ? AppColors.textGrey : const Color(0xFFCBD5E1),
+              size: 18,
             ),
           ],
         ),

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/stock_report_controller.dart';
 import '../../core/constants/color_constants.dart';
-import '../../data/database/app_database.dart';
 
 class StockReportScreen extends StatelessWidget {
   const StockReportScreen({super.key});
@@ -91,34 +90,24 @@ class StockReportScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // Placeholder for Excel Export (Feature 7)
-          Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.green.withAlpha(20),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.green.withAlpha(50)),
+          FilledButton.icon(
+            onPressed: () async {
+              try {
+                await Get.find<StockReportController>().exportMovements();
+                Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
+                  backgroundColor: AppColors.green, colorText: Colors.white);
+              } catch (e) {
+                Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',
+                  backgroundColor: AppColors.red, colorText: Colors.white);
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.green,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Row(
-              children: [
-                const HugeIcon(
-                  icon: HugeIcons.strokeRoundedDownload01,
-                  size: 16,
-                  color: AppColors.green,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'stock_rep_export'.tr,
-                  style: const TextStyle(
-                    fontFamily: 'Gilroy',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.green,
-                  ),
-                ),
-              ],
-            ),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedFile01, color: Colors.white, size: 18),
+            label: const Text('Excel', style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
           ),
         ],
       ),
@@ -130,48 +119,40 @@ class StockReportScreen extends StatelessWidget {
     final formatter = RegExp(r'\B(?=(\d{3})+(?!\d))');
     String formatMoney(double val) => val.toStringAsFixed(0).replaceAllMapped(formatter, (m) => ' ');
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 2.2,
-          children: [
-            _SummaryCard(
-              title: 'stock_rep_products'.tr,
-              value: '${s['productCount'] ?? 0}',
-              icon: HugeIcons.strokeRoundedPackage,
-              color: AppColors.primary2,
-              isDark: isDark,
-            ),
-            _SummaryCard(
-              title: 'stock_rep_total_value'.tr,
-              value: '${formatMoney(s['totalProductValue'] ?? 0)} TMT',
-              icon: HugeIcons.strokeRoundedWallet02,
-              color: AppColors.green,
-              isDark: isDark,
-            ),
-            _SummaryCard(
-              title: 'stock_rep_zero'.tr,
-              value: '${s['zeroStock'] ?? 0}',
-              icon: HugeIcons.strokeRoundedPackageRemove,
-              color: AppColors.orange,
-              isDark: isDark,
-            ),
-            _SummaryCard(
-              title: 'stock_rep_critical'.tr,
-              value: '${s['criticalIngredients'] ?? 0}',
-              icon: HugeIcons.strokeRoundedAlert02,
-              color: AppColors.red,
-              isDark: isDark,
-            ),
-          ],
-        );
-      },
+    return Row(
+      children: [
+        _SummaryCard(
+          title: 'stock_rep_products'.tr,
+          value: '${s['productCount'] ?? 0}',
+          icon: HugeIcons.strokeRoundedPackage,
+          color: AppColors.primary2,
+          isDark: isDark,
+        ),
+        const SizedBox(width: 12),
+        _SummaryCard(
+          title: 'stock_rep_total_value'.tr,
+          value: '${formatMoney(s['totalProductValue'] ?? 0)} TMT',
+          icon: HugeIcons.strokeRoundedWallet02,
+          color: AppColors.green,
+          isDark: isDark,
+        ),
+        const SizedBox(width: 12),
+        _SummaryCard(
+          title: 'stock_rep_zero'.tr,
+          value: '${s['zeroStock'] ?? 0}',
+          icon: HugeIcons.strokeRoundedPackageRemove,
+          color: AppColors.orange,
+          isDark: isDark,
+        ),
+        const SizedBox(width: 12),
+        _SummaryCard(
+          title: 'stock_rep_critical'.tr,
+          value: '${s['criticalIngredients'] ?? 0}',
+          icon: HugeIcons.strokeRoundedAlert02,
+          color: AppColors.red,
+          isDark: isDark,
+        ),
+      ],
     );
   }
 
@@ -252,23 +233,30 @@ class StockReportScreen extends StatelessWidget {
         );
       }
 
-      return SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final p = list[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Row(
-                children: [
+      return SliverPadding(
+        padding: const EdgeInsets.only(bottom: 12),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 400,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            mainAxisExtent: 86,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final p = list[index];
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: borderColor),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: [
                   Container(
                     width: 48,
                     height: 48,
@@ -345,14 +333,14 @@ class StockReportScreen extends StatelessWidget {
           },
           childCount: list.length,
         ),
+        ),
       );
     });
   }
 
   Widget _buildCriticalIngredientsList(StockReportController ctrl, bool isDark) {
     final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
-    final cardColor = isDark ? AppColors.bgCard : Colors.white;
-    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    // cardColor and borderColor removed (unused)
 
     return SliverList(
       delegate: SliverChildBuilderDelegate(
@@ -468,60 +456,73 @@ class _SummaryCard extends StatelessWidget {
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
     final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color.withAlpha(20),
-              borderRadius: BorderRadius.circular(14),
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 8, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withAlpha(18),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: HugeIcon(icon: icon, size: 18, color: color),
+              ),
             ),
-            child: Center(
-              child: HugeIcon(icon: icon, size: 24, color: color),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Gilroy',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textGrey,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontFamily: 'Gilroy',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: textColor,
-                    height: 1,
+                  const SizedBox(height: 3),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: textColor,
+                      height: 1.1,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Container(
+              width: 3,
+              height: 32,
+              decoration: BoxDecoration(
+                color: color.withAlpha(80),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import '../seeds/owaz_seed.dart';
 
 part 'app_database.g.dart';
 
@@ -171,33 +172,25 @@ class AppDatabase extends _$AppDatabase {
       );
 
   Future<void> _seedInitialData() async {
-    // Default admin user
+    // Admin user
     await into(users).insert(UsersCompanion.insert(
       name: 'Admin',
       pin: '1234',
       role: const Value('admin'),
     ));
 
-    // Default categories
-    final cats = [
-      ('Kahve', '#E8724A'),
-      ('Çay', '#4CAF50'),
-      ('Soğuk İçecekler', '#2196F3'),
-      ('Tatlılar', '#9C27B0'),
-      ('Aperatifler', '#FF9800'),
-    ];
-    for (final (name, color) in cats) {
-      await into(categories).insert(CategoriesCompanion.insert(
-        name: name,
-        color: Value(color),
-      ));
-    }
-
-    // Default units
-    final unitList = [('Adet', 'adet'), ('Gram', 'g'), ('Mililitre', 'ml'), ('Litre', 'L')];
-    for (final (name, short) in unitList) {
+    // Units
+    for (final (name, short) in [
+      ('Adet', 'pcs'),
+      ('Gram', 'g'),
+      ('Mililitre', 'ml'),
+      ('Litre', 'L'),
+    ]) {
       await into(units).insert(UnitsCompanion.insert(name: name, shortName: short));
     }
+
+    // Owaz.atlas products, categories, ingredients, recipes
+    await seedOwazData(this);
   }
 
   static QueryExecutor _openConnection() {
@@ -312,6 +305,69 @@ class AppDatabase extends _$AppDatabase {
               o.createdAt.isSmallerOrEqualValue(to))
           ..orderBy([(o) => OrderingTerm.desc(o.createdAt)]))
         .get();
+  }
+
+  Future<List<Map<String, dynamic>>> getHourlySales(DateTime day) async {
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start.add(const Duration(days: 1));
+    final dayOrders = await (select(orders)
+          ..where((o) =>
+              o.createdAt.isBiggerOrEqualValue(start) &
+              o.createdAt.isSmallerThanValue(end)))
+        .get();
+
+    final Map<int, double> hourlyRevenue = {};
+    final Map<int, int> hourlyCount = {};
+    for (int i = 0; i < 24; i++) {
+      hourlyRevenue[i] = 0.0;
+      hourlyCount[i] = 0;
+    }
+
+    for (final o in dayOrders) {
+      final h = o.createdAt.hour;
+      hourlyRevenue[h] = (hourlyRevenue[h] ?? 0.0) + o.total;
+      hourlyCount[h] = (hourlyCount[h] ?? 0) + 1;
+    }
+
+    return List.generate(24, (h) => {
+      'hour': h,
+      'revenue': hourlyRevenue[h],
+      'orders': hourlyCount[h],
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getEmployeeSalesSummary(DateTime from, DateTime to) async {
+    final rangeOrders = await (select(orders)
+          ..where((o) =>
+              o.createdAt.isBiggerOrEqualValue(from) &
+              o.createdAt.isSmallerOrEqualValue(to)))
+        .get();
+
+    final allUsers = await getAllUsers();
+    final userMap = {for (final u in allUsers) u.id: u.name};
+
+    final Map<int, double> rev = {};
+    final Map<int, int> count = {};
+
+    for (final o in rangeOrders) {
+      rev[o.userId] = (rev[o.userId] ?? 0.0) + o.total;
+      count[o.userId] = (count[o.userId] ?? 0) + 1;
+    }
+
+    final result = <Map<String, dynamic>>[];
+    for (final userId in rev.keys) {
+      final c = count[userId]!;
+      result.add({
+        'userId': userId,
+        'userName': userMap[userId] ?? 'Unknown',
+        'orders': c,
+        'revenue': rev[userId],
+        'avgOrderValue': c > 0 ? (rev[userId]! / c) : 0.0,
+      });
+    }
+
+    result.sort((a, b) => (b['revenue'] as double).compareTo(a['revenue'] as double));
+    return result;
   }
 
   Future<List<OrderItem>> getOrderItems(int orderId) =>
@@ -540,6 +596,25 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Shift>> getRecentShifts({int limit = 10}) =>
       (select(shifts)
             ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
+            ..limit(limit))
+          .get();
+
+  Future<List<Map<String, dynamic>>> getShiftsWithUser({int limit = 50}) async {
+    final allShifts = await (select(shifts)
+          ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
+          ..limit(limit))
+        .get();
+    final allUsers = await select(users).get();
+    final userMap = {for (final u in allUsers) u.id: u.name};
+    return allShifts.map((s) => {
+      'shift': s,
+      'userName': userMap[s.userId] ?? '—',
+    }).toList();
+  }
+
+  Future<List<InventoryTransaction>> getRecentTransactions({int limit = 50}) =>
+      (select(inventoryTransactions)
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
             ..limit(limit))
           .get();
 

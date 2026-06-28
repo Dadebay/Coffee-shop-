@@ -6,6 +6,7 @@ import '../../../data/database/app_database.dart';
 import '../../../controllers/database_controller.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/permissions.dart';
 
 class ReturnPanel extends StatefulWidget {
   const ReturnPanel({super.key});
@@ -164,8 +165,15 @@ class _ReturnPanelState extends State<ReturnPanel> {
     );
 
     if (confirmed == true) {
-      final user = AuthController.to.currentUser.value;
+      final auth = AuthController.to;
+      final user = auth.currentUser.value;
       if (user == null) return;
+      
+      if (!auth.can(Permission.processReturn)) {
+        final approved = await auth.requireAdmin('auth_req_return'.tr);
+        if (!approved) return;
+      }
+      
       try {
         await _db.cancelOrder(order.id, user.id);
         Get.snackbar(

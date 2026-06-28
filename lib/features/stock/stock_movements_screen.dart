@@ -50,7 +50,7 @@ class StockMovementsScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 // Period filter chips
-                Obx(() => _PeriodChips(ctrl: ctrl)),
+                _PeriodChips(ctrl: ctrl),
               ],
             ),
           ),
@@ -60,72 +60,7 @@ class StockMovementsScreen extends StatelessWidget {
             child: Row(
               children: [
                 // Left panel — ingredient list
-                Container(
-                  width: 280,
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    border: Border(right: BorderSide(color: borderColor)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Panel header
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                        child: Text(
-                          'ing_title'.tr,
-                          style: TextStyle(
-                            fontFamily: 'Gilroy',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textGrey,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      Divider(color: borderColor, height: 1),
-                      // Ingredient list
-                      Expanded(
-                        child: Obx(() {
-                          if (ctrl.loading.value) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                          if (ctrl.ingredients.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'ing_add'.tr,
-                                style: const TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  color: AppColors.textGrey,
-                                ),
-                              ),
-                            );
-                          }
-                          return ListView.builder(
-                            itemCount: ctrl.ingredients.length,
-                            itemBuilder: (ctx, i) {
-                              final ing = ctrl.ingredients[i];
-                              return Obx(() {
-                                final selected =
-                                    ctrl.selectedIngredient.value?.id == ing.id;
-                                final isLow =
-                                    ing.minStock > 0 && ing.stock <= ing.minStock;
-                                return _IngredientTile(
-                                  ingredient: ing,
-                                  selected: selected,
-                                  isLow: isLow,
-                                  isDark: isDark,
-                                  borderColor: borderColor,
-                                  onTap: () => ctrl.selectIngredient(ing),
-                                );
-                              });
-                            },
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
+                _IngredientPanel(ctrl: ctrl, isDark: isDark),
 
                 // Right panel — transaction history + action buttons
                 Expanded(
@@ -333,6 +268,147 @@ class StockMovementsScreen extends StatelessWidget {
   }
 }
 
+// ── Ingredient panel (left sidebar) ──────────────────────────────────────────
+class _IngredientPanel extends StatefulWidget {
+  final StockController ctrl;
+  final bool isDark;
+  const _IngredientPanel({required this.ctrl, required this.isDark});
+
+  @override
+  State<_IngredientPanel> createState() => _IngredientPanelState();
+}
+
+class _IngredientPanelState extends State<_IngredientPanel> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final ctrl = widget.ctrl;
+    final bg = isDark ? AppColors.bgCard : Colors.white;
+    final border = isDark ? AppColors.bgBorder : const Color(0xFFE8EAEF);
+
+    return Container(
+      width: 280,
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border(right: BorderSide(color: border)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: border)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ing_title'.tr,
+                  style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _search,
+                  onChanged: (v) => setState(() => _query = v.toLowerCase()),
+                  style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 13,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'pos_search'.tr,
+                    hintStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: AppColors.textGrey),
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, size: 15, color: AppColors.textGrey),
+                    ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                    suffixIcon: _query.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () { _search.clear(); setState(() => _query = ''); },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 13, color: AppColors.textGrey),
+                            ),
+                          )
+                        : null,
+                    suffixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    filled: true,
+                    fillColor: isDark ? AppColors.bgSurface : const Color(0xFFF4F6FA),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // List — loading/ingredients/selected are each in their own Obx
+          Expanded(
+            child: Obx(() {
+              if (ctrl.loading.value) {
+                return const Center(child: CircularProgressIndicator(color: AppColors.primary2));
+              }
+              final all = ctrl.ingredients;
+              final filtered = _query.isEmpty
+                  ? all
+                  : all.where((i) => i.name.toLowerCase().contains(_query)).toList();
+              if (filtered.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      HugeIcon(icon: HugeIcons.strokeRoundedSearch01, size: 28, color: AppColors.textGrey),
+                      const SizedBox(height: 8),
+                      Text('pos_no_products'.tr, style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey, fontSize: 12)),
+                    ],
+                  ),
+                );
+              }
+              final selectedId = ctrl.selectedIngredient.value?.id;
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                itemCount: filtered.length,
+                itemBuilder: (ctx, i) {
+                  final ing = filtered[i];
+                  final selected = selectedId == ing.id;
+                  final isLow = ing.minStock > 0 && ing.stock <= ing.minStock;
+                  return _IngredientTile(
+                    ingredient: ing,
+                    selected: selected,
+                    isLow: isLow,
+                    isDark: isDark,
+                    borderColor: border,
+                    onTap: () => ctrl.selectIngredient(ing),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Period filter chips ────────────────────────────────────────────────────────
 class _PeriodChips extends StatelessWidget {
   final StockController ctrl;
@@ -346,50 +422,47 @@ class _PeriodChips extends StatelessWidget {
       'rep_today'.tr,
       'rep_week'.tr,
     ];
-    return Row(
-      children: List.generate(periods.length, (i) {
-        final selected = ctrl.filterPeriod.value == periods[i];
-        return Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: GestureDetector(
-            onTap: () => ctrl.setPeriod(periods[i]),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppColors.primary.withAlpha(30)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
+    return Obx(() {
+      final current = ctrl.filterPeriod.value;
+      return Row(
+        children: List.generate(periods.length, (i) {
+          final selected = current == periods[i];
+          return Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: GestureDetector(
+              onTap: () => ctrl.setPeriod(periods[i]),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
                   color: selected
-                      ? AppColors.primary2
-                      : AppColors.bgBorder,
+                      ? AppColors.primary.withAlpha(30)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: selected ? AppColors.primary2 : AppColors.bgBorder,
+                  ),
                 ),
-              ),
-              child: Text(
-                labels[i],
-                style: TextStyle(
-                  fontFamily: 'Gilroy',
-                  fontSize: 13,
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected
-                      ? AppColors.primary2
-                      : AppColors.textGrey,
+                child: Text(
+                  labels[i],
+                  style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    color: selected ? AppColors.primary2 : AppColors.textGrey,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      }),
-    );
+          );
+        }),
+      );
+    });
   }
 }
 
 // ── Ingredient tile ────────────────────────────────────────────────────────────
-class _IngredientTile extends StatelessWidget {
+class _IngredientTile extends StatefulWidget {
   final Ingredient ingredient;
   final bool selected;
   final bool isLow;
@@ -407,78 +480,118 @@ class _IngredientTile extends StatelessWidget {
   });
 
   @override
+  State<_IngredientTile> createState() => _IngredientTileState();
+}
+
+class _IngredientTileState extends State<_IngredientTile> {
+  bool _hov = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withAlpha(20)
-              : Colors.transparent,
-          border: Border(
-            bottom: BorderSide(color: borderColor),
-            left: BorderSide(
-              color: selected ? AppColors.primary2 : Colors.transparent,
-              width: 3,
-            ),
+    final ing = widget.ingredient;
+    final sel = widget.selected;
+    final isDark = widget.isDark;
+
+    final hoverColor = isDark ? AppColors.bgSurface : const Color(0xFFF0F4FF);
+    final bg = sel
+        ? AppColors.primary2
+        : _hov
+            ? hoverColor
+            : hoverColor.withAlpha(0);
+    final nameColor = sel ? Colors.white : (isDark ? AppColors.textWhite : const Color(0xFF0F172A));
+    final subColor = sel
+        ? Colors.white.withAlpha(190)
+        : (widget.isLow ? AppColors.red : AppColors.textGrey);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: sel
+                ? [BoxShadow(color: AppColors.primary2.withAlpha(60), blurRadius: 8, offset: const Offset(0, 3))]
+                : [],
           ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ingredient.name,
-                    style: TextStyle(
-                      fontFamily: 'Gilroy',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: selected
-                          ? AppColors.primary2
-                          : (isDark
-                              ? AppColors.textWhite
-                              : const Color(0xFF0F172A)),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${ingredient.stock.toStringAsFixed(2)} ${ingredient.unit}',
-                    style: TextStyle(
-                      fontFamily: 'Gilroy',
-                      fontSize: 12,
-                      color:
-                          isLow ? AppColors.red : AppColors.textGrey,
-                      fontWeight:
-                          isLow ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isLow)
+          child: Row(
+            children: [
+              // Avatar initial
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                width: 36, height: 36,
                 decoration: BoxDecoration(
-                  color: AppColors.red.withAlpha(30),
-                  borderRadius: BorderRadius.circular(6),
+                  color: sel
+                      ? Colors.white.withAlpha(30)
+                      : AppColors.primary.withAlpha(isDark ? 30 : 15),
+                  borderRadius: BorderRadius.circular(9),
                 ),
+                alignment: Alignment.center,
                 child: Text(
-                  '!',
-                  style: const TextStyle(
+                  ing.name.substring(0, 1).toUpperCase(),
+                  style: TextStyle(
                     fontFamily: 'Gilroy',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.red,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: sel ? Colors.white : AppColors.primary2,
                   ),
                 ),
               ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ing.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Gilroy',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: nameColor,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Row(
+                      children: [
+                        if (widget.isLow && !sel)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Container(
+                              width: 6, height: 6,
+                              decoration: const BoxDecoration(
+                                  color: AppColors.red, shape: BoxShape.circle),
+                            ),
+                          ),
+                        Text(
+                          '${ing.stock.toStringAsFixed(2)} ${ing.unit}',
+                          style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 11,
+                            color: subColor,
+                            fontWeight: widget.isLow ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (sel)
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                  size: 16,
+                  color: Colors.white,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -884,7 +997,11 @@ class _StockDialogState extends State<_StockDialog> {
                 style: TextStyle(fontFamily: 'Gilroy', color: textColor),
                 decoration: inputDecoration.copyWith(
                   labelText: 'stock_unit_cost'.tr,
-                  prefixIcon: const Icon(Icons.attach_money, size: 18),
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: 18, color: AppColors.textGrey),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 42, minHeight: 42),
                 ),
               ),
               const SizedBox(height: 12),
@@ -896,7 +1013,11 @@ class _StockDialogState extends State<_StockDialog> {
               style: TextStyle(fontFamily: 'Gilroy', color: textColor),
               decoration: inputDecoration.copyWith(
                 labelText: 'stock_note'.tr,
-                prefixIcon: const Icon(Icons.notes, size: 18),
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedNote01, size: 18, color: AppColors.textGrey),
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 42, minHeight: 42),
               ),
             ),
             const SizedBox(height: 20),

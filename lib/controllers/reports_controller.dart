@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../data/database/app_database.dart';
+import '../features/reports/export_service.dart';
 import 'database_controller.dart';
 
 class ProductStat {
@@ -29,6 +29,11 @@ class ReportsController extends GetxController {
   final RxDouble discount = 0.0.obs;
   final RxDouble margin = 0.0.obs;
   final RxList<ProductStat> productStats = <ProductStat>[].obs;
+  
+  final RxList<Map<String, dynamic>> hourlySales = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> employeeSales = <Map<String, dynamic>>[].obs;
+  final RxString activeTab = 'general'.obs; // general | employees
+
 
   @override
   void onInit() {
@@ -87,6 +92,22 @@ class ReportsController extends GetxController {
     margin.value = totalRev > 0 ? (totalRev - totalCost) / totalRev * 100 : 0;
     productStats.value = stats;
 
+    // Load extra Feature 3 stats
+    hourlySales.value = await _db.getHourlySales(start);
+    employeeSales.value = await _db.getEmployeeSalesSummary(start, end);
+
     loading.value = false;
+  }
+
+  void setTab(String tab) {
+    activeTab.value = tab;
+    loading.value = false;
+  }
+
+  Future<void> exportOrders() async {
+    final start = DateTime(from.value.year, from.value.month, from.value.day);
+    final end = DateTime(to.value.year, to.value.month, to.value.day, 23, 59, 59);
+    final orders = await _db.getOrdersInRange(start, end);
+    await ExportService.exportOrders(orders);
   }
 }

@@ -122,6 +122,7 @@ class ProductsController extends GetxController {
     int? categoryId,
     int? unitId,
     String? imagePath,
+    DateTime? expireDate,
   }) async {
     if (existing == null) {
       await _db.createProduct(ProductsCompanion.insert(
@@ -135,6 +136,7 @@ class ProductsController extends GetxController {
         discount: drift.Value(discount),
         discountType: drift.Value(discountType),
         quantity: drift.Value(quantity),
+        expireDate: drift.Value(expireDate),
       ));
     } else {
       if (imagePath != null && imagePath != existing.imagePath) {
@@ -151,6 +153,7 @@ class ProductsController extends GetxController {
         discount: discount,
         discountType: discountType,
         quantity: quantity,
+        expireDate: drift.Value(expireDate),
       ));
     }
     await loadAll();

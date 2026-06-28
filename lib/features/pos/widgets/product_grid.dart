@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../data/database/app_database.dart';
 import '../../../core/constants/color_constants.dart';
@@ -30,138 +31,178 @@ class ProductGrid extends StatelessWidget {
   }
 }
 
-class _ProductCard extends StatelessWidget {
+class _ProductCard extends StatefulWidget {
   final Product product;
   final void Function(Product) onTap;
 
   const _ProductCard({required this.product, required this.onTap});
 
+  @override
+  State<_ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<_ProductCard> {
+  bool _hov = false;
+
   double get _price {
-    if (product.discountType == 'percentage') {
-      return (product.price - product.price * product.discount / 100)
-          .clamp(0, double.infinity);
+    final p = widget.product;
+    if (p.discountType == 'percentage') {
+      return (p.price - p.price * p.discount / 100).clamp(0, double.infinity);
     }
-    return (product.price - product.discount).clamp(0, double.infinity);
+    return (p.price - p.discount).clamp(0, double.infinity);
   }
 
-  bool get _outOfStock => product.quantity <= 0;
+  bool get _outOfStock => false;
   bool get _hasImage =>
-      product.imagePath != null && product.imagePath!.isNotEmpty;
+      widget.product.imagePath != null && widget.product.imagePath!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _outOfStock ? null : () => onTap(product),
-      child: AnimatedOpacity(
-        opacity: _outOfStock ? 0.38 : 1.0,
-        duration: const Duration(milliseconds: 180),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.bgBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top: image or accent bar
-              _hasImage
-                  ? _ImageHeader(imagePath: product.imagePath!)
-                  : Container(
-                      height: 3,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary2,
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(14)),
-                      ),
-                    ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!_hasImage)
-                        Expanded(
-                          child: Center(
-                            child: Icon(
-                              Icons.local_cafe_outlined,
-                              size: 38,
-                              color: AppColors.primary2.withAlpha(160),
-                            ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = widget.product;
+    final cardBg = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = _hov && !_outOfStock
+        ? AppColors.primary2.withAlpha(120)
+        : (isDark ? AppColors.bgBorder : const Color(0xFFE4E7F0));
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      cursor: _outOfStock ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: _outOfStock ? null : () => widget.onTap(p),
+        child: AnimatedOpacity(
+          opacity: _outOfStock ? 0.42 : 1.0,
+          duration: const Duration(milliseconds: 180),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor, width: _hov ? 1.5 : 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(isDark ? 0 : (_hov ? 10 : 5)),
+                  blurRadius: _hov ? 14 : 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Image or icon area ──
+                _hasImage
+                    ? _ImageHeader(imagePath: p.imagePath!)
+                    : _IconHeader(isDark: isDark),
+
+                // ── Info ──
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(11, 8, 11, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          p.name,
+                          style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: textColor,
+                            height: 1.25,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      if (_hasImage) const SizedBox(height: 4),
-                      Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: AppColors.textWhite,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                formatCurrency(_price),
-                                style: const TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  color: AppColors.primary2,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (p.discount > 0)
+                                    Text(
+                                      formatCurrency(p.price),
+                                      style: const TextStyle(
+                                        fontFamily: 'Gilroy',
+                                        color: AppColors.textDim,
+                                        fontSize: 10,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  Text(
+                                    formatCurrency(_price),
+                                    style: const TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      color: AppColors.primary2,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              if (product.discount > 0)
-                                Text(
-                                  formatCurrency(product.price),
+                            ),
+                            // Stock badge
+                            if (p.quantity > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.green.withAlpha(isDark ? 30 : 18),
+                                  borderRadius: BorderRadius.circular(7),
+                                  border: Border.all(color: AppColors.green.withAlpha(60)),
+                                ),
+                                child: Text(
+                                  '${p.quantity}',
                                   style: const TextStyle(
                                     fontFamily: 'Gilroy',
-                                    color: AppColors.textDim,
                                     fontSize: 10,
-                                    decoration: TextDecoration.lineThrough,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.green,
                                   ),
                                 ),
-                            ],
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: (_outOfStock
-                                      ? AppColors.red
-                                      : AppColors.green)
-                                  .withAlpha(30),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              _outOfStock ? 'Yok' : '${product.quantity}',
-                              style: TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: _outOfStock
-                                    ? AppColors.red
-                                    : AppColors.green,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconHeader extends StatelessWidget {
+  final bool isDark;
+  const _IconHeader({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 90,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [AppColors.primary.withAlpha(40), AppColors.primary2.withAlpha(20)]
+              : [const Color(0xFFEEF3FF), const Color(0xFFDDE8FF)],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Center(
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedCoffee01,
+          size: 40,
+          color: AppColors.primary2.withAlpha(isDark ? 200 : 160),
         ),
       ),
     );
@@ -175,9 +216,9 @@ class _ImageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       child: SizedBox(
-        height: 90,
+        height: 100,
         width: double.infinity,
         child: _buildImage(),
       ),
@@ -204,7 +245,7 @@ class _ImageHeader extends StatelessWidget {
 
   Widget _fallback() => Container(
         color: AppColors.bgSurface,
-        child: const Icon(Icons.broken_image_outlined,
+        child: const HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01,
             size: 28, color: AppColors.textDim),
       );
 }

@@ -52,4 +52,6 @@ class ShiftController extends GetxController {
   }
 
   Future<List<Shift>> getRecentShifts() => _db.getRecentShifts();
+
+  Future<List<Map<String, dynamic>>> getShiftsWithUser() => _db.getShiftsWithUser();
 }

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.owaz" "\0"
-            VALUE "FileDescription", "kassa_programma" "\0"
+            VALUE "FileDescription", "Owaz Coffee Shop" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "kassa_programma" "\0"
+            VALUE "InternalName", "Owaz Coffee Shop" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.owaz. All rights reserved." "\0"
             VALUE "OriginalFilename", "kassa_programma.exe" "\0"
-            VALUE "ProductName", "kassa_programma" "\0"
+            VALUE "ProductName", "Owaz Coffee Shop" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

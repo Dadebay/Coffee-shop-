@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'database_controller.dart';
 import '../../data/database/app_database.dart';
+import '../features/reports/export_service.dart';
 
 class StockReportController extends GetxController {
   static StockReportController get to => Get.find();
@@ -54,5 +55,10 @@ class StockReportController extends GetxController {
           return true;
       }
     }).toList();
+  }
+
+  Future<void> exportMovements() async {
+    final movements = await _db.getRecentTransactions(limit: 500);
+    await ExportService.exportStockMovements(movements);
   }
 }

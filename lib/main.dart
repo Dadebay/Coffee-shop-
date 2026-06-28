@@ -30,7 +30,7 @@ class KassaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeCtrl = Get.put(ThemeController(), permanent: true);
     return Obx(() => GetMaterialApp(
-          title: 'Kassa – Coffee Shop POS',
+          title: 'Owaz Coffee Shop',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
@@ -64,11 +64,11 @@ class AppBindings extends Bindings {
     Get.put(AuthController(),     permanent: true);
     Get.put(CartController(),     permanent: true);
     Get.put(ShiftController(),    permanent: true);
-    Get.lazyPut(() => PosController());
-    Get.lazyPut(() => ProductsController());
-    Get.lazyPut(() => IngredientsController());
-    Get.lazyPut(() => RecipesController());
-    Get.lazyPut(() => ReportsController());
-    Get.lazyPut(() => StockController());
+    Get.lazyPut(() => PosController(), fenix: true);
+    Get.lazyPut(() => ProductsController(), fenix: true);
+    Get.lazyPut(() => IngredientsController(), fenix: true);
+    Get.lazyPut(() => RecipesController(), fenix: true);
+    Get.lazyPut(() => ReportsController(), fenix: true);
+    Get.lazyPut(() => StockController(), fenix: true);
   }
 }

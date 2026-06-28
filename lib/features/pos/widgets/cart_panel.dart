@@ -173,11 +173,13 @@ class _CartTile extends StatelessWidget {
       Dialog(
         backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox(
+          width: 380,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
@@ -255,6 +257,7 @@ class _CartTile extends StatelessWidget {
                 ],
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -264,12 +267,21 @@ class _CartTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = CartController.to;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+    final qtyColor = isDark ? AppColors.textWhite : const Color(0xFF1E293B);
+    final totalColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+    final discBtnBg = isDark ? AppColors.bgBorder : const Color(0xFFEEF0F6);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: isDark
+            ? []
+            : [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,21 +292,27 @@ class _CartTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.product.name,
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      item.product.name,
+                      style: TextStyle(
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: textColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 2),
-                    Text(formatCurrency(item.unitPrice),
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          color: AppColors.primary2,
-                          fontSize: 12,
-                        )),
+                    Text(
+                      formatCurrency(item.unitPrice),
+                      style: const TextStyle(
+                        fontFamily: 'Gilroy',
+                        color: AppColors.primary2,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -302,14 +320,17 @@ class _CartTile extends StatelessWidget {
               GestureDetector(
                 onTap: () => _showDiscountDialog(context),
                 child: Container(
-                  width: 26,
-                  height: 26,
-                  margin: const EdgeInsets.only(right: 4),
+                  width: 28,
+                  height: 28,
+                  margin: const EdgeInsets.only(right: 6),
                   decoration: BoxDecoration(
                     color: item.extraDiscount > 0
-                        ? AppColors.red.withAlpha(30)
-                        : AppColors.bgBorder,
-                    borderRadius: BorderRadius.circular(6),
+                        ? AppColors.red.withAlpha(isDark ? 40 : 20)
+                        : discBtnBg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: item.extraDiscount > 0
+                        ? Border.all(color: AppColors.red.withAlpha(60))
+                        : null,
                   ),
                   child: Center(
                     child: HugeIcon(
@@ -325,14 +346,15 @@ class _CartTile extends StatelessWidget {
                 onTap: () => cart.decrement(item.product.id),
               ),
               Container(
-                width: 30,
+                width: 32,
                 alignment: Alignment.center,
                 child: Text(
                   '${item.quantity}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Gilroy',
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
+                    color: qtyColor,
                   ),
                 ),
               ),
@@ -342,24 +364,35 @@ class _CartTile extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                width: 66,
+                width: 68,
                 child: Text(
                   formatCurrency(item.lineTotal),
                   textAlign: TextAlign.right,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Gilroy',
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
+                    color: totalColor,
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               GestureDetector(
                 onTap: () => cart.removeItem(item.product.id),
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedCancel01,
-                  size: 15,
-                  color: AppColors.red,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: AppColors.red.withAlpha(isDark ? 30 : 15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Center(
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCancel01,
+                      size: 12,
+                      color: AppColors.red,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -399,17 +432,22 @@ class _QtyBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 26,
-        height: 26,
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
-          color: AppColors.bgBorder,
-          borderRadius: BorderRadius.circular(6),
+          color: isDark ? AppColors.bgBorder : const Color(0xFFEEF0F6),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
-          child: HugeIcon(icon: icon, size: 13, color: AppColors.textWhite),
+          child: HugeIcon(
+            icon: icon,
+            size: 13,
+            color: isDark ? AppColors.textWhite : const Color(0xFF334155),
+          ),
         ),
       ),
     );
@@ -425,7 +463,11 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final c = color ?? AppColors.textGrey;
+    final labelColor = bold
+        ? (isDark ? AppColors.textWhite : const Color(0xFF0F172A))
+        : AppColors.textGrey;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -436,7 +478,7 @@ class _SummaryRow extends StatelessWidget {
                 fontFamily: 'Gilroy',
                 fontSize: bold ? 16 : 13,
                 fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-                color: AppColors.textGrey,
+                color: labelColor,
               )),
           Text(formatCurrency(value.abs()),
               style: TextStyle(

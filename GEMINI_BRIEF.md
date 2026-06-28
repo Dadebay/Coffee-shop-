@@ -164,8 +164,6 @@ final surfaceColor = isDark ? AppColors.bgSurface : const Color(0xFFF8FAFF);
 
 ### ❌ EKSİK — Yapılacaklar
 
------------------============================###########################################################
-
 ## 6. Yapılacak Özellikler (Öncelik Sırası)
 
 ### FEATURE 1: Stok Hareketi (Prikhod/Stok Girişi)
@@ -222,7 +220,7 @@ Future<List<Ingredient>> getCriticalStockIngredients();
 Future<Map<String, dynamic>> getStockSummary();
 ```
 
----
+-----------------============================###########################################################
 
 ### FEATURE 3: Raporlar Sayfası Genişletme
 

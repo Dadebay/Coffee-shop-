@@ -112,32 +112,67 @@ class _PosScreenState extends State<PosScreen> {
       Color surfaceColor, Color borderColor) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
       decoration: BoxDecoration(
         color: surfaceColor,
         border: Border(bottom: BorderSide(color: borderColor)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Search row ──
           Row(
             children: [
               Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'pos_search'.tr,
-                    prefixIcon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedSearch01,
-                      color: AppColors.textGrey,
-                      size: 18,
+                child: Container(
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.bgCard : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? AppColors.bgBorder : const Color(0xFFE2E6F0),
                     ),
-                    isDense: true,
+                    boxShadow: isDark
+                        ? []
+                        : [BoxShadow(color: Colors.black.withAlpha(6), blurRadius: 6, offset: const Offset(0, 1))],
                   ),
-                  style: const TextStyle(fontFamily: 'Gilroy'),
-                  onChanged: (v) => pos.search.value = v,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 13),
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedSearch01,
+                        color: AppColors.textGrey,
+                        size: 15,
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: TextField(
+                          style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 13,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            hintText: 'pos_search'.tr,
+                            hintStyle: TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontSize: 13,
+                              color: isDark ? AppColors.textGrey : const Color(0xFFADB5C8),
+                            ),
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          onChanged: (v) => pos.search.value = v,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
-              // İade (Return) button
               _TopBarBtn(
                 icon: HugeIcons.strokeRoundedReturnRequest,
                 color: AppColors.red,
@@ -145,7 +180,6 @@ class _PosScreenState extends State<PosScreen> {
                 onTap: () => Get.dialog(const ReturnPanel()),
               ),
               const SizedBox(width: 6),
-              // Shift button
               Obx(() {
                 final isOpen = ShiftController.to.isOpen;
                 return _TopBarBtn(
@@ -166,7 +200,9 @@ class _PosScreenState extends State<PosScreen> {
               }),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+
+          // ── Category chips ──
           Obx(() => SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -179,12 +215,12 @@ class _PosScreenState extends State<PosScreen> {
                 ...pos.categories.map((c) => _CatChip(
                       label: c.name,
                       selected: pos.selectedCategory.value == c.id,
-                      color: _hexColor(c.color),
                       onTap: () => pos.selectCategory(c.id),
                     )),
               ],
             ),
           )),
+          const SizedBox(height: 10),
         ],
       ),
     );
@@ -260,43 +296,78 @@ class _TopBarBtn extends StatelessWidget {
   }
 }
 
-class _CatChip extends StatelessWidget {
+class _CatChip extends StatefulWidget {
   final String label;
   final bool selected;
-  final Color? color;
   final VoidCallback onTap;
 
-  const _CatChip({required this.label, required this.selected, required this.onTap, this.color});
+  const _CatChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  State<_CatChip> createState() => _CatChipState();
+}
+
+class _CatChipState extends State<_CatChip> {
+  bool _hov = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final c = color ?? AppColors.primary2;
+    const c = AppColors.primary2;
+    final sel = widget.selected;
+
     return Padding(
       padding: const EdgeInsets.only(right: 6),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          decoration: BoxDecoration(
-            color: selected
-                ? c.withAlpha(40)
-                : (isDark ? AppColors.bgCard : Colors.white),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: selected
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hov = true),
+        onExit: (_) => setState(() => _hov = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: sel
                   ? c
-                  : (isDark ? AppColors.bgBorder : const Color(0xffE0E0E6)),
+                  : (_hov
+                      ? c.withAlpha(isDark ? 30 : 18)
+                      : (isDark ? AppColors.bgCard : Colors.white)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: sel
+                    ? c
+                    : (_hov
+                        ? c.withAlpha(120)
+                        : (isDark ? AppColors.bgBorder : const Color(0xffDDE1EE))),
+                width: sel ? 0 : 1,
+              ),
+              boxShadow: sel
+                  ? [BoxShadow(color: c.withAlpha(60), blurRadius: 8, offset: const Offset(0, 3))]
+                  : [],
             ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Gilroy',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: selected ? c : AppColors.textGrey,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (sel) ...[
+                  Container(
+                    width: 6, height: 6,
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: sel
+                        ? Colors.white
+                        : (_hov ? c : AppColors.textGrey),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

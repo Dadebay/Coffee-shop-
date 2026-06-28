@@ -1,97 +1,471 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../controllers/reports_controller.dart';
+import '../../controllers/shift_controller.dart';
+import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
 
-class ReportsScreen extends StatelessWidget {
+class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
+
+  @override
+  State<ReportsScreen> createState() => _ReportsScreenState();
+}
+
+class _ReportsScreenState extends State<ReportsScreen> {
+  List<Map<String, dynamic>>? _shifts;
+  bool _shiftsLoading = false;
+
+  Future<void> _loadShifts() async {
+    if (_shifts != null) return;
+    setState(() => _shiftsLoading = true);
+    final result = await ShiftController.to.getShiftsWithUser();
+    if (mounted) setState(() { _shifts = result; _shiftsLoading = false; });
+  }
 
   @override
   Widget build(BuildContext context) {
     final ctrl = Get.find<ReportsController>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.bgDark : const Color(0xFFF5F5F7);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: Text('rep_title'.tr),
+        backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
+        title: Text('rep_title'.tr, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontFamily: 'Gilroy')),
         actions: [
-          Obx(() => TextButton.icon(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedCalendar03,
-                  color: AppColors.primary2,
-                  size: 18,
+          Obx(() {
+            if (ctrl.activeTab.value == 'shifts') return const SizedBox.shrink();
+            return TextButton.icon(
+              icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, color: AppColors.primary2, size: 18),
+              label: Text(
+                '${formatDate(ctrl.from.value)} – ${formatDate(ctrl.to.value)}',
+                style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.primary2, fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              onPressed: () => _pickRange(context, ctrl),
+            );
+          }),
+          Obx(() {
+            if (ctrl.activeTab.value == 'shifts') return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton.icon(
+                onPressed: () async {
+                  try {
+                    await ctrl.exportOrders();
+                    Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
+                        backgroundColor: AppColors.green, colorText: Colors.white);
+                  } catch (e) {
+                    Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',
+                        backgroundColor: AppColors.red, colorText: Colors.white);
+                  }
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.green,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                label: Text(
-                  '${formatDate(ctrl.from.value)} – ${formatDate(ctrl.to.value)}',
-                  style: const TextStyle(
-                      fontFamily: 'Gilroy', color: AppColors.primary2, fontSize: 13),
-                ),
-                onPressed: () => _pickRange(context, ctrl),
-              )),
-          const SizedBox(width: 12),
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedFile01, color: Colors.white, size: 18),
+                label: const Text('Excel', style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+              ),
+            );
+          }),
         ],
       ),
-      body: Obx(() => ctrl.loading.value
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary2))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      body: Obx(() {
+        final tab = ctrl.activeTab.value;
+        return Column(
+          children: [
+            _buildTabs(ctrl, isDark),
+            Expanded(
+              child: tab == 'shifts'
+                  ? _buildShiftsTab(isDark)
+                  : (ctrl.loading.value
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.primary2))
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: tab == 'general'
+                              ? _buildGeneralTab(ctrl, context, isDark)
+                              : _buildEmployeesTab(ctrl, context, isDark),
+                        )),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildTabs(ReportsController ctrl, bool isDark) {
+    return Container(
+      color: isDark ? AppColors.bgSurface : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Obx(() => Row(
+        children: [
+          _TabButton(
+            title: 'rep_general'.tr,
+            isActive: ctrl.activeTab.value == 'general',
+            onTap: () => ctrl.setTab('general'),
+            isDark: isDark,
+          ),
+          const SizedBox(width: 12),
+          _TabButton(
+            title: 'rep_employees'.tr,
+            isActive: ctrl.activeTab.value == 'employees',
+            onTap: () => ctrl.setTab('employees'),
+            isDark: isDark,
+          ),
+          const SizedBox(width: 12),
+          _TabButton(
+            title: 'rep_shifts'.tr,
+            isActive: ctrl.activeTab.value == 'shifts',
+            onTap: () {
+              ctrl.setTab('shifts');
+              _loadShifts();
+            },
+            isDark: isDark,
+            icon: HugeIcons.strokeRoundedClock01,
+          ),
+        ],
+      )),
+    );
+  }
+
+  Widget _buildShiftsTab(bool isDark) {
+    final cardBg = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+
+    if (_shiftsLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary2));
+    }
+    if (_shifts == null || _shifts!.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HugeIcon(icon: HugeIcons.strokeRoundedClock01, size: 56, color: AppColors.textDim),
+            const SizedBox(height: 12),
+            Text('rep_no_shifts'.tr, style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey, fontSize: 15)),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('rep_shifts'.tr,
+              style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18)),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor),
+              boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 10, offset: const Offset(0, 4))],
+            ),
+            child: Column(
+              children: [
+                // Header row
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.bgSurface : const Color(0xFFF8FAFC),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: Row(
                     children: [
-                      Expanded(
-                        child: _BigStatCard(
-                          icon: HugeIcons.strokeRoundedReceiptText,
-                          label: 'rep_orders'.tr,
-                          value: '${ctrl.orderCount.value}',
-                          color: AppColors.primary2,
-                          isDark: Theme.of(context).brightness == Brightness.dark,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: _BigStatCard(
-                          icon: HugeIcons.strokeRoundedMoney02,
-                          label: 'rep_revenue'.tr,
-                          value: formatCurrency(ctrl.revenue.value),
-                          color: AppColors.green,
-                          isDark: Theme.of(context).brightness == Brightness.dark,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: _BigStatCard(
-                          icon: HugeIcons.strokeRoundedShoppingBag01,
-                          label: 'rep_cost'.tr,
-                          value: formatCurrency(ctrl.cost.value),
-                          color: AppColors.orange,
-                          isDark: Theme.of(context).brightness == Brightness.dark,
-                        ),
-                      ),
+                      Expanded(flex: 2, child: Text('emp_name'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                      Expanded(flex: 2, child: Text('shift_opened_at'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                      Expanded(flex: 2, child: Text('shift_close'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                      Expanded(child: Text('shift_hours'.tr, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                      Expanded(child: Text('rep_orders'.tr, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                      Expanded(flex: 2, child: Text('rep_revenue'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                      Expanded(child: Text('shift_status'.tr, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
                     ],
                   ),
-                  const SizedBox(height: 28),
-                  Text('rep_top_products'.tr,
-                      style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16)),
-                  const SizedBox(height: 12),
-                  ctrl.productStats.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Center(
-                            child: Text('pos_no_products'.tr,
-                                style: const TextStyle(
-                                    fontFamily: 'Gilroy', color: AppColors.textGrey)),
-                          ),
-                        )
-                      : _ProductTable(stats: ctrl.productStats),
-                ],
+                ),
+                Divider(color: borderColor, height: 1),
+                ..._shifts!.asMap().entries.map((e) {
+                  final i = e.key;
+                  final row = e.value;
+                  final shift = row['shift'] as Shift;
+                  final userName = row['userName'] as String;
+                  final isOpen = shift.closedAt == null;
+                  final isLast = i == _shifts!.length - 1;
+                  final duration = (shift.closedAt ?? DateTime.now()).difference(shift.openedAt);
+                  final h = duration.inHours;
+                  final m = duration.inMinutes.remainder(60);
+
+                  return Column(
+                    children: [
+                      Container(
+                        color: isOpen
+                            ? AppColors.green.withAlpha(isDark ? 15 : 8)
+                            : Colors.transparent,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        child: Row(
+                          children: [
+                            // Name + avatar
+                            Expanded(
+                              flex: 2,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary2.withAlpha(isDark ? 40 : 20),
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                                        style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.primary2),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(userName,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: 'Gilroy',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+                                        )),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Open time
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_fmtDateTime(shift.openedAt),
+                                      style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w500)),
+                                  Text(
+                                    '${shift.openingCash.toStringAsFixed(0)} TMT',
+                                    style: const TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: AppColors.textGrey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Close time
+                            Expanded(
+                              flex: 2,
+                              child: isOpen
+                                  ? const Text('—', style: TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey))
+                                  : Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(_fmtDateTime(shift.closedAt!),
+                                            style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w500)),
+                                        Text(
+                                          '${(shift.closingCash ?? 0).toStringAsFixed(0)} TMT',
+                                          style: const TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: AppColors.textGrey),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                            // Duration
+                            Expanded(
+                              child: Text(
+                                '${h}s ${m}d',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: h >= 8 ? AppColors.red : AppColors.textGrey,
+                                ),
+                              ),
+                            ),
+                            // Order count
+                            Expanded(
+                              child: Text(
+                                '${shift.orderCount}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary2),
+                              ),
+                            ),
+                            // Revenue
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                formatCurrency(shift.totalRevenue),
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.green),
+                              ),
+                            ),
+                            // Status
+                            Expanded(
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isOpen
+                                        ? AppColors.green.withAlpha(isDark ? 40 : 20)
+                                        : AppColors.textGrey.withAlpha(isDark ? 40 : 15),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: isOpen ? AppColors.green.withAlpha(80) : AppColors.bgBorder,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    isOpen ? 'shift_open'.tr : 'shift_closed'.tr,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: isOpen ? AppColors.green : AppColors.textGrey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!isLast) Divider(color: borderColor, height: 1),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmtDateTime(DateTime dt) {
+    final date = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
+    final time = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    return '$date  $time';
+  }
+
+  Widget _buildGeneralTab(ReportsController ctrl, BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _BigStatCard(icon: HugeIcons.strokeRoundedReceiptText, label: 'rep_orders'.tr, value: '${ctrl.orderCount.value}', color: AppColors.primary2, isDark: isDark)),
+            const SizedBox(width: 16),
+            Expanded(child: _BigStatCard(icon: HugeIcons.strokeRoundedMoney02, label: 'rep_revenue'.tr, value: formatCurrency(ctrl.revenue.value), color: AppColors.green, isDark: isDark)),
+            const SizedBox(width: 16),
+            Expanded(child: _BigStatCard(icon: HugeIcons.strokeRoundedShoppingBag01, label: 'rep_cost'.tr, value: formatCurrency(ctrl.cost.value), color: AppColors.orange, isDark: isDark)),
+          ],
+        ),
+        const SizedBox(height: 32),
+        _buildHourlySalesChart(ctrl, isDark),
+        const SizedBox(height: 32),
+        Text('rep_top_products'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18)),
+        const SizedBox(height: 16),
+        ctrl.productStats.isEmpty
+            ? Padding(padding: const EdgeInsets.all(32), child: Center(child: Text('pos_no_products'.tr, style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey))))
+            : _ProductTable(stats: ctrl.productStats),
+      ],
+    );
+  }
+
+  Widget _buildHourlySalesChart(ReportsController ctrl, bool isDark) {
+    final cardBg = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final data = ctrl.hourlySales;
+    if (data.isEmpty) return const SizedBox();
+
+    double maxRev = 0;
+    for (var d in data) {
+      if ((d['revenue'] as double) > maxRev) maxRev = d['revenue'] as double;
+    }
+    if (maxRev == 0) maxRev = 100;
+
+    return Container(
+      height: 300,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('rep_hourly_sales'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 16)),
+          const SizedBox(height: 24),
+          Expanded(
+            child: BarChart(BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxRev * 1.2,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+                    formatCurrency(rod.toY),
+                    const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Gilroy'),
+                  ),
+                ),
               ),
+              titlesData: FlTitlesData(
+                show: true,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      if (value % 3 != 0) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text('${value.toInt()}:00', style: TextStyle(color: isDark ? AppColors.textGrey : AppColors.textDim, fontSize: 10, fontFamily: 'Gilroy')),
+                      );
+                    },
+                    reservedSize: 28,
+                  ),
+                ),
+                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxRev / 4,
+                getDrawingHorizontalLine: (value) => FlLine(color: isDark ? Colors.white10 : Colors.black12, strokeWidth: 1),
+              ),
+              borderData: FlBorderData(show: false),
+              barGroups: data.map((d) => BarChartGroupData(
+                x: d['hour'] as int,
+                barRods: [BarChartRodData(toY: d['revenue'] as double, color: AppColors.primary2, width: 12, borderRadius: const BorderRadius.vertical(top: Radius.circular(4)))],
+              )).toList(),
             )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmployeesTab(ReportsController ctrl, BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('rep_emp_sales'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18)),
+        const SizedBox(height: 16),
+        ctrl.employeeSales.isEmpty
+            ? Padding(padding: const EdgeInsets.all(32), child: Center(child: Text('pos_no_products'.tr, style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey))))
+            : _EmployeeTable(stats: ctrl.employeeSales),
+      ],
     );
   }
 
@@ -101,24 +475,60 @@ class ReportsScreen extends StatelessWidget {
       context: context,
       firstDate: DateTime(2024),
       lastDate: DateTime.now(),
-      initialDateRange:
-          DateTimeRange(start: ctrl.from.value, end: ctrl.to.value),
+      initialDateRange: DateTimeRange(start: ctrl.from.value, end: ctrl.to.value),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: isDark
-              ? const ColorScheme.dark(
-                  primary: AppColors.primary2,
-                  surface: AppColors.bgSurface,
-                )
-              : ColorScheme.light(
-                  primary: AppColors.primary2,
-                  surface: Colors.white,
-                ),
+              ? const ColorScheme.dark(primary: AppColors.primary2, surface: AppColors.bgSurface)
+              : const ColorScheme.light(primary: AppColors.primary2, surface: Colors.white),
         ),
         child: child!,
       ),
     );
     if (range != null) ctrl.setRange(range.start, range.end);
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  final String title;
+  final bool isActive;
+  final VoidCallback onTap;
+  final bool isDark;
+  final List<List<dynamic>>? icon;
+
+  const _TabButton({required this.title, required this.isActive, required this.onTap, required this.isDark, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary2 : (isDark ? AppColors.bgCard : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              HugeIcon(icon: icon!, size: 14, color: isActive ? Colors.white : AppColors.textGrey),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: isActive ? Colors.white : (isDark ? AppColors.textGrey : const Color(0xFF475569)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -128,83 +538,37 @@ class _BigStatCard extends StatelessWidget {
   final String value;
   final Color color;
   final bool isDark;
-  const _BigStatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.isDark,
-  });
+  const _BigStatCard({required this.icon, required this.label, required this.value, required this.color, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final cardBg = isDark ? AppColors.bgCard : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
-
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(isDark ? 0 : 6),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon + label row
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: color.withAlpha(isDark ? 35 : 25),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Center(
-                  child: HugeIcon(icon: icon, color: color, size: 20),
-                ),
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(color: color.withAlpha(isDark ? 35 : 20), borderRadius: BorderRadius.circular(12)),
+                child: Center(child: HugeIcon(icon: icon, color: color, size: 22)),
               ),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Gilroy',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textGrey : const Color(0xFF64748B),
-                ),
-              ),
+              Text(label, style: TextStyle(fontFamily: 'Gilroy', fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? AppColors.textGrey : const Color(0xFF64748B))),
             ],
           ),
-          const SizedBox(height: 16),
-          // Accent bar
-          Container(
-            height: 3,
-            width: 36,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Value
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Gilroy',
-              fontWeight: FontWeight.w800,
-              fontSize: 26,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
-            ),
-          ),
+          const SizedBox(height: 20),
+          Text(value, style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w800, fontSize: 28, color: isDark ? Colors.white : const Color(0xFF0F172A))),
         ],
       ),
     );
@@ -218,30 +582,22 @@ class _ProductTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor   = isDark ? AppColors.bgCard   : Colors.white;
-    final borderColor = isDark ? AppColors.bgBorder : const Color(0xffE0E0E6);
-
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xffE2E8F0);
     return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
-      ),
+      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: borderColor)),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.bgSurface : const Color(0xffF5F5F7),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(color: isDark ? AppColors.bgSurface : const Color(0xffF8FAFC), borderRadius: const BorderRadius.vertical(top: Radius.circular(14))),
             child: Row(
               children: [
-                Expanded(flex: 3, child: Text('prod_name'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textGrey))),
-                Expanded(child: Text('prod_qty'.tr, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textGrey))),
-                Expanded(child: Text('rep_revenue'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textGrey))),
-                Expanded(child: Text('rep_profit'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textGrey))),
-                Expanded(child: Text('rep_margin'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textGrey))),
+                Expanded(flex: 3, child: Text('prod_name'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('prod_qty'.tr, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('rep_revenue'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('rep_profit'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('rep_margin'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
               ],
             ),
           ),
@@ -253,14 +609,67 @@ class _ProductTable extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Row(
                     children: [
-                      Expanded(flex: 3, child: Text(s.name, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13))),
-                      Expanded(child: Text('${s.qty}', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13))),
-                      Expanded(child: Text(formatCurrency(s.revenue), textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: AppColors.green))),
-                      Expanded(child: Text(formatCurrency(s.profit), textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: s.profit >= 0 ? AppColors.green : AppColors.red))),
-                      Expanded(child: Text('%${s.margin.toStringAsFixed(1)}', textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: AppColors.purple))),
+                      Expanded(flex: 3, child: Text(s.name, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 14))),
+                      Expanded(child: Text('${s.qty}', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 14))),
+                      Expanded(child: Text(formatCurrency(s.revenue), textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.green))),
+                      Expanded(child: Text(formatCurrency(s.profit), textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 14, color: s.profit >= 0 ? AppColors.green : AppColors.red))),
+                      Expanded(child: Text('%${s.margin.toStringAsFixed(1)}', textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 14, color: AppColors.purple))),
+                    ],
+                  ),
+                ),
+                if (!isLast) Divider(color: borderColor, height: 1),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmployeeTable extends StatelessWidget {
+  final List<Map<String, dynamic>> stats;
+  const _EmployeeTable({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xffE2E8F0);
+    return Container(
+      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: borderColor)),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(color: isDark ? AppColors.bgSurface : const Color(0xffF8FAFC), borderRadius: const BorderRadius.vertical(top: Radius.circular(14))),
+            child: Row(
+              children: [
+                Expanded(flex: 2, child: Text('emp_name'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('rep_orders'.tr, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('rep_revenue'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+                Expanded(child: Text('rep_avg_basket'.tr, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textGrey))),
+              ],
+            ),
+          ),
+          Divider(color: borderColor, height: 1),
+          ...stats.asMap().entries.map((e) {
+            final i = e.key;
+            final s = e.value;
+            final isLast = i == stats.length - 1;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 2, child: Text(s['userName'], style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 14))),
+                      Expanded(child: Text('${s['orders']}', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 14))),
+                      Expanded(child: Text(formatCurrency(s['revenue'] as double), textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.green))),
+                      Expanded(child: Text(formatCurrency(s['avgOrderValue'] as double), textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.primary2))),
                     ],
                   ),
                 ),

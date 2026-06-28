@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/color_constants.dart';
 
@@ -25,14 +26,14 @@ class LoginScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Logo
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(30),
-                  shape: BoxShape.circle,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/logo.jpeg',
+                  width: 92,
+                  height: 92,
+                  fit: BoxFit.cover,
                 ),
-                child: const Icon(Icons.coffee_rounded, size: 36, color: AppColors.primary2),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -57,25 +58,25 @@ class LoginScreen extends StatelessWidget {
 
               // PIN dots
               Obx(() => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (i) => _PinDot(filled: i < auth.pin.value.length)),
-              )),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (i) => _PinDot(filled: i < auth.pin.value.length)),
+                  )),
               const SizedBox(height: 10),
               Obx(() => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: auth.error.value.isEmpty
-                    ? const SizedBox(height: 18)
-                    : Text(
-                        auth.error.value,
-                        key: const ValueKey('err'),
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          color: AppColors.red,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-              )),
+                    duration: const Duration(milliseconds: 200),
+                    child: auth.error.value.isEmpty
+                        ? const SizedBox(height: 18)
+                        : Text(
+                            auth.error.value,
+                            key: const ValueKey('err'),
+                            style: const TextStyle(
+                              fontFamily: 'Gilroy',
+                              color: AppColors.red,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                  )),
               const SizedBox(height: 20),
 
               // Numpad
@@ -148,9 +149,12 @@ class _Numpad extends StatelessWidget {
                               label: k,
                               isAction: k == 'C' || k == '⌫',
                               onTap: () {
-                                if (k == '⌫') onBackspace();
-                                else if (k == 'C') onClear();
-                                else onDigit(k);
+                                if (k == '⌫')
+                                  onBackspace();
+                                else if (k == 'C')
+                                  onClear();
+                                else
+                                  onDigit(k);
                               },
                             ),
                           ))

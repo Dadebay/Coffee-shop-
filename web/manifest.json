@@ -1,6 +1,6 @@
 {
-    "name": "kassa_programma",
-    "short_name": "kassa_programma",
+    "name": "Owaz Coffee Shop",
+    "short_name": "Owaz Coffee Shop",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

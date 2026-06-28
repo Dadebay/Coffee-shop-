@@ -25,10 +25,15 @@ class IngredientsScreen extends StatelessWidget {
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary2))
                 : ctrl.ingredients.isEmpty
                     ? _EmptyState()
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(20),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 2.4,
+                        ),
                         itemCount: ctrl.ingredients.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (_, i) => _IngTile(ingredient: ctrl.ingredients[i]),
                       )),
           ),
@@ -67,7 +72,7 @@ class _TopBar extends StatelessWidget {
               Obx(() {
                 final count = Get.find<IngredientsController>().ingredients.length;
                 return Text(
-                  '$count malzeme',
+                  '$count ${'ing_count'.tr}',
                   style: TextStyle(
                     fontFamily: 'Gilroy',
                     fontSize: 12,
@@ -85,7 +90,7 @@ class _TopBar extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             ),
-            icon: const Icon(Icons.add_rounded, size: 18),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 18, color: Colors.white),
             label: Text(
               'ing_add'.tr,
               style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13),
@@ -114,21 +119,19 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Henüz malzeme eklenmemiş',
+            'ing_empty'.tr,
             style: TextStyle(
               fontFamily: 'Gilroy',
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.textGrey
-                  : const Color(0xFF64748B),
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : const Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () => Get.dialog(const IngredientFormDialog()),
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary2),
-            icon: const Icon(Icons.add_rounded, size: 16),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 16, color: Colors.white),
             label: Text('ing_add'.tr, style: const TextStyle(fontFamily: 'Gilroy')),
           ),
         ],
@@ -148,36 +151,28 @@ class _IngTile extends StatefulWidget {
 class _IngTileState extends State<_IngTile> {
   bool _hovered = false;
 
-  bool get _isLow =>
-      widget.ingredient.minStock > 0 &&
-      widget.ingredient.stock <= widget.ingredient.minStock;
+  bool get _isLow => widget.ingredient.minStock > 0 && widget.ingredient.stock <= widget.ingredient.minStock;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor   = isDark ? AppColors.bgCard : Colors.white;
-    final borderColor = _isLow
-        ? AppColors.red.withAlpha(100)
-        : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0));
+    final ing = widget.ingredient;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = _isLow ? AppColors.red.withAlpha(100) : (_hovered ? AppColors.primary.withAlpha(60) : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)));
     final barColor = _isLow ? AppColors.red : AppColors.green;
-    final pct = widget.ingredient.minStock > 0
-        ? (widget.ingredient.stock / (widget.ingredient.minStock * 3)).clamp(0.0, 1.0)
-        : 1.0;
+    final pct = ing.minStock > 0 ? (ing.stock / (ing.minStock * 3)).clamp(0.0, 1.0) : 1.0;
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: _hovered && !isDark ? const Color(0xFFF8FAFF) : cardColor,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: _hovered
-                ? AppColors.primary.withAlpha(60)
-                : borderColor,
-          ),
+          border: Border.all(color: borderColor),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(isDark ? 0 : (_hovered ? 8 : 4)),
@@ -186,128 +181,95 @@ class _IngTileState extends State<_IngTile> {
             ),
           ],
         ),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Accent bar
-            Container(
-              width: 4,
-              height: 56,
-              decoration: BoxDecoration(
+            // ── Top row: name + badges + actions ──
+            Row(
+              children: [
+                // Status dot
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: barColor, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    ing.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+                if (_isLow)
+                  Container(
+                    margin: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.red.withAlpha(20),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.red.withAlpha(70)),
+                    ),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 10, color: AppColors.red),
+                  ),
+                _SmallIconBtn(
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  color: AppColors.green,
+                  onTap: () => Get.dialog(StockAdjustDialog(ingredient: ing)),
+                ),
+                const SizedBox(width: 2),
+                _SmallIconBtn(
+                  icon: HugeIcons.strokeRoundedPencilEdit01,
+                  color: AppColors.textGrey,
+                  onTap: () => Get.dialog(IngredientFormDialog(ingredient: ing)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // ── Progress bar ──
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: pct,
+                backgroundColor: isDark ? AppColors.bgBorder : const Color(0xFFEEF2FF),
                 color: barColor,
-                borderRadius: BorderRadius.circular(2),
+                minHeight: 4,
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(height: 8),
 
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          widget.ingredient.name,
-                          style: TextStyle(
-                            fontFamily: 'Gilroy',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
-                          ),
-                        ),
-                      ),
-                      if (_isLow) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.red.withAlpha(20),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.red.withAlpha(80)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.warning_amber_rounded, size: 11, color: AppColors.red),
-                              const SizedBox(width: 4),
-                              Text(
-                                'ing_low_stock'.tr.toUpperCase(),
-                                style: TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  color: AppColors.red,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
+            // ── Bottom row: stock value + cost ──
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${formatCurrency(ing.cost)} / ${ing.unit}',
+                    style: TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontSize: 11,
+                      color: isDark ? AppColors.textDim : const Color(0xFF94A3B8),
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: pct,
-                                backgroundColor: isDark
-                                    ? AppColors.bgBorder
-                                    : const Color(0xFFEEF2FF),
-                                color: barColor,
-                                minHeight: 5,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'Birim maliyet: ${formatCurrency(widget.ingredient.cost)} / ${widget.ingredient.unit}'
-                              '${widget.ingredient.minStock > 0 ? '   •   Min: ${widget.ingredient.minStock.toStringAsFixed(0)} ${widget.ingredient.unit}' : ''}',
-                              style: TextStyle(
-                                fontFamily: 'Gilroy',
-                                color: isDark ? AppColors.textDim : const Color(0xFF94A3B8),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        '${widget.ingredient.stock.toStringAsFixed(2)} ${widget.ingredient.unit}',
-                        style: TextStyle(
-                          fontFamily: 'Gilroy',
-                          color: _isLow ? AppColors.red : barColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+                ),
+                Text(
+                  '${ing.stock.toStringAsFixed(1)} ${ing.unit}',
+                  style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    color: _isLow ? AppColors.red : barColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            // Action buttons
-            _TileIconBtn(
-              icon: HugeIcons.strokeRoundedAdd01,
-              color: AppColors.green,
-              tooltip: 'ing_adjust'.tr,
-              onTap: () => Get.dialog(StockAdjustDialog(ingredient: widget.ingredient)),
-            ),
-            const SizedBox(width: 4),
-            _TileIconBtn(
-              icon: HugeIcons.strokeRoundedPencilEdit01,
-              color: AppColors.textGrey,
-              tooltip: 'gen_edit'.tr,
-              onTap: () => Get.dialog(IngredientFormDialog(ingredient: widget.ingredient)),
+                ),
+              ],
             ),
           ],
         ),
@@ -316,45 +278,37 @@ class _IngTileState extends State<_IngTile> {
   }
 }
 
-class _TileIconBtn extends StatefulWidget {
+class _SmallIconBtn extends StatefulWidget {
   final List<List<dynamic>> icon;
   final Color color;
-  final String tooltip;
   final VoidCallback onTap;
-  const _TileIconBtn({required this.icon, required this.color, required this.tooltip, required this.onTap});
+  const _SmallIconBtn({required this.icon, required this.color, required this.onTap});
 
   @override
-  State<_TileIconBtn> createState() => _TileIconBtnState();
+  State<_SmallIconBtn> createState() => _SmallIconBtnState();
 }
 
-class _TileIconBtnState extends State<_TileIconBtn> {
+class _SmallIconBtnState extends State<_SmallIconBtn> {
   bool _hov = false;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: widget.tooltip,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hov = true),
-        onExit: (_) => setState(() => _hov = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 130),
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: _hov ? widget.color.withAlpha(20) : Colors.transparent,
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(
-                color: _hov ? widget.color.withAlpha(80) : Colors.transparent,
-              ),
-            ),
-            child: Center(
-              child: HugeIcon(icon: widget.icon, size: 18, color: widget.color),
-            ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: _hov ? widget.color.withAlpha(20) : Colors.transparent,
+            borderRadius: BorderRadius.circular(7),
           ),
+          alignment: Alignment.center,
+          child: HugeIcon(icon: widget.icon, size: 14, color: widget.color),
         ),
       ),
     );
@@ -455,7 +409,7 @@ class _CloseX extends StatelessWidget {
           color: Colors.grey.withAlpha(20),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textGrey),
+        child: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 16, color: AppColors.textGrey),
       ),
     );
   }
@@ -584,9 +538,9 @@ class IngredientFormDialog extends StatefulWidget {
 
 class _IngredientFormDialogState extends State<IngredientFormDialog> {
   final _form = GlobalKey<FormState>();
-  late final _name     = TextEditingController(text: widget.ingredient?.name ?? '');
-  late final _cost     = TextEditingController(text: widget.ingredient?.cost.toStringAsFixed(2) ?? '0');
-  late final _stock    = TextEditingController(text: widget.ingredient?.stock.toStringAsFixed(2) ?? '0');
+  late final _name = TextEditingController(text: widget.ingredient?.name ?? '');
+  late final _cost = TextEditingController(text: widget.ingredient?.cost.toStringAsFixed(2) ?? '0');
+  late final _stock = TextEditingController(text: widget.ingredient?.stock.toStringAsFixed(2) ?? '0');
   late final _minStock = TextEditingController(text: widget.ingredient?.minStock.toStringAsFixed(2) ?? '0');
   String _unit = 'g';
   bool _saving = false;
@@ -599,7 +553,9 @@ class _IngredientFormDialogState extends State<IngredientFormDialog> {
 
   @override
   void dispose() {
-    for (final c in [_name, _cost, _stock, _minStock]) { c.dispose(); }
+    for (final c in [_name, _cost, _stock, _minStock]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -609,7 +565,7 @@ class _IngredientFormDialogState extends State<IngredientFormDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return _DialogShell(
-      title: isEdit ? 'Malzemeyi Düzenle' : 'Yeni Malzeme',
+      title: isEdit ? 'ing_edit'.tr : 'ing_add'.tr,
       content: Form(
         key: _form,
         child: Column(
@@ -660,8 +616,7 @@ class _IngredientFormDialogState extends State<IngredientFormDialog> {
       Get.back();
     } catch (e) {
       setState(() => _saving = false);
-      Get.snackbar('gen_error'.tr, e.toString(),
-          backgroundColor: AppColors.red, colorText: Colors.white);
+      Get.snackbar('gen_error'.tr, e.toString(), backgroundColor: AppColors.red, colorText: Colors.white);
     }
   }
 }
@@ -693,8 +648,8 @@ class _UnitDropdown extends StatelessWidget {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
       ),
       items: const [
-        DropdownMenuItem(value: 'g',   child: Text('Gram (g)')),
-        DropdownMenuItem(value: 'ml',  child: Text('Mililitre (ml)')),
+        DropdownMenuItem(value: 'g', child: Text('Gram (g)')),
+        DropdownMenuItem(value: 'ml', child: Text('Mililitre (ml)')),
         DropdownMenuItem(value: 'pcs', child: Text('Adet (pcs)')),
       ],
       onChanged: (v) => onChanged(v!),
@@ -718,7 +673,10 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
   bool _saving = false;
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -747,7 +705,9 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
                   child: Text(
                     widget.ingredient.name,
                     style: TextStyle(
-                      fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
@@ -755,8 +715,10 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
                 Text(
                   '${widget.ingredient.stock.toStringAsFixed(2)} ${widget.ingredient.unit}',
                   style: const TextStyle(
-                    fontFamily: 'Gilroy', fontWeight: FontWeight.w700,
-                    fontSize: 13, color: AppColors.primary2,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: AppColors.primary2,
                   ),
                 ),
               ],
@@ -767,9 +729,9 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
           // Add / Remove toggle
           Row(
             children: [
-              Expanded(child: _TypeBtn(label: 'Ekle', type: 'add', color: AppColors.green, selected: _type == 'add', onTap: () => setState(() => _type = 'add'))),
+              Expanded(child: _TypeBtn(label: 'gen_add'.tr, type: 'add', color: AppColors.green, selected: _type == 'add', onTap: () => setState(() => _type = 'add'))),
               const SizedBox(width: 10),
-              Expanded(child: _TypeBtn(label: 'Çıkar', type: 'remove', color: AppColors.red, selected: _type == 'remove', onTap: () => setState(() => _type = 'remove'))),
+              Expanded(child: _TypeBtn(label: 'ing_remove'.tr, type: 'remove', color: AppColors.red, selected: _type == 'remove', onTap: () => setState(() => _type = 'remove'))),
             ],
           ),
           const SizedBox(height: 14),
@@ -785,7 +747,7 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
 
           _DialogActions(
             cancelLabel: 'gen_cancel'.tr,
-            confirmLabel: _type == 'add' ? 'Ekle' : 'Çıkar',
+            confirmLabel: _type == 'add' ? 'gen_add'.tr : 'ing_remove'.tr,
             loading: _saving,
             onConfirm: _apply,
           ),
@@ -798,8 +760,7 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
     final val = double.tryParse(_ctrl.text) ?? 0;
     if (val <= 0) return;
     setState(() => _saving = true);
-    await Get.find<IngredientsController>()
-        .adjustStock(widget.ingredient.id, _type == 'add' ? val : -val);
+    await Get.find<IngredientsController>().adjustStock(widget.ingredient.id, _type == 'add' ? val : -val);
     Get.back();
   }
 }
@@ -831,8 +792,8 @@ class _TypeBtn extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              type == 'add' ? Icons.add_circle_rounded : Icons.remove_circle_rounded,
+            HugeIcon(
+              icon: type == 'add' ? HugeIcons.strokeRoundedAddCircle : HugeIcons.strokeRoundedRemoveCircle,
               size: 16,
               color: selected ? color : AppColors.textGrey,
             ),

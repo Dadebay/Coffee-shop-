@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../controllers/products_controller.dart';
+import '../../controllers/auth_controller.dart';
+import '../../core/permissions.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
@@ -104,17 +106,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
             Container(
               width: 52, height: 52,
               decoration: BoxDecoration(color: AppColors.red.withAlpha(15), shape: BoxShape.circle),
-              child: const Icon(Icons.warning_amber_rounded, color: AppColors.red, size: 28),
+              child: const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.red, size: 28),
             ),
             const SizedBox(height: 14),
             Text(
-              'Ürünü Sil',
+              'prod_delete_title'.tr,
               style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w800, fontSize: 17,
                   color: isDark ? Colors.white : const Color(0xFF0F172A)),
             ),
             const SizedBox(height: 8),
             Text(
-              '"${p.name}" silinecek. Emin misiniz?',
+              '"${p.name}" ${'prod_delete_confirm'.tr}',
               textAlign: TextAlign.center,
               style: TextStyle(fontFamily: 'Gilroy', fontSize: 13,
                   color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
@@ -129,19 +131,31 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     side: BorderSide(color: Colors.grey.withAlpha(60)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('İptal', style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                  child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: () { Get.find<ProductsController>().delete(p.id); Get.back(); },
+                  onPressed: () async { 
+                    final auth = Get.find<AuthController>();
+                    if (auth.can(Permission.deleteProduct)) {
+                      Get.find<ProductsController>().delete(p.id);
+                      Get.back();
+                    } else {
+                      final approved = await auth.requireAdmin('auth_req_delete'.tr);
+                      if (approved) {
+                        Get.find<ProductsController>().delete(p.id);
+                        Get.back();
+                      }
+                    }
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.red,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Sil', style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                  child: Text('gen_delete'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
                 ),
               ),
             ]),
@@ -175,7 +189,7 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ürünler',
+                'prod_title'.tr,
                 style: TextStyle(
                   fontFamily: 'Gilroy', fontSize: 22, fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -184,7 +198,7 @@ class _Header extends StatelessWidget {
               Obx(() {
                 final count = Get.find<ProductsController>().products.length;
                 return Text(
-                  '$count ürün kayıtlı',
+                  '$count ${'prod_count'.tr}',
                   style: TextStyle(fontFamily: 'Gilroy', fontSize: 13,
                       color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8)),
                 );
@@ -200,8 +214,8 @@ class _Header extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 18, color: Colors.white),
-            label: const Text('Yeni Ürün',
-                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14)),
+            label: Text('prod_add_new'.tr,
+                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14)),
           ),
         ],
       ),
@@ -246,12 +260,15 @@ class _FilterBar extends StatelessWidget {
                 onChanged: onSearch,
                 style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Ürün adı veya SKU ara...',
+                  hintText: 'prod_search'.tr,
                   hintStyle: TextStyle(fontFamily: 'Gilroy', color: hintColor, fontSize: 13),
-                  prefixIcon: Icon(Icons.search, color: hintColor, size: 18),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: hintColor, size: 14),
+                  ),
                   suffixIcon: searchCtrl.text.isNotEmpty
                       ? IconButton(
-                          icon: Icon(Icons.close, color: hintColor, size: 16),
+                          icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: hintColor, size: 14),
                           onPressed: () { searchCtrl.clear(); onSearch(''); },
                         )
                       : null,
@@ -282,9 +299,9 @@ class _FilterBar extends StatelessWidget {
                     value: selectedCategory,
                     dropdownColor: isDark ? AppColors.bgCard : Colors.white,
                     style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
-                    icon: Icon(Icons.expand_more, color: hintColor, size: 18),
+                    icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: hintColor, size: 18),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('Tüm Kategoriler')),
+                      DropdownMenuItem(value: null, child: Text('prod_all_cats'.tr)),
                       ...cats.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
                     ],
                     onChanged: onCategory,
@@ -337,36 +354,31 @@ class _ProductTable extends StatelessWidget {
     final hoverColor  = isDark ? AppColors.bgSurface : const Color(0xFFF8FAFF);
     final headerBg    = isDark ? AppColors.bgSurface : const Color(0xFFF4F6FB);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 10, offset: const Offset(0, 3))],
-        ),
-        child: Column(
-          children: [
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        border: Border(top: BorderSide(color: borderColor)),
+      ),
+      child: Column(
+        children: [
             // Table header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: headerBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 border: Border(bottom: BorderSide(color: borderColor)),
               ),
               child: Row(
                 children: [
                   const SizedBox(width: 52),
-                  Expanded(flex: 3, child: _TH('Ürün')),
-                  Expanded(flex: 2, child: _TH('Kategori')),
-                  Expanded(flex: 2, child: _TH('Satış Fiyatı')),
-                  Expanded(flex: 2, child: _TH('Maliyet')),
-                  Expanded(flex: 2, child: _TH('Kâr')),
-                  Expanded(flex: 1, child: _TH('Stok')),
-                  Expanded(flex: 1, child: _TH('Durum')),
-                  const SizedBox(width: 80),
+                  Expanded(flex: 3, child: _TH('prod_name'.tr)),
+                  Expanded(flex: 2, child: _TH('prod_category'.tr)),
+                  Expanded(flex: 2, child: _TH('prod_price'.tr)),
+                  Expanded(flex: 2, child: _TH('prod_cost'.tr)),
+                  Expanded(flex: 2, child: _TH('prod_profit'.tr)),
+                  Expanded(flex: 1, child: _TH('prod_qty'.tr)),
+                  Expanded(flex: 1, child: _TH('gen_status'.tr)),
+                  SizedBox(width: 80, child: Center(child: _TH('gen_action'.tr))),
                 ],
               ),
             ),
@@ -410,8 +422,16 @@ class _ProductTable extends StatelessWidget {
                                     Text(p.name,
                                         style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13, color: textColor),
                                         overflow: TextOverflow.ellipsis),
-                                    Text('SKU: ${p.sku}',
-                                        style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: subColor)),
+                                    Row(
+                                      children: [
+                                        Text('SKU: ${p.sku}',
+                                            style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: subColor)),
+                                        if (p.expireDate != null) ...[
+                                          const SizedBox(width: 8),
+                                          _ExpiryBadge(date: p.expireDate!),
+                                        ],
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
@@ -470,8 +490,7 @@ class _ProductTable extends StatelessWidget {
                 },
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -517,16 +536,19 @@ class _ProfitBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = profit >= 0 ? AppColors.green : AppColors.red;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withAlpha(60)),
-      ),
-      child: Text(
-        '${profit >= 0 ? '+' : ''}${formatCurrency(profit)}',
-        style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700, color: color),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withAlpha(25),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withAlpha(60)),
+        ),
+        child: Text(
+          '${profit >= 0 ? '+' : ''}${formatCurrency(profit)}',
+          style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700, color: color),
+        ),
       ),
     );
   }
@@ -538,16 +560,19 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: (active ? AppColors.green : AppColors.textDim).withAlpha(25),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        active ? 'Aktif' : 'Pasif',
-        style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700,
-            color: active ? AppColors.green : AppColors.textDim),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: (active ? AppColors.green : AppColors.textDim).withAlpha(25),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          active ? 'prod_status_active'.tr : 'prod_status_inactive'.tr,
+          style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700,
+              color: active ? AppColors.green : AppColors.textDim),
+        ),
       ),
     );
   }
@@ -563,10 +588,10 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 54,
+          HugeIcon(icon: HugeIcons.strokeRoundedPackage, size: 54,
               color: isDark ? AppColors.textDim.withAlpha(120) : const Color(0xFFCBD5E1)),
           const SizedBox(height: 12),
-          Text('Henüz ürün eklenmemiş',
+          Text('prod_empty'.tr,
               style: TextStyle(fontFamily: 'Gilroy', fontSize: 15,
                   color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8))),
         ],
@@ -599,7 +624,7 @@ class _ProductThumb extends StatelessWidget {
   Widget _buildImage() {
     final dimColor = isDark ? AppColors.textDim : const Color(0xFFB0B8C8);
     if (imagePath == null || imagePath!.isEmpty) {
-      return Icon(Icons.local_cafe_outlined, size: 20, color: dimColor);
+      return HugeIcon(icon: HugeIcons.strokeRoundedCoffee01, size: 20, color: dimColor);
     }
     if (kIsWeb || imagePath!.startsWith('data:')) {
       try {
@@ -608,11 +633,11 @@ class _ProductThumb extends StatelessWidget {
         final bytes = base64Decode(imagePath!.substring(comma + 1));
         return Image.memory(bytes, fit: BoxFit.cover);
       } catch (_) {
-        return Icon(Icons.broken_image_outlined, size: 20, color: dimColor);
+        return HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 20, color: dimColor);
       }
     }
     return Image.file(File(imagePath!), fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(Icons.broken_image_outlined, size: 20, color: dimColor));
+        errorBuilder: (_, __, ___) => HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 20, color: dimColor));
   }
 }
 
@@ -640,6 +665,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   int? _categoryId;
   int? _unitId;
   String? _imagePath;
+  DateTime? _expireDate;
   bool _loading = false;
 
   final _ctrl = Get.find<ProductsController>();
@@ -654,6 +680,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       _categoryId = p.categoryId;
       _unitId     = p.unitId;
       _imagePath  = p.imagePath;
+      _expireDate = p.expireDate;
     }
   }
 
@@ -711,27 +738,27 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _sectionLabel('Temel Bilgiler', isDark),
+                            _sectionLabel('prod_basic_info'.tr, isDark),
                             const SizedBox(height: 10),
-                            _field(_name, 'Ürün Adı *', isDark: isDark, required: true),
+                            _field(_name, 'prod_name'.tr, isDark: isDark, required: true),
                             const SizedBox(height: 12),
-                            _field(_sku, 'SKU / Barkod', isDark: isDark),
+                            _field(_sku, 'prod_sku'.tr, isDark: isDark),
                             const SizedBox(height: 20),
-                            _sectionLabel('Fiyatlandırma', isDark),
+                            _sectionLabel('prod_pricing'.tr, isDark),
                             const SizedBox(height: 10),
                             Row(children: [
-                              Expanded(child: _field(_price, 'Satış Fiyatı (TMT)', isDark: isDark, numeric: true)),
+                              Expanded(child: _field(_price, 'prod_price'.tr, isDark: isDark, numeric: true)),
                               const SizedBox(width: 12),
-                              Expanded(child: _field(_cost, 'Alış Fiyatı (TMT)', isDark: isDark, numeric: true)),
+                              Expanded(child: _field(_cost, 'prod_cost'.tr, isDark: isDark, numeric: true)),
                             ]),
                             const SizedBox(height: 12),
                             Row(children: [
-                              Expanded(child: _field(_disc, 'İndirim', isDark: isDark, numeric: true)),
+                              Expanded(child: _field(_qty, 'prod_qty'.tr, isDark: isDark, numeric: true)),
                               const SizedBox(width: 12),
                               Expanded(child: _discTypeDropdown(isDark)),
                             ]),
                             const SizedBox(height: 20),
-                            _sectionLabel('Sınıflandırma', isDark),
+                            _sectionLabel('prod_stock_management'.tr, isDark),
                             const SizedBox(height: 10),
                             Row(children: [
                               Expanded(child: _categoryDropdown(isDark)),
@@ -740,10 +767,17 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                             ]),
                             const SizedBox(height: 12),
                             Row(children: [
-                              SizedBox(width: 160, child: _field(_qty, 'Stok Miktarı', isDark: isDark, numeric: true)),
+                              SizedBox(width: 160, child: _field(_qty, 'prod_stock_qty'.tr, isDark: isDark, numeric: true)),
                               const SizedBox(width: 12),
                               _StatusToggle(value: _status, onChanged: (v) => setState(() => _status = v), isDark: isDark),
                             ]),
+                            const SizedBox(height: 12),
+                            _DatePickerField(
+                              label: 'exp_title'.tr,
+                              value: _expireDate,
+                              isDark: isDark,
+                              onChanged: (d) => setState(() => _expireDate = d),
+                            ),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -781,7 +815,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       style: TextStyle(fontFamily: 'Gilroy',
           color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
       decoration: _inputDecoration(label, isDark),
-      validator: required ? (v) => v?.trim().isEmpty == true ? 'Zorunlu alan' : null : null,
+      validator: required ? (v) => v?.trim().isEmpty == true ? 'gen_required'.tr : null : null,
     );
   }
 
@@ -791,10 +825,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       dropdownColor: isDark ? AppColors.bgCard : Colors.white,
       style: TextStyle(fontFamily: 'Gilroy',
           color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
-      decoration: _inputDecoration('İndirim Türü', isDark),
-      items: const [
-        DropdownMenuItem(value: 'fixed',      child: Text('Sabit (TMT)')),
-        DropdownMenuItem(value: 'percentage', child: Text('Yüzde (%)')),
+      decoration: _inputDecoration('prod_disc_type'.tr, isDark),
+      items: [
+        DropdownMenuItem(value: 'fixed',      child: Text('prod_disc_fixed'.tr)),
+        DropdownMenuItem(value: 'percentage', child: Text('prod_disc_perc'.tr)),
       ],
       onChanged: (v) => setState(() => _discType = v!),
     );
@@ -806,9 +840,9 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           dropdownColor: isDark ? AppColors.bgCard : Colors.white,
           style: TextStyle(fontFamily: 'Gilroy',
               color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
-          decoration: _inputDecoration('Kategori', isDark),
+          decoration: _inputDecoration('prod_category'.tr, isDark),
           items: [
-            const DropdownMenuItem(value: null, child: Text('— Seçiniz —')),
+            DropdownMenuItem(value: null, child: Text('prod_select'.tr)),
             ..._ctrl.categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
           ],
           onChanged: (v) => setState(() => _categoryId = v),
@@ -821,9 +855,9 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           dropdownColor: isDark ? AppColors.bgCard : Colors.white,
           style: TextStyle(fontFamily: 'Gilroy',
               color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
-          decoration: _inputDecoration('Birim', isDark),
+          decoration: _inputDecoration('prod_unit'.tr, isDark),
           items: [
-            const DropdownMenuItem(value: null, child: Text('— Seçiniz —')),
+            DropdownMenuItem(value: null, child: Text('prod_select'.tr)),
             ..._ctrl.units.map((u) => DropdownMenuItem(value: u.id, child: Text(u.name))),
           ],
           onChanged: (v) => setState(() => _unitId = v),
@@ -849,6 +883,16 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
+    
+    final newPrice = double.tryParse(_price.text) ?? 0;
+    if (_isEdit && widget.product != null && widget.product!.price != newPrice) {
+      final auth = Get.find<AuthController>();
+      if (!auth.can(Permission.changePrice)) {
+        final approved = await auth.requireAdmin('auth_req_price'.tr);
+        if (!approved) return;
+      }
+    }
+
     setState(() => _loading = true);
     try {
       await _ctrl.save(
@@ -863,11 +907,12 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         categoryId: _categoryId,
         unitId: _unitId,
         imagePath: _imagePath,
+        expireDate: _expireDate,
       );
       Get.back();
       Get.snackbar(
-        _isEdit ? 'Güncellendi' : 'Eklendi',
-        '"${_name.text.trim()}" başarıyla ${_isEdit ? 'güncellendi' : 'eklendi'}.',
+        _isEdit ? 'gen_updated'.tr : 'gen_added'.tr,
+        '"${_name.text.trim()}" ${_isEdit ? 'gen_updated_msg'.tr : 'gen_added_msg'.tr}.',
         backgroundColor: AppColors.green.withAlpha(220),
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -876,7 +921,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         duration: const Duration(seconds: 2),
       );
     } catch (e) {
-      Get.snackbar('Hata', e.toString(),
+      Get.snackbar('gen_error'.tr, e.toString(),
           backgroundColor: AppColors.red, colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
           margin: const EdgeInsets.all(16), borderRadius: 10);
@@ -910,7 +955,7 @@ class _ImagePanel extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-            child: Text('Ürün Fotoğrafı',
+            child: Text('prod_photo'.tr,
                 style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w700, color: textColor)),
           ),
           Padding(
@@ -942,9 +987,9 @@ class _ImagePanel extends StatelessWidget {
                                 colors: [Colors.transparent, Colors.black.withAlpha(160)],
                               ),
                             ),
-                            child: const Center(
-                              child: Text('Değiştir',
-                                  style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                            child: Center(
+                              child: Text('gen_change'.tr,
+                                  style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                             ),
                           ),
                         ),
@@ -955,13 +1000,13 @@ class _ImagePanel extends StatelessWidget {
                           Container(
                             width: 52, height: 52,
                             decoration: BoxDecoration(color: AppColors.primary2.withAlpha(20), borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(Icons.add_photo_alternate_outlined, size: 26, color: AppColors.primary2),
+                            child: const HugeIcon(icon: HugeIcons.strokeRoundedImageAdd01, size: 26, color: AppColors.primary2),
                           ),
                           const SizedBox(height: 12),
-                          Text('Fotoğraf Seç',
+                          Text('gen_photo_select'.tr,
                               style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
                           const SizedBox(height: 4),
-                          Text('PNG, JPG, WEBP',
+                          Text('gen_formats'.tr,
                               style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: dimColor)),
                         ],
                       ),
@@ -982,8 +1027,8 @@ class _ImagePanel extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  icon: const Icon(Icons.upload_rounded, size: 16),
-                  label: const Text('Yükle', style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600)),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedUpload01, size: 16, color: AppColors.primary2),
+                  label: Text('gen_upload'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
                 if (imagePath != null) ...[
                   const SizedBox(height: 8),
@@ -995,8 +1040,8 @@ class _ImagePanel extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 16),
-                    label: const Text('Kaldır', style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600)),
+                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 16, color: AppColors.red),
+                    label: Text('gen_remove'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ],
@@ -1014,10 +1059,10 @@ class _ImagePanel extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 13, color: dimColor),
+                  HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle, size: 13, color: dimColor),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text('Max 5MB\nPNG, JPG, WEBP',
+                    child: Text('gen_max_file'.tr,
                         style: TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: dimColor, height: 1.5)),
                   ),
                 ],
@@ -1038,11 +1083,11 @@ class _ImagePanel extends StatelessWidget {
         final bytes = base64Decode(path.substring(comma + 1));
         return Image.memory(bytes, fit: BoxFit.cover);
       } catch (_) {
-        return Icon(Icons.broken_image_outlined, size: 32, color: dimColor);
+        return HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 32, color: dimColor);
       }
     }
     return Image.file(File(path), fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(Icons.broken_image_outlined, size: 32, color: dimColor));
+        errorBuilder: (_, __, ___) => HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 32, color: dimColor));
   }
 }
 
@@ -1067,14 +1112,14 @@ class _DialogTitle extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            isEdit ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle',
+            isEdit ? 'prod_edit'.tr : 'prod_add'.tr,
             style: TextStyle(fontFamily: 'Gilroy', fontSize: 16, fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : const Color(0xFF0F172A)),
           ),
           const Spacer(),
           IconButton(
             onPressed: Get.back,
-            icon: const Icon(Icons.close, color: AppColors.textGrey, size: 20),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.textGrey, size: 20),
             splashRadius: 16,
           ),
         ],
@@ -1118,7 +1163,7 @@ class _StatusToggle extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              value ? 'Aktif' : 'Pasif',
+              value ? 'prod_status_active'.tr : 'prod_status_inactive'.tr,
               style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600,
                   color: value ? AppColors.green : AppColors.textGrey),
             ),
@@ -1160,7 +1205,7 @@ class _ActionBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
             ),
-            child: const Text('İptal', style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+            child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
           ),
           const SizedBox(width: 10),
           FilledButton(
@@ -1174,10 +1219,125 @@ class _ActionBar extends StatelessWidget {
             child: loading
                 ? const SizedBox(width: 18, height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Text(isEdit ? 'Güncelle' : 'Kaydet',
+                : Text(isEdit ? 'set_update'.tr : 'gen_save'.tr,
                     style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Expiry Helpers (Feature 5) ─────────────────────────────────────────────
+
+class _DatePickerField extends StatelessWidget {
+  final String label;
+  final DateTime? value;
+  final bool isDark;
+  final ValueChanged<DateTime?> onChanged;
+
+  const _DatePickerField({
+    required this.label,
+    required this.value,
+    required this.isDark,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final bgColor = isDark ? AppColors.bgCard : const Color(0xFFF8FAFF);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+              fontFamily: 'Gilroy',
+              color: isDark ? AppColors.textGrey : const Color(0xFF64748B),
+              fontSize: 12),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: value ?? DateTime.now().add(const Duration(days: 30)),
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+            );
+            if (date != null) onChanged(date);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value != null
+                        ? '${value!.day.toString().padLeft(2, '0')}.${value!.month.toString().padLeft(2, '0')}.${value!.year}'
+                        : 'prod_select_date'.tr,
+                    style: TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontSize: 13,
+                      color: value != null ? textColor : AppColors.textGrey,
+                    ),
+                  ),
+                ),
+                if (value != null)
+                  GestureDetector(
+                    onTap: () => onChanged(null),
+                    child: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.textGrey, size: 16),
+                  )
+                else
+                  const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, color: AppColors.textGrey, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExpiryBadge extends StatelessWidget {
+  final DateTime date;
+  const _ExpiryBadge({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final isExpired = date.isBefore(now);
+    final isExpiringSoon = !isExpired && date.isBefore(now.add(const Duration(days: 7)));
+    
+    if (!isExpired && !isExpiringSoon) return const SizedBox.shrink(); // No badge if safe
+
+    final color = isExpired ? AppColors.red : AppColors.orange;
+    final text = isExpired ? 'exp_expired'.tr : 'exp_warning'.tr.replaceAll('{days}', date.difference(now).inDays.toString());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(isDark ? 50 : 20),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Gilroy',
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }

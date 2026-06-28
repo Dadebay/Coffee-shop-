@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/shift_controller.dart';
+import '../../../controllers/auth_controller.dart';
 import '../../../data/database/app_database.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
@@ -155,6 +157,17 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
   final _ctrl = TextEditingController();
   bool _loading = false;
   Shift? _closedShift;
+  late Timer _timer;
+  late DateTime _now;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
 
   Future<void> _close() async {
     setState(() => _loading = true);
@@ -170,6 +183,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
 
   @override
   void dispose() {
+    _timer.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -182,22 +196,36 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
       return _ShiftSummaryView(shift: _closedShift!);
     }
 
-    final now = DateTime.now();
-    final duration = now.difference(widget.shift.openedAt);
+    final duration = _now.difference(widget.shift.openedAt);
     final hours = duration.inHours;
     final mins = duration.inMinutes.remainder(60);
+    final secs = duration.inSeconds.remainder(60);
+    const targetSeconds = 8 * 3600;
+    final progress = (duration.inSeconds / targetSeconds).clamp(0.0, 1.0);
+    final isOvertime = duration.inSeconds > targetSeconds;
+
+    final openTimeStr = _fmtTime(widget.shift.openedAt);
+    final targetTimeStr = _fmtTime(widget.shift.openedAt.add(const Duration(hours: 8)));
+    final nowTimeStr = _fmtTime(_now);
+
+    final cardBg = isDark ? AppColors.bgCard : const Color(0xFFF8FAFF);
+    final border = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+    final workerName = AuthController.to.currentUser.value?.name ?? '—';
 
     return Dialog(
       backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
-        width: 400,
+        width: 420,
         child: Padding(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              // ── Header ──────────────────────────────────────────────
               Row(
                 children: [
                   Container(
@@ -208,106 +236,185 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedClock01,
-                        color: AppColors.red,
-                        size: 20,
-                      ),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedClock01, color: AppColors.red, size: 20),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'shift_close'.tr,
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                        ),
-                      ),
-                      Text(
-                        '$hours ${'shift_hours'.tr} $mins ${'shift_mins'.tr}',
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          color: AppColors.textGrey,
-                          fontSize: 12,
-                        ),
+                      Text('shift_close'.tr,
+                          style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18)),
+                      Row(
+                        children: [
+                          const HugeIcon(icon: HugeIcons.strokeRoundedUser, size: 12, color: AppColors.textGrey),
+                          const SizedBox(width: 4),
+                          Text(workerName,
+                              style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w600)),
+                        ],
                       ),
                     ],
                   ),
                   const Spacer(),
-                  IconButton(
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedCancel01,
-                      size: 20,
-                      color: AppColors.textGrey,
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      width: 30, height: 30,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.bgBorder : const Color(0xFFEEF0F6),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 14, color: AppColors.textGrey)),
                     ),
-                    onPressed: () => Get.back(),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              _InfoRow('shift_opened_at'.tr,
-                  _fmtTime(widget.shift.openedAt)),
-              _InfoRow('shift_opening_cash'.tr,
-                  formatCurrency(widget.shift.openingCash)),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
+
+              // ── Time progress card ───────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: border),
+                ),
+                child: Column(
+                  children: [
+                    // Açılış → Şu an → Hedef
+                    Row(
+                      children: [
+                        // Açılış
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(openTimeStr,
+                                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18, color: textColor)),
+                            Text('shift_opened_at'.tr,
+                                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textGrey)),
+                          ],
+                        ),
+                        const Spacer(),
+                        // Geçen süre — ortada
+                        Column(
+                          children: [
+                            Text(
+                              '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontWeight: FontWeight.w800,
+                                fontSize: 22,
+                                color: isOvertime ? AppColors.red : AppColors.primary2,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: (isOvertime ? AppColors.red : AppColors.primary2).withAlpha(15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                isOvertime ? 'Mesai aşıldı!' : '${'shift_hours'.tr} 8:00',
+                                style: TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: isOvertime ? AppColors.red : AppColors.primary2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        // Hedef bitiş
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(targetTimeStr,
+                                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18, color: textColor)),
+                            Text('8 saat', style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textGrey)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 7,
+                        backgroundColor: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0),
+                        valueColor: AlwaysStoppedAnimation(isOvertime ? AppColors.red : AppColors.primary2),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(openTimeStr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textDim)),
+                        Text(nowTimeStr,
+                            style: TextStyle(fontFamily: 'Gilroy', fontSize: 10, fontWeight: FontWeight.w700,
+                                color: isOvertime ? AppColors.red : AppColors.primary2)),
+                        Text(targetTimeStr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textDim)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // ── Info rows ───────────────────────────────────────────
+              _InfoRow('shift_opened_at'.tr, '${_fmtDate(widget.shift.openedAt)}  $openTimeStr'),
+              _InfoRow('shift_opening_cash'.tr, formatCurrency(widget.shift.openingCash)),
+              const SizedBox(height: 14),
+
+              // ── Closing cash input ──────────────────────────────────
               TextField(
                 controller: _ctrl,
                 autofocus: true,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                ],
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                 decoration: InputDecoration(
                   labelText: 'shift_closing_cash'.tr,
                   labelStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
                   hintText: '0.00',
                   filled: true,
-                  fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0),
-                    ),
-                  ),
+                  fillColor: cardBg,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
                 ),
-                style: const TextStyle(
-                  fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
+                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 16, color: textColor),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
+
+              // ── Buttons ─────────────────────────────────────────────
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Get.back(),
-                      child: Text('gen_cancel'.tr,
-                          style: const TextStyle(fontFamily: 'Gilroy')),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: border),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: FilledButton(
                       onPressed: _loading ? null : _close,
-                      style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.red,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                       child: _loading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2))
-                          : Text(
-                              'shift_close'.tr,
-                              style: const TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text('shift_close'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],
@@ -323,6 +430,10 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
     return '$h:$m';
+  }
+
+  String _fmtDate(DateTime dt) {
+    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
   }
 }
 
@@ -482,6 +593,40 @@ class _StatLine extends StatelessWidget {
               fontSize: bold ? 16 : 13,
               color: color,
             )),
+      ],
+    );
+  }
+}
+
+class _ShiftTimePin extends StatelessWidget {
+  final String time;
+  final String label;
+  final bool isDark;
+  final bool alignEnd;
+  const _ShiftTimePin({required this.time, required this.label, required this.isDark, this.alignEnd = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          time,
+          style: TextStyle(
+            fontFamily: 'Gilroy',
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Gilroy',
+            fontSize: 10,
+            color: AppColors.textGrey,
+          ),
+        ),
       ],
     );
   }
