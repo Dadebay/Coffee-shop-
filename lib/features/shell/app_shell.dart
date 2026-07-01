@@ -159,55 +159,55 @@ class _AnimatedRail extends StatelessWidget {
           const SizedBox(height: 14),
 
           // ── Header: logo + toggle button ─────────────────────────
+          // collapsed=72px: 8+36+Spacer(0)+28+0margin = 72 ✓
+          // expanded=220px: 14+36+text+Spacer+28+6margin = fine ✓
           SizedBox(
             height: 44,
-            child: ClipRect(
-              child: Row(
-                children: [
-                  const SizedBox(width: 14),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      'assets/images/logo.jpeg',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                    ),
+            child: Row(
+              children: [
+                SizedBox(width: expanded ? 14 : 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    'assets/images/logo.jpeg',
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.cover,
                   ),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    child: SizedBox(
-                      width: expanded ? null : 0,
-                      child: expanded
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(width: 10),
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 110),
-                                  child: Text(
-                                    'Owaz Coffee',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
-                                    ),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  child: SizedBox(
+                    width: expanded ? null : 0,
+                    child: expanded
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 10),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 110),
+                                child: Text(
+                                  'Owaz Coffee',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
                                   ),
                                 ),
-                              ],
-                            )
-                          : const SizedBox.shrink(),
-                    ),
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
-                  const Spacer(),
-                  if (onToggle != null)
-                    _ToggleBtn(expanded: expanded, onTap: onToggle!),
-                ],
-              ),
+                ),
+                const Spacer(),
+                if (onToggle != null)
+                  _ToggleBtn(expanded: expanded, onTap: onToggle!, compact: !expanded),
+              ],
             ),
           ),
 
@@ -414,8 +414,9 @@ class _AnimatedRail extends StatelessWidget {
 // ── Expand/collapse toggle button ──────────────────────────────────────────────
 class _ToggleBtn extends StatelessWidget {
   final bool expanded;
+  final bool compact;
   final VoidCallback onTap;
-  const _ToggleBtn({required this.expanded, required this.onTap});
+  const _ToggleBtn({required this.expanded, required this.onTap, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -425,7 +426,7 @@ class _ToggleBtn extends StatelessWidget {
       child: Container(
         width: 28,
         height: 28,
-        margin: const EdgeInsets.only(right: 6),
+        margin: EdgeInsets.only(right: compact ? 0 : 6),
         decoration: BoxDecoration(
           color: isDark ? AppColors.bgCard : const Color(0xFFE8E8EE),
           borderRadius: BorderRadius.circular(8),

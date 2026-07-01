@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/numpad.dart';
 
 class CartPanel extends StatelessWidget {
   final VoidCallback? onCheckout;
@@ -209,13 +210,10 @@ class _CartTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              NumPadField(
                 controller: ctrl,
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                ],
+                numpadLabel: 'pos_discount'.tr,
+                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   labelText: '${'pos_discount'.tr} (max ${formatCurrency(maxDiscount)})',
                   labelStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
@@ -224,12 +222,9 @@ class _CartTile extends StatelessWidget {
                   fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0),
-                    ),
+                    borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
                   ),
                 ),
-                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
               Row(

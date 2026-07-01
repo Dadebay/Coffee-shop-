@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../data/database/app_database.dart';
 import '../features/reports/export_service.dart';
 import 'database_controller.dart';
 
@@ -32,7 +33,11 @@ class ReportsController extends GetxController {
   
   final RxList<Map<String, dynamic>> hourlySales = <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> employeeSales = <Map<String, dynamic>>[].obs;
-  final RxString activeTab = 'general'.obs; // general | employees
+  final RxString activeTab = 'general'.obs; // general | employees | orders | shifts
+
+  // Orders tab
+  final RxList<Order> ordersList = <Order>[].obs;
+  final RxMap<int, String> usersMap = <int, String>{}.obs; // userId → name
 
 
   @override
@@ -92,9 +97,14 @@ class ReportsController extends GetxController {
     margin.value = totalRev > 0 ? (totalRev - totalCost) / totalRev * 100 : 0;
     productStats.value = stats;
 
-    // Load extra Feature 3 stats
+    // Load extra stats
     hourlySales.value = await _db.getHourlySales(start);
     employeeSales.value = await _db.getEmployeeSalesSummary(start, end);
+
+    // Orders tab — reuse already-fetched list (includes returned orders)
+    ordersList.value = List.from(orders);
+    final allUsers = await _db.getAllUsers();
+    usersMap.value = {for (final u in allUsers) u.id: u.name};
 
     loading.value = false;
   }

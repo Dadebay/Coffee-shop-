@@ -21,6 +21,7 @@ class ProductsController extends GetxController {
   final RxList<Category> categories = <Category>[].obs;
   final RxList<Unit>     units      = <Unit>[].obs;
   final RxBool loading = false.obs;
+  final RxMap<int, int> maxProducible = <int, int>{}.obs;
 
   @override
   void onInit() {
@@ -34,6 +35,15 @@ class ProductsController extends GetxController {
     categories.value = await _db.getAllCategories();
     units.value      = await _db.getAllUnits();
     loading.value = false;
+    _calcMaxProducible();
+  }
+
+  Future<void> _calcMaxProducible() async {
+    final map = <int, int>{};
+    for (final p in products) {
+      map[p.id] = await _db.getMaxProducible(p.id);
+    }
+    maxProducible.value = map;
   }
 
   // ── Image picking ──────────────────────────────────────────────────────────

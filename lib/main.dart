@@ -15,6 +15,7 @@ import 'controllers/shift_controller.dart';
 import 'controllers/stock_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/locale_controller.dart';
+import 'controllers/print_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/shell/app_shell.dart';
 
@@ -62,6 +63,7 @@ class AppBindings extends Bindings {
     Get.put(LocaleController(), permanent: true);
     Get.put(DatabaseController(), permanent: true);
     Get.put(AuthController(),     permanent: true);
+    Get.put(PrintController(),    permanent: true);
     Get.put(CartController(),     permanent: true);
     Get.put(ShiftController(),    permanent: true);
     Get.lazyPut(() => PosController(), fenix: true);

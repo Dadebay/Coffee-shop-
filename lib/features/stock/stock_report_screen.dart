@@ -12,7 +12,7 @@ class StockReportScreen extends StatelessWidget {
     Get.lazyPut(() => StockReportController());
     final ctrl = StockReportController.to;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     final bgColor = isDark ? AppColors.bgDark : const Color(0xFFF5F5F7);
     final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
 
@@ -30,28 +30,28 @@ class StockReportScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 child: CustomScrollView(
                   slivers: [
-                  SliverToBoxAdapter(child: _buildSummaryGrid(ctrl, isDark)),
-                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
-                  SliverToBoxAdapter(child: _buildFilterTabs(ctrl, isDark)),
-                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                  _buildProductsList(ctrl, isDark),
-                  if (ctrl.criticalIngredients.isNotEmpty) ...[
+                    SliverToBoxAdapter(child: _buildSummaryGrid(ctrl, isDark)),
                     const SliverToBoxAdapter(child: SizedBox(height: 32)),
-                    SliverToBoxAdapter(
-                      child: Text(
-                        'stock_rep_critical'.tr,
-                        style: TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.red,
+                    SliverToBoxAdapter(child: _buildFilterTabs(ctrl, isDark)),
+                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                    _buildProductsList(ctrl, isDark),
+                    if (ctrl.criticalIngredients.isNotEmpty) ...[
+                      const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                      SliverToBoxAdapter(
+                        child: Text(
+                          'stock_rep_critical'.tr,
+                          style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.red,
+                          ),
                         ),
                       ),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                    _buildCriticalIngredientsList(ctrl, isDark),
-                  ]
-                ],
+                      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                      _buildCriticalIngredientsList(ctrl, isDark),
+                    ]
+                  ],
                 ),
               );
             }),
@@ -95,19 +95,28 @@ class StockReportScreen extends StatelessWidget {
               try {
                 await Get.find<StockReportController>().exportMovements();
                 Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
-                  backgroundColor: AppColors.green, colorText: Colors.white);
+                    backgroundColor: AppColors.green, colorText: Colors.white);
               } catch (e) {
                 Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',
-                  backgroundColor: AppColors.red, colorText: Colors.white);
+                    backgroundColor: AppColors.red, colorText: Colors.white);
               }
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.green,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedFile01, color: Colors.white, size: 18),
-            label: const Text('Excel', style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedFile01,
+                color: Colors.white,
+                size: 18),
+            label: const Text('Excel',
+                style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white)),
           ),
         ],
       ),
@@ -117,7 +126,8 @@ class StockReportScreen extends StatelessWidget {
   Widget _buildSummaryGrid(StockReportController ctrl, bool isDark) {
     final s = ctrl.summary;
     final formatter = RegExp(r'\B(?=(\d{3})+(?!\d))');
-    String formatMoney(double val) => val.toStringAsFixed(0).replaceAllMapped(formatter, (m) => ' ');
+    String formatMoney(double val) =>
+        val.toStringAsFixed(0).replaceAllMapped(formatter, (m) => ' ');
 
     return Row(
       children: [
@@ -158,10 +168,26 @@ class StockReportScreen extends StatelessWidget {
 
   Widget _buildFilterTabs(StockReportController ctrl, bool isDark) {
     final filters = [
-      {'key': 'all', 'label': 'rep_all'.tr, 'icon': HugeIcons.strokeRoundedPackageSearch},
-      {'key': 'zero', 'label': 'stock_rep_zero'.tr, 'icon': HugeIcons.strokeRoundedPackageRemove},
-      {'key': 'expiring', 'label': 'stock_rep_expiring'.tr, 'icon': HugeIcons.strokeRoundedClock01},
-      {'key': 'expired', 'label': 'stock_rep_expired'.tr, 'icon': HugeIcons.strokeRoundedCancel01},
+      {
+        'key': 'all',
+        'label': 'rep_all'.tr,
+        'icon': HugeIcons.strokeRoundedPackageSearch
+      },
+      {
+        'key': 'zero',
+        'label': 'stock_rep_zero'.tr,
+        'icon': HugeIcons.strokeRoundedPackageRemove
+      },
+      {
+        'key': 'expiring',
+        'label': 'stock_rep_expiring'.tr,
+        'icon': HugeIcons.strokeRoundedClock01
+      },
+      {
+        'key': 'expired',
+        'label': 'stock_rep_expired'.tr,
+        'icon': HugeIcons.strokeRoundedCancel01
+      },
     ];
 
     return Row(
@@ -174,15 +200,27 @@ class StockReportScreen extends StatelessWidget {
               onTap: () => ctrl.setFilter(f['key'] as String),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.primary2 : (isDark ? AppColors.bgCard : Colors.white),
+                  color: selected
+                      ? AppColors.primary2
+                      : (isDark ? AppColors.bgCard : Colors.white),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: selected ? AppColors.primary2 : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+                    color: selected
+                        ? AppColors.primary2
+                        : (isDark
+                            ? AppColors.bgBorder
+                            : const Color(0xFFE2E8F0)),
                   ),
                   boxShadow: selected
-                      ? [BoxShadow(color: AppColors.primary2.withAlpha(60), blurRadius: 8, offset: const Offset(0, 4))]
+                      ? [
+                          BoxShadow(
+                              color: AppColors.primary2.withAlpha(60),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4))
+                        ]
                       : [],
                 ),
                 child: Row(
@@ -199,8 +237,13 @@ class StockReportScreen extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'Gilroy',
                         fontSize: 14,
-                        fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                        color: selected ? Colors.white : (isDark ? AppColors.textWhite : const Color(0xFF0F172A)),
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w500,
+                        color: selected
+                            ? Colors.white
+                            : (isDark
+                                ? AppColors.textWhite
+                                : const Color(0xFF0F172A)),
                       ),
                     ),
                   ],
@@ -219,6 +262,8 @@ class StockReportScreen extends StatelessWidget {
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
 
     return Obx(() {
+      // ignore: unused_local_variable — tracks maxProducible changes
+      final _ = ctrl.maxProducible.length;
       final list = ctrl.filteredProducts;
       if (list.isEmpty) {
         return SliverToBoxAdapter(
@@ -227,7 +272,8 @@ class StockReportScreen extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               'pos_no_products'.tr,
-              style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey),
+              style: const TextStyle(
+                  fontFamily: 'Gilroy', color: AppColors.textGrey),
             ),
           ),
         );
@@ -240,11 +286,12 @@ class StockReportScreen extends StatelessWidget {
             maxCrossAxisExtent: 400,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            mainAxisExtent: 86,
+            mainAxisExtent: 101,
           ),
           delegate: SliverChildBuilderDelegate(
             (context, index) {
               final p = list[index];
+              final maxCount = ctrl.maxProducible[p.id] ?? -1;
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -252,93 +299,104 @@ class StockReportScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: borderColor),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(
+                        color: Colors.black.withAlpha(5),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Row(
                   children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(20),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        p.name.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary2,
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          p.name.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary2,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p.name,
+                            style: TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                p.sku,
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontSize: 12,
+                                    color: AppColors.textGrey),
+                              ),
+                              const SizedBox(width: 12),
+                              if (p.expireDate != null)
+                                _buildExpiryBadge(p.expireDate!),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          p.name,
+                          maxCount >= 0 ? '$maxCount' : '—',
                           style: TextStyle(
                             fontFamily: 'Gilroy',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: maxCount == 0
+                                ? AppColors.red
+                                : maxCount > 0
+                                    ? textColor
+                                    : AppColors.textGrey,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              p.sku,
-                              style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey),
-                            ),
-                            const SizedBox(width: 12),
-                            if (p.expireDate != null)
-                              _buildExpiryBadge(p.expireDate!),
-                          ],
+                        Text(
+                          'stock_qty'.tr,
+                          style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 11,
+                            color: AppColors.textGrey,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${p.quantity}',
-                        style: TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: p.quantity == 0 ? AppColors.red : textColor,
-                        ),
-                      ),
-                      Text(
-                        'stock_qty'.tr,
-                        style: const TextStyle(
-                          fontFamily: 'Gilroy',
-                          fontSize: 11,
-                          color: AppColors.textGrey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-          childCount: list.length,
-        ),
+                  ],
+                ),
+              );
+            },
+            childCount: list.length,
+          ),
         ),
       );
     });
   }
 
-  Widget _buildCriticalIngredientsList(StockReportController ctrl, bool isDark) {
+  Widget _buildCriticalIngredientsList(
+      StockReportController ctrl, bool isDark) {
     final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
     // cardColor and borderColor removed (unused)
 
@@ -356,7 +414,10 @@ class StockReportScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 24, color: AppColors.red),
+                const HugeIcon(
+                    icon: HugeIcons.strokeRoundedAlert02,
+                    size: 24,
+                    color: AppColors.red),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -374,7 +435,10 @@ class StockReportScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '${'ing_min_stock'.tr}: ${ing.minStock} ${ing.unit}',
-                        style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: AppColors.red),
+                        style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 13,
+                            color: AppColors.red),
                       ),
                     ],
                   ),
@@ -400,10 +464,10 @@ class StockReportScreen extends StatelessWidget {
   Widget _buildExpiryBadge(DateTime expiry) {
     final now = DateTime.now();
     final in7Days = now.add(const Duration(days: 7));
-    
+
     Color color;
     String text;
-    
+
     if (expiry.isBefore(now)) {
       color = AppColors.red;
       text = 'exp_expired'.tr;
@@ -464,7 +528,10 @@ class _SummaryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: borderColor),
           boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 0 : 5),
+                blurRadius: 8,
+                offset: const Offset(0, 2)),
           ],
         ),
         child: Row(
@@ -494,7 +561,8 @@ class _SummaryCard extends StatelessWidget {
                       fontFamily: 'Gilroy',
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8),
+                      color:
+                          isDark ? AppColors.textGrey : const Color(0xFF94A3B8),
                     ),
                   ),
                   const SizedBox(height: 3),

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
+import '../../controllers/database_controller.dart';
 import '../../controllers/stock_controller.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
+import '../../core/widgets/numpad.dart';
 
 class StockMovementsScreen extends StatelessWidget {
   const StockMovementsScreen({super.key});
@@ -74,68 +76,76 @@ class StockMovementsScreen extends StatelessWidget {
                           color: surfaceColor,
                           border: Border(bottom: BorderSide(color: borderColor)),
                         ),
-                        child: Row(
-                          children: [
-                            Obx(() {
-                              final hasSelected =
-                                  ctrl.selectedIngredient.value != null;
-                              return Row(
+                        child: Obx(() {
+                          final hasSelected =
+                              ctrl.selectedIngredient.value != null;
+                          final ing = ctrl.selectedIngredient.value;
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Buttons — wrap if not enough space
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 8,
                                 children: [
-                                  // Add receipt button
                                   _ActionButton(
                                     label: 'stock_receipt'.tr,
                                     icon: HugeIcons.strokeRoundedPackageAdd,
                                     color: AppColors.green,
                                     enabled: hasSelected,
                                     onTap: hasSelected
-                                        ? () => _showReceiptDialog(
-                                            context, ctrl, isDark)
+                                        ? () => _showReceiptDialog(context, ctrl, isDark)
                                         : null,
                                   ),
-                                  const SizedBox(width: 12),
-                                  // Write-off button
                                   _ActionButton(
                                     label: 'stock_writeoff'.tr,
                                     icon: HugeIcons.strokeRoundedPackageRemove,
                                     color: AppColors.red,
                                     enabled: hasSelected,
                                     onTap: hasSelected
-                                        ? () => _showWriteOffDialog(
-                                            context, ctrl, isDark)
+                                        ? () => _showWriteOffDialog(context, ctrl, isDark)
+                                        : null,
+                                  ),
+                                  _ActionButton(
+                                    label: 'stock_used_in_btn'.tr,
+                                    icon: HugeIcons.strokeRoundedPackageSearch,
+                                    color: AppColors.primary2,
+                                    enabled: hasSelected,
+                                    onTap: hasSelected
+                                        ? () => _showUsedInDialog(context, ctrl, isDark)
                                         : null,
                                   ),
                                 ],
-                              );
-                            }),
-                            const Spacer(),
-                            Obx(() {
-                              final ing = ctrl.selectedIngredient.value;
-                              if (ing == null) return const SizedBox.shrink();
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    ing.name,
-                                    style: TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 15,
-                                      color: textColor,
+                              ),
+                              const Spacer(),
+                              // Selected ingredient info
+                              if (ing != null)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      ing.name,
+                                      style: TextStyle(
+                                        fontFamily: 'Gilroy',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        color: textColor,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    '${'ing_stock'.tr}: ${ing.stock.toStringAsFixed(2)} ${ing.unit}',
-                                    style: const TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      fontSize: 13,
-                                      color: AppColors.textGrey,
+                                    Text(
+                                      '${'ing_stock'.tr}: ${ing.stock.toStringAsFixed(2)} ${ing.unit}',
+                                      style: const TextStyle(
+                                        fontFamily: 'Gilroy',
+                                        fontSize: 13,
+                                        color: AppColors.textGrey,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            }),
-                          ],
-                        ),
+                                  ],
+                                ),
+                            ],
+                          );
+                        }),
                       ),
 
                       // Transaction list
@@ -186,6 +196,13 @@ class StockMovementsScreen extends StatelessWidget {
   }
 
   // ── Dialogs ─────────────────────────────────────────────────────────────────
+
+  void _showUsedInDialog(
+      BuildContext context, StockController ctrl, bool isDark) {
+    final ing = ctrl.selectedIngredient.value!;
+    final db = Get.find<DatabaseController>().db;
+    Get.dialog(_UsedInDialog(ing: ing, db: db, isDark: isDark));
+  }
 
   void _showReceiptDialog(
       BuildContext context, StockController ctrl, bool isDark) {
@@ -622,13 +639,21 @@ class _TransactionTile extends StatelessWidget {
     final color = isPositive ? AppColors.green : AppColors.red;
     final fmt = DateFormat('dd.MM.yyyy HH:mm');
 
-    return Container(
+    final canDrill = tx.type == 'consume' && tx.referenceId != null;
+
+    return GestureDetector(
+      onTap: canDrill
+          ? () => _showOrderProductsDialog(context, tx.referenceId!)
+          : null,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: canDrill
+            ? borderColor.withAlpha(200)
+            : borderColor),
       ),
       child: Row(
         children: [
@@ -712,7 +737,12 @@ class _TransactionTile extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
+  }
+
+  void _showOrderProductsDialog(BuildContext context, int orderId) {
+    final db = Get.find<DatabaseController>().db;
+    Get.dialog(_OrderProductsDialog(orderId: orderId, db: db, isDark: isDark));
   }
 }
 
@@ -766,8 +796,8 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: enabled ? color : color.withAlpha(60),
           borderRadius: BorderRadius.circular(12),
@@ -776,15 +806,15 @@ class _ActionButton extends StatelessWidget {
           children: [
             HugeIcon(
               icon: icon,
-              size: 20,
+              size: 17,
               color: Colors.white.withAlpha(enabled ? 255 : 150),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'Gilroy',
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Colors.white.withAlpha(enabled ? 255 : 150),
               ),
@@ -990,10 +1020,9 @@ class _StockDialogState extends State<_StockDialog> {
 
             // Unit cost (only for receipt)
             if (widget.showCost) ...[
-              TextField(
+              NumPadField(
                 controller: widget.costCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                numpadLabel: 'stock_unit_cost'.tr,
                 style: TextStyle(fontFamily: 'Gilroy', color: textColor),
                 decoration: inputDecoration.copyWith(
                   labelText: 'stock_unit_cost'.tr,
@@ -1126,6 +1155,329 @@ class _Numpad extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ─── Used-in Products Dialog ────────────────────────────────────────────────
+
+class _UsedInDialog extends StatefulWidget {
+  final Ingredient ing;
+  final AppDatabase db;
+  final bool isDark;
+  const _UsedInDialog({required this.ing, required this.db, required this.isDark});
+
+  @override
+  State<_UsedInDialog> createState() => _UsedInDialogState();
+}
+
+class _UsedInDialogState extends State<_UsedInDialog> {
+  List<Product>? _products;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.db.getProductsUsingIngredient(widget.ing.id).then((list) {
+      if (mounted) setState(() => _products = list);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+
+    return Dialog(
+      backgroundColor: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        width: 380,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary2.withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedPackageSearch,
+                      size: 18,
+                      color: AppColors.primary2,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.ing.name,
+                          style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
+                          ),
+                        ),
+                        Text(
+                          'stock_used_in_title'.tr,
+                          style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 12,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: const Icon(Icons.close, color: AppColors.textGrey, size: 20),
+                  ),
+                ],
+              ),
+            ),
+            Divider(color: borderColor, height: 1),
+            // Content
+            if (_products == null)
+              const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary2)),
+              )
+            else if (_products!.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: Text(
+                    'Hiç bir harytda ulanylmaýar',
+                    style: const TextStyle(
+                      fontFamily: 'Gilroy',
+                      color: AppColors.textGrey,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 360),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: _products!.length,
+                  separatorBuilder: (_, __) => Divider(color: borderColor, height: 1),
+                  itemBuilder: (_, i) {
+                    final p = _products![i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(20),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                p.name.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: AppColors.primary2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              p.name,
+                              style: TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: textColor,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'SKU: ${p.sku}',
+                            style: const TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontSize: 11,
+                              color: AppColors.textGrey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Order Products Dialog ───────────────────────────────────────────────────
+
+class _OrderProductsDialog extends StatefulWidget {
+  final int orderId;
+  final AppDatabase db;
+  final bool isDark;
+  const _OrderProductsDialog({required this.orderId, required this.db, required this.isDark});
+
+  @override
+  State<_OrderProductsDialog> createState() => _OrderProductsDialogState();
+}
+
+class _OrderProductsDialogState extends State<_OrderProductsDialog> {
+  List<OrderItem>? _items;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.db.getOrderItems(widget.orderId).then((list) {
+      if (mounted) setState(() => _items = list);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+
+    return Dialog(
+      backgroundColor: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        width: 380,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary2.withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedShoppingCart01,
+                      size: 18,
+                      color: AppColors.primary2,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${'rep_order_detail'.tr}${widget.orderId}',
+                          style: TextStyle(fontFamily: 'Gilroy', fontSize: 15, fontWeight: FontWeight.w700, color: textColor),
+                        ),
+                        Text(
+                          'rep_order_items'.tr,
+                          style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: const Icon(Icons.close, color: AppColors.textGrey, size: 20),
+                  ),
+                ],
+              ),
+            ),
+            Divider(color: borderColor, height: 1),
+            if (_items == null)
+              const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary2)),
+              )
+            else if (_items!.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: Text('pos_no_products'.tr,
+                      style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey, fontSize: 13)),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 360),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: _items!.length,
+                  separatorBuilder: (_, __) => Divider(color: borderColor, height: 1),
+                  itemBuilder: (_, i) {
+                    final item = _items![i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(20),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                item.productName.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primary2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(item.productName,
+                                style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary2.withAlpha(20),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('×${item.quantity}',
+                                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary2)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 }

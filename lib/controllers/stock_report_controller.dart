@@ -13,7 +13,8 @@ class StockReportController extends GetxController {
   final RxMap<String, dynamic> summary = <String, dynamic>{}.obs;
   final RxList<Product> allProducts = <Product>[].obs;
   final RxList<Ingredient> criticalIngredients = <Ingredient>[].obs;
-  
+  final RxMap<int, int> maxProducible = <int, int>{}.obs;
+
   // Filter state
   final RxString filterType = 'all'.obs; // all | critical | expiring | expired | zero
 
@@ -32,6 +33,15 @@ class StockReportController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+    _calcMaxProducible();
+  }
+
+  Future<void> _calcMaxProducible() async {
+    final map = <int, int>{};
+    for (final p in allProducts) {
+      map[p.id] = await _db.getMaxProducible(p.id);
+    }
+    maxProducible.value = map;
   }
 
   void setFilter(String filter) {
@@ -45,7 +55,7 @@ class StockReportController extends GetxController {
     return allProducts.where((p) {
       switch (filterType.value) {
         case 'zero':
-          return p.quantity == 0;
+          return (maxProducible[p.id] ?? p.quantity) == 0;
         case 'expired':
           return p.expireDate != null && p.expireDate!.isBefore(now);
         case 'expiring':

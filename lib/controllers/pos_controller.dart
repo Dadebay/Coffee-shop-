@@ -14,6 +14,7 @@ class PosController extends GetxController {
   final Rx<int?> selectedCategory = Rx<int?>(null);
   final RxString search = ''.obs;
   final RxBool loadingProducts = false.obs;
+  final RxMap<int, int> maxProducible = <int, int>{}.obs; // productId → max count (-1 = no recipe)
 
   @override
   void onInit() {
@@ -35,11 +36,20 @@ class PosController extends GetxController {
       search: search.value.isEmpty ? null : search.value,
     );
     loadingProducts.value = false;
+    _calcMaxProducible();
+  }
+
+  Future<void> _calcMaxProducible() async {
+    final map = <int, int>{};
+    for (final p in products) {
+      map[p.id] = await _db.getMaxProducible(p.id);
+    }
+    maxProducible.value = map;
   }
 
   void selectCategory(int? id) => selectedCategory.value = id;
 
-  Future<void> placeOrder({
+  Future<Order> placeOrder({
     required double paid,
     required String paymentMethod,
     required double orderDiscount,
@@ -49,7 +59,7 @@ class PosController extends GetxController {
     if (user == null) throw Exception('Kullanıcı bulunamadı');
     if (cart.items.isEmpty) throw Exception('Sepet boş');
 
-    await _db.placeOrder(
+    final order = await _db.placeOrder(
       userId: user.id,
       cartItems: cart.items
           .map((i) => {
@@ -64,6 +74,6 @@ class PosController extends GetxController {
     );
 
     cart.clear();
-    await loadProducts(); // refresh stock
+    return order;
   }
 }

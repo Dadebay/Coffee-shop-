@@ -22,7 +22,15 @@ class AuthController extends GetxController {
     if (pin.value.length >= 6) return;
     pin.value += digit;
     error.value = '';
-    if (pin.value.length >= 4) _tryLogin();
+    if (pin.value.length >= 6) _tryLogin();
+  }
+
+  Future<void> tryLogin() async {
+    if (pin.value.length < 4) {
+      error.value = 'En az 4 rakam girin';
+      return;
+    }
+    await _tryLogin();
   }
 
   void backspace() {
@@ -39,15 +47,25 @@ class AuthController extends GetxController {
   Future<void> _tryLogin() async {
     if (loading.value) return;
     loading.value = true;
-    final user = await _db.getUserByPin(pin.value);
-    loading.value = false;
-
-    if (user != null) {
-      currentUser.value = user;
-      Get.offAllNamed('/home');
-    } else if (pin.value.length >= 6) {
-      error.value = 'Yanlış PIN';
+    try {
+      final user = await _db.getUserByPin(pin.value);
+      if (user != null) {
+        currentUser.value = user;
+        // Close any open dialogs (Get.dialog uses rootNavigator, offAllNamed won't clear them)
+        try {
+          final nav = Navigator.of(Get.context!, rootNavigator: true);
+          nav.popUntil((r) => r.isFirst);
+        } catch (_) {}
+        Get.offAllNamed('/home');
+      } else {
+        error.value = 'Yanlış PIN';
+        pin.value = '';
+      }
+    } catch (e) {
+      error.value = 'Bağlantı hatası';
       pin.value = '';
+    } finally {
+      loading.value = false;
     }
   }
 
@@ -55,6 +73,10 @@ class AuthController extends GetxController {
     currentUser.value = null;
     pin.value = '';
     error.value = '';
+    try {
+      final nav = Navigator.of(Get.context!, rootNavigator: true);
+      nav.popUntil((r) => r.isFirst);
+    } catch (_) {}
     Get.offAllNamed('/login');
   }
 

@@ -139,6 +139,37 @@ const Map<String, String> _tr = {
   'gen_added_msg': 'başarıyla eklendi',
   'gen_status': 'Durum',
   'gen_action': 'İşlem',
+  // ── Orders tab ──
+  'rep_orders_tab': 'Siparişler',
+  'rep_no_orders_period': 'Bu dönemde sipariş yok',
+  'rep_cashier': 'Kasiyer',
+  'rep_time': 'Zaman',
+  'rep_total_col': 'Toplam',
+  'rep_payment': 'Ödeme',
+  'rep_disc_short': 'İndirim',
+  'rep_order_detail': 'Sipariş #',
+  'rep_order_items': 'Bu siparişte satın alınan ürünler',
+  'order_status_paid': 'Ödendi',
+  'order_status_returned': 'İade Edildi',
+  'order_status_debt': 'Borç',
+  // ── Stock used-in ──
+  'stock_used_in_btn': 'Hangi Ürünlerde',
+  'stock_used_in_title': 'Hangi Ürünlerde Kullanılıyor',
+  // ── Printer settings ──
+  'set_printer': 'Yazıcı',
+  'set_printer_none': 'Yazıcı bulunamadı',
+  'set_printer_select': 'Yazıcı seç',
+  'set_printer_auto': 'Otomatik yazdır',
+  'set_printer_auto_desc': 'Ödeme sonrası kwitansiya otomatik çıksın',
+  'set_printer_test': 'Test Çıktısı',
+  'set_printer_test_ok': 'Test çıktısı gönderildi',
+  'set_printer_test_fail': 'Yazıcıya bağlanılamadı',
+  // ── Ingredient units ──
+  'ing_unit_g': 'Gram (g)',
+  'ing_unit_ml': 'Mililitre (ml)',
+  'ing_unit_pcs': 'Adet (pcs)',
+  // ── Numpad ──
+  'numpad_confirm': 'Onayla',
 };
 
 // ── Russian ───────────────────────────────────────────────────────────────────
@@ -400,6 +431,37 @@ const Map<String, String> _ru = {
   'prod_empty': 'Товары ещё не добавлены',
   'prod_count': 'товаров записано',
   'prod_stock_qty': 'Количество на складе',
+  // ── Orders tab ──
+  'rep_orders_tab': 'Заказы',
+  'rep_no_orders_period': 'Нет заказов за этот период',
+  'rep_cashier': 'Кассир',
+  'rep_time': 'Время',
+  'rep_total_col': 'Итого',
+  'rep_payment': 'Оплата',
+  'rep_disc_short': 'Скидка',
+  'rep_order_detail': 'Заказ #',
+  'rep_order_items': 'Товары в этом заказе',
+  'order_status_paid': 'Оплачено',
+  'order_status_returned': 'Возвращён',
+  'order_status_debt': 'В долг',
+  // ── Stock used-in ──
+  'stock_used_in_btn': 'В каких товарах',
+  'stock_used_in_title': 'В каких товарах используется',
+  // ── Printer settings ──
+  'set_printer': 'Принтер',
+  'set_printer_none': 'Принтер не найден',
+  'set_printer_select': 'Выбрать принтер',
+  'set_printer_auto': 'Авт. печать',
+  'set_printer_auto_desc': 'Автоматически распечатывать квитанцию после оплаты',
+  'set_printer_test': 'Тест печать',
+  'set_printer_test_ok': 'Тест отправлен',
+  'set_printer_test_fail': 'Ошибка подключения к принтеру',
+  // ── Ingredient units ──
+  'ing_unit_g': 'Грамм (г)',
+  'ing_unit_ml': 'Миллилитр (мл)',
+  'ing_unit_pcs': 'Штука (шт)',
+  // ── Numpad ──
+  'numpad_confirm': 'Подтвердить',
 };
 
 // ── Turkmen ───────────────────────────────────────────────────────────────────
@@ -661,4 +723,35 @@ const Map<String, String> _tk = {
   'prod_empty': 'Harytlar heniz goşulmady',
   'prod_count': 'haryt hasaba alyndy',
   'prod_stock_qty': 'Ammardaky mukdary',
+  // ── Orders tab ──
+  'rep_orders_tab': 'Zakazlar',
+  'rep_no_orders_period': 'Bu döwürde sargyt ýok',
+  'rep_cashier': 'Kassir',
+  'rep_time': 'Wagt',
+  'rep_total_col': 'Jemi',
+  'rep_payment': 'Töleg',
+  'rep_disc_short': 'Arzanl.',
+  'rep_order_detail': 'Sargyt #',
+  'rep_order_items': 'Bu sargytda satyn alnan harytlar',
+  'order_status_paid': 'Tölendi',
+  'order_status_returned': 'Gaýtaryldy',
+  'order_status_debt': 'Bergili',
+  // ── Stock used-in ──
+  'stock_used_in_btn': 'Haýsy harytlarda',
+  'stock_used_in_title': 'Haýsy harytlarda ulanylýar',
+  // ── Printer settings ──
+  'set_printer': 'Printer',
+  'set_printer_none': 'Printer tapylmady',
+  'set_printer_select': 'Printer saýlaň',
+  'set_printer_auto': 'Awtomatik çap et',
+  'set_printer_auto_desc': 'Tölegden soň kwitansiýa awtomatik çap edilsin',
+  'set_printer_test': 'Test çap',
+  'set_printer_test_ok': 'Test çap edildi',
+  'set_printer_test_fail': 'Printerе birikip bolmady',
+  // ── Ingredient units ──
+  'ing_unit_g': 'Gram (g)',
+  'ing_unit_ml': 'Mililitr (ml)',
+  'ing_unit_pcs': 'Sany (pcs)',
+  // ── Numpad ──
+  'numpad_confirm': 'Tassykla',
 };

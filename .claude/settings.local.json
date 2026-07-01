@@ -44,7 +44,11 @@
       "Bash(grep \"INSERT INTO \\\\`categories\\\\`\" /Users/gurbanowdadebay/Desktop/test_dump.sql)",
       "Bash(grep \"INSERT INTO \\\\`ingredients\\\\`\" /Users/gurbanowdadebay/Desktop/test_dump.sql)",
       "Bash(grep \"INSERT INTO \\\\`recipes\\\\`\" /Users/gurbanowdadebay/Desktop/test_dump.sql)",
-      "Bash(pkill -f \"flutter run\" 2>/dev/null *)"
+      "Bash(pkill -f \"flutter run\" 2>/dev/null *)",
+      "PowerShell(head -20)",
+      "Bash(flutter build *)",
+      "Bash(timeout 30)",
+      "Bash(grep -v \"//\")"
     ]
   }
 }

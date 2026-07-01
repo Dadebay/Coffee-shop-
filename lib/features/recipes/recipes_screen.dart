@@ -5,6 +5,7 @@ import '../../controllers/recipes_controller.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/numpad.dart';
 
 class RecipesScreen extends StatefulWidget {
   const RecipesScreen({super.key});
@@ -636,9 +637,10 @@ class _RecipeEditor extends StatelessWidget {
                       onChanged: (v) => setState(() => sel = v),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
+                    NumPadField(
                       controller: qtyCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      numpadLabel: 'rec_qty'.tr,
+                      numpadSuffix: sel?.unit ?? '',
                       style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 14),
                       decoration: InputDecoration(
                         labelText: 'rec_qty'.tr,
@@ -748,10 +750,10 @@ class _RecipeEditor extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
-                  TextFormField(
+                  NumPadField(
                     controller: ctrl2,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    autofocus: true,
+                    numpadLabel: '${'rec_qty'.tr} (${ing.unit})',
+                    numpadSuffix: ing.unit,
                     style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 14),
                     decoration: InputDecoration(
                       labelText: '${('rec_qty'.tr)} (${ing.unit})',

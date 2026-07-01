@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../../controllers/stock_controller.dart';
 import '../../../data/database/app_database.dart';
 import '../../../controllers/database_controller.dart';
 import '../../../core/constants/color_constants.dart';
@@ -176,6 +177,7 @@ class _ReturnPanelState extends State<ReturnPanel> {
       
       try {
         await _db.cancelOrder(order.id, user.id);
+        if (Get.isRegistered<StockController>()) StockController.to.loadIngredients();
         Get.snackbar(
           'gen_success'.tr,
           '#${order.id} ${'pos_return_done'.tr}',

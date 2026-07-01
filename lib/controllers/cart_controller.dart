@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../data/database/app_database.dart';
 import '../data/models/cart_item.dart';
+import 'pos_controller.dart';
 
 class CartController extends GetxController {
   static CartController get to => Get.find();
@@ -14,11 +15,20 @@ class CartController extends GetxController {
   double totalAfterOrderDiscount(double orderDiscount) =>
       (subTotal - totalItemDiscount - orderDiscount).clamp(0.0, double.infinity);
 
+  // -1 = no recipe (use product.quantity), >=0 = ingredient-based max
+  int _effectiveMax(Product product) {
+    if (!Get.isRegistered<PosController>()) return product.quantity;
+    final mp = PosController.to.maxProducible[product.id];
+    if (mp == null || mp < 0) return product.quantity;
+    return mp;
+  }
+
   void addProduct(Product product) {
+    final max = _effectiveMax(product);
     final idx = items.indexWhere((i) => i.product.id == product.id);
     if (idx >= 0) {
       final item = items[idx];
-      if (item.quantity < product.quantity) {
+      if (max < 0 || item.quantity < max) {
         items[idx] = CartItem(
           product: item.product,
           quantity: item.quantity + 1,
@@ -30,7 +40,7 @@ class CartController extends GetxController {
             duration: const Duration(seconds: 2));
       }
     } else {
-      if (product.quantity > 0) {
+      if (max != 0) {
         items.add(CartItem(product: product));
       } else {
         Get.snackbar('Stok Yok', '${product.name} stokta bulunmuyor',
@@ -43,7 +53,8 @@ class CartController extends GetxController {
     final idx = items.indexWhere((i) => i.product.id == productId);
     if (idx < 0) return;
     final item = items[idx];
-    if (item.quantity < item.product.quantity) {
+    final max = _effectiveMax(item.product);
+    if (max < 0 || item.quantity < max) {
       items[idx] = CartItem(
         product: item.product,
         quantity: item.quantity + 1,

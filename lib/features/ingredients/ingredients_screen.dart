@@ -5,6 +5,7 @@ import '../../controllers/ingredients_controller.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/numpad.dart';
 
 class IngredientsScreen extends StatelessWidget {
   const IngredientsScreen({super.key});
@@ -31,7 +32,7 @@ class IngredientsScreen extends StatelessWidget {
                           crossAxisCount: 4,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
-                          childAspectRatio: 2.4,
+                          childAspectRatio: 2.2,
                         ),
                         itemCount: ctrl.ingredients.length,
                         itemBuilder: (_, i) => _IngTile(ingredient: ctrl.ingredients[i]),
@@ -433,44 +434,35 @@ class _DField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextFormField(
-      controller: controller,
-      keyboardType: numeric ? const TextInputType.numberWithOptions(decimal: true) : null,
-      validator: validator,
-      style: TextStyle(
-        fontFamily: 'Gilroy',
-        fontSize: 14,
-        color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        suffixText: suffix,
-        labelStyle: TextStyle(
-          fontFamily: 'Gilroy',
-          fontSize: 13,
-          color: isDark ? AppColors.textGrey : const Color(0xFF64748B),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.primary2, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.red),
-        ),
-      ),
+    final textStyle = TextStyle(
+      fontFamily: 'Gilroy',
+      fontSize: 14,
+      color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
     );
+    final dec = InputDecoration(
+      labelText: label,
+      suffixText: suffix,
+      labelStyle: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
+      filled: true,
+      fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+    );
+
+    if (numeric) {
+      return NumPadField(
+        controller: controller,
+        numpadLabel: label,
+        numpadSuffix: suffix,
+        validator: validator,
+        style: textStyle,
+        decoration: dec,
+      );
+    }
+    return TextFormField(controller: controller, validator: validator, style: textStyle, decoration: dec);
   }
 }
 
@@ -647,10 +639,10 @@ class _UnitDropdown extends StatelessWidget {
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
       ),
-      items: const [
-        DropdownMenuItem(value: 'g', child: Text('Gram (g)')),
-        DropdownMenuItem(value: 'ml', child: Text('Mililitre (ml)')),
-        DropdownMenuItem(value: 'pcs', child: Text('Adet (pcs)')),
+      items: [
+        DropdownMenuItem(value: 'g', child: Text('ing_unit_g'.tr)),
+        DropdownMenuItem(value: 'ml', child: Text('ing_unit_ml'.tr)),
+        DropdownMenuItem(value: 'pcs', child: Text('ing_unit_pcs'.tr)),
       ],
       onChanged: (v) => onChanged(v!),
     );

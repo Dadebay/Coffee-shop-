@@ -30,6 +30,9 @@ dependencies:
   fl_chart: 0.69.0
   excel: ^4.0.6
   universal_html: ^2.3.0
+  # Windows printing
+  win32: ^5.10.1
+  ffi: ^2.1.3
 
 dev_dependencies:
   flutter_test:

@@ -12,6 +12,7 @@ import '../../core/permissions.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/numpad.dart';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -66,10 +67,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
               if (list.isEmpty) return const _EmptyState();
 
+              // ignore: unused_local_variable — forces Obx to track maxProducible changes
+              final _ = ctrl.maxProducible.length;
+
               return _ProductTable(
                 products: list,
                 categories: ctrl.categories,
                 units: ctrl.units,
+                maxProducible: ctrl.maxProducible,
                 onEdit: (p) => _openForm(ctrl, product: p),
                 onDelete: (p) => _confirmDelete(context, p),
               );
@@ -322,6 +327,7 @@ class _ProductTable extends StatelessWidget {
   final List<Product> products;
   final List<Category> categories;
   final List<Unit> units;
+  final Map<int, int> maxProducible;
   final void Function(Product) onEdit;
   final void Function(Product) onDelete;
 
@@ -329,6 +335,7 @@ class _ProductTable extends StatelessWidget {
     required this.products,
     required this.categories,
     required this.units,
+    required this.maxProducible,
     required this.onEdit,
     required this.onDelete,
   });
@@ -395,6 +402,7 @@ class _ProductTable extends StatelessWidget {
                   final isLast = i == products.length - 1;
                   final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
                   final subColor  = isDark ? AppColors.textDim   : const Color(0xFF94A3B8);
+                  final maxCount = maxProducible[p.id] ?? -1;
 
                   return Container(
                     decoration: BoxDecoration(
@@ -464,9 +472,19 @@ class _ProductTable extends StatelessWidget {
                               Expanded(
                                 flex: 1,
                                 child: Text(
-                                  '${p.quantity}${unit.isNotEmpty ? ' $unit' : ''}',
-                                  style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600,
-                                      color: p.quantity > 0 ? textColor : AppColors.red),
+                                  maxCount >= 0
+                                      ? '$maxCount${unit.isNotEmpty ? ' $unit' : ''}'
+                                      : '—',
+                                  style: TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: maxCount == 0
+                                        ? AppColors.red
+                                        : maxCount > 0
+                                            ? textColor
+                                            : AppColors.textDim,
+                                  ),
                                 ),
                               ),
                               Expanded(flex: 1, child: _StatusBadge(active: p.status)),
@@ -809,13 +827,23 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
   Widget _field(TextEditingController c, String label,
       {required bool isDark, bool required = false, bool numeric = false}) {
+    final style = TextStyle(fontFamily: 'Gilroy',
+        color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13);
+    final validator = required ? (String? v) => v?.trim().isEmpty == true ? 'gen_required'.tr : null : null;
+    if (numeric) {
+      return NumPadField(
+        controller: c,
+        numpadLabel: label,
+        style: style,
+        validator: validator,
+        decoration: _inputDecoration(label, isDark),
+      );
+    }
     return TextFormField(
       controller: c,
-      keyboardType: numeric ? const TextInputType.numberWithOptions(decimal: true) : null,
-      style: TextStyle(fontFamily: 'Gilroy',
-          color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
+      style: style,
       decoration: _inputDecoration(label, isDark),
-      validator: required ? (v) => v?.trim().isEmpty == true ? 'gen_required'.tr : null : null,
+      validator: validator,
     );
   }
 

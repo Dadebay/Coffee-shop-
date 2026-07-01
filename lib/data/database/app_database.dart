@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path/path.dart' as p;
 import '../seeds/owaz_seed.dart';
 
 part 'app_database.g.dart';
@@ -172,6 +176,10 @@ class AppDatabase extends _$AppDatabase {
       );
 
   Future<void> _seedInitialData() async {
+    // Guard: skip if already seeded
+    final existingUsers = await select(users).get();
+    if (existingUsers.isNotEmpty) return;
+
     // Admin user
     await into(users).insert(UsersCompanion.insert(
       name: 'Admin',
@@ -194,18 +202,24 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(
-      name: 'kassa_db',
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-        driftWorker: Uri.parse('drift_worker.dart.js'),
-        onResult: (result) {
-          if (result.missingFeatures.isNotEmpty) {
-            // Running with limited storage — acceptable for dev
-          }
-        },
-      ),
-    );
+    if (kIsWeb) {
+      return driftDatabase(
+        name: 'kassa_db',
+        web: DriftWebOptions(
+          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+          driftWorker: Uri.parse('drift_worker.dart.js'),
+          onResult: (result) {
+            if (result.missingFeatures.isNotEmpty) {
+              // Running with limited storage — acceptable for dev
+            }
+          },
+        ),
+      );
+    }
+    // Native (Windows/macOS/Linux): store database next to the executable
+    final exeDir = File(Platform.resolvedExecutable).parent.path;
+    final dbPath = p.join(exeDir, 'kassa_db.sqlite');
+    return NativeDatabase(File(dbPath));
   }
 
   // ── Products ──────────────────────────────────────────────────────────────
@@ -274,6 +288,34 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Recipe>> getRecipesForProduct(int productId) =>
       (select(recipes)..where((r) => r.productId.equals(productId))).get();
+
+  /// Returns all products that use [ingredientId] in their recipe.
+  Future<List<Product>> getProductsUsingIngredient(int ingredientId) async {
+    final recipeRows = await (select(recipes)
+          ..where((r) => r.ingredientId.equals(ingredientId)))
+        .get();
+    if (recipeRows.isEmpty) return [];
+    final productIds = recipeRows.map((r) => r.productId).toSet().toList();
+    return (select(products)
+          ..where((p) => p.id.isIn(productIds)))
+        .get();
+  }
+
+  /// How many units of [productId] can be made from current ingredient stock.
+  /// Returns -1 if the product has no recipe (no constraint).
+  Future<int> getMaxProducible(int productId) async {
+    final prodRecipes = await getRecipesForProduct(productId);
+    if (prodRecipes.isEmpty) return -1;
+    int max = 99999;
+    for (final r in prodRecipes) {
+      if (r.quantity <= 0) continue;
+      final ing = await (select(ingredients)..where((i) => i.id.equals(r.ingredientId))).getSingleOrNull();
+      if (ing == null) continue;
+      final fromThis = (ing.stock / r.quantity).floor();
+      if (fromThis < max) max = fromThis;
+    }
+    return max == 99999 ? -1 : max;
+  }
 
   Future<int> createRecipe(RecipesCompanion data) => into(recipes).insert(data);
 
@@ -482,31 +524,7 @@ class AppDatabase extends _$AppDatabase {
       final order = await (select(orders)..where((o) => o.id.equals(orderId))).getSingle();
       if (order.isReturned) throw Exception('Bu sipariş zaten iptal edilmiş.');
 
-      final items = await getOrderItems(orderId);
-      for (final item in items) {
-        // Restore product stock
-        await customUpdate(
-          'UPDATE products SET quantity = quantity + ? WHERE id = ?',
-          variables: [Variable.withInt(item.quantity), Variable.withInt(item.productId)],
-          updates: {products},
-        );
-
-        // Restore ingredients
-        final prodRecipes = await getRecipesForProduct(item.productId);
-        for (final recipe in prodRecipes) {
-          final restore = recipe.quantity * item.quantity;
-          await adjustIngredientStock(recipe.ingredientId, restore);
-          await into(inventoryTransactions).insert(InventoryTransactionsCompanion.insert(
-            ingredientId: recipe.ingredientId,
-            type: 'restore',
-            quantity: restore,
-            referenceType: const Value('order'),
-            referenceId: Value(orderId),
-            userId: Value(userId),
-            note: Value('Sipariş #$orderId iptali nedeniyle iade'),
-          ));
-        }
-      }
+      // Cancelling an order does not restore stock or log inventory movements
 
       await (update(orders)..where((o) => o.id.equals(orderId))).write(
         const OrdersCompanion(isReturned: Value(true), status: Value(0)),

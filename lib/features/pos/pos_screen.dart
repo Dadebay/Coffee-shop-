@@ -40,7 +40,7 @@ class _PosScreenState extends State<PosScreen> {
     final cart = CartController.to;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.bgSurface : const Color(0xffEEEEF2);
-    final borderColor  = isDark ? AppColors.bgBorder  : const Color(0xffE0E0E6);
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xffE0E0E6);
 
     return Scaffold(
       body: Row(
@@ -55,7 +55,8 @@ class _PosScreenState extends State<PosScreen> {
                   child: Obx(() {
                     if (pos.loadingProducts.value) {
                       return const Center(
-                          child: CircularProgressIndicator(color: AppColors.primary2));
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary2));
                     }
                     if (pos.products.isEmpty) {
                       return Center(
@@ -82,6 +83,7 @@ class _PosScreenState extends State<PosScreen> {
                     }
                     return ProductGrid(
                       products: pos.products,
+                      maxProducible: pos.maxProducible,
                       onTap: cart.addProduct,
                     );
                   }),
@@ -130,11 +132,17 @@ class _PosScreenState extends State<PosScreen> {
                     color: isDark ? AppColors.bgCard : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isDark ? AppColors.bgBorder : const Color(0xFFE2E6F0),
+                      color:
+                          isDark ? AppColors.bgBorder : const Color(0xFFE2E6F0),
                     ),
                     boxShadow: isDark
                         ? []
-                        : [BoxShadow(color: Colors.black.withAlpha(6), blurRadius: 6, offset: const Offset(0, 1))],
+                        : [
+                            BoxShadow(
+                                color: Colors.black.withAlpha(6),
+                                blurRadius: 6,
+                                offset: const Offset(0, 1))
+                          ],
                   ),
                   child: Row(
                     children: [
@@ -150,7 +158,8 @@ class _PosScreenState extends State<PosScreen> {
                           style: TextStyle(
                             fontFamily: 'Gilroy',
                             fontSize: 13,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                           decoration: InputDecoration(
                             border: InputBorder.none,
@@ -160,7 +169,9 @@ class _PosScreenState extends State<PosScreen> {
                             hintStyle: TextStyle(
                               fontFamily: 'Gilroy',
                               fontSize: 13,
-                              color: isDark ? AppColors.textGrey : const Color(0xFFADB5C8),
+                              color: isDark
+                                  ? AppColors.textGrey
+                                  : const Color(0xFFADB5C8),
                             ),
                             isDense: true,
                             contentPadding: EdgeInsets.zero,
@@ -204,34 +215,26 @@ class _PosScreenState extends State<PosScreen> {
 
           // ── Category chips ──
           Obx(() => SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _CatChip(
-                  label: 'pos_all'.tr,
-                  selected: pos.selectedCategory.value == null,
-                  onTap: () => pos.selectCategory(null),
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _CatChip(
+                      label: 'pos_all'.tr,
+                      selected: pos.selectedCategory.value == null,
+                      onTap: () => pos.selectCategory(null),
+                    ),
+                    ...pos.categories.map((c) => _CatChip(
+                          label: c.name,
+                          selected: pos.selectedCategory.value == c.id,
+                          onTap: () => pos.selectCategory(c.id),
+                        )),
+                  ],
                 ),
-                ...pos.categories.map((c) => _CatChip(
-                      label: c.name,
-                      selected: pos.selectedCategory.value == c.id,
-                      onTap: () => pos.selectCategory(c.id),
-                    )),
-              ],
-            ),
-          )),
+              )),
           const SizedBox(height: 10),
         ],
       ),
     );
-  }
-
-  Color _hexColor(String hex) {
-    try {
-      return Color(int.parse(hex.replaceFirst('#', '0xFF')));
-    } catch (_) {
-      return AppColors.primary2;
-    }
   }
 }
 
@@ -301,7 +304,8 @@ class _CatChip extends StatefulWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _CatChip({required this.label, required this.selected, required this.onTap});
+  const _CatChip(
+      {required this.label, required this.selected, required this.onTap});
 
   @override
   State<_CatChip> createState() => _CatChipState();
@@ -339,11 +343,18 @@ class _CatChipState extends State<_CatChip> {
                     ? c
                     : (_hov
                         ? c.withAlpha(120)
-                        : (isDark ? AppColors.bgBorder : const Color(0xffDDE1EE))),
+                        : (isDark
+                            ? AppColors.bgBorder
+                            : const Color(0xffDDE1EE))),
                 width: sel ? 0 : 1,
               ),
               boxShadow: sel
-                  ? [BoxShadow(color: c.withAlpha(60), blurRadius: 8, offset: const Offset(0, 3))]
+                  ? [
+                      BoxShadow(
+                          color: c.withAlpha(60),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3))
+                    ]
                   : [],
             ),
             child: Row(
@@ -351,8 +362,10 @@ class _CatChipState extends State<_CatChip> {
               children: [
                 if (sel) ...[
                   Container(
-                    width: 6, height: 6,
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                        color: Colors.white, shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 6),
                 ],
@@ -362,9 +375,7 @@ class _CatChipState extends State<_CatChip> {
                     fontFamily: 'Gilroy',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: sel
-                        ? Colors.white
-                        : (_hov ? c : AppColors.textGrey),
+                    color: sel ? Colors.white : (_hov ? c : AppColors.textGrey),
                   ),
                 ),
               ],

@@ -11,9 +11,15 @@ import '../../../core/utils/formatters.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<Product> products;
+  final Map<int, int> maxProducible;
   final void Function(Product) onTap;
 
-  const ProductGrid({super.key, required this.products, required this.onTap});
+  const ProductGrid({
+    super.key,
+    required this.products,
+    required this.maxProducible,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,16 +32,21 @@ class ProductGrid extends StatelessWidget {
         childAspectRatio: 0.82,
       ),
       itemCount: products.length,
-      itemBuilder: (_, i) => _ProductCard(product: products[i], onTap: onTap),
+      itemBuilder: (_, i) => _ProductCard(
+        product: products[i],
+        maxCount: maxProducible[products[i].id] ?? -1,
+        onTap: onTap,
+      ),
     );
   }
 }
 
 class _ProductCard extends StatefulWidget {
   final Product product;
+  final int maxCount; // -1 = no recipe constraint
   final void Function(Product) onTap;
 
-  const _ProductCard({required this.product, required this.onTap});
+  const _ProductCard({required this.product, required this.maxCount, required this.onTap});
 
   @override
   State<_ProductCard> createState() => _ProductCardState();
@@ -52,7 +63,7 @@ class _ProductCardState extends State<_ProductCard> {
     return (p.price - p.discount).clamp(0, double.infinity);
   }
 
-  bool get _outOfStock => false;
+  bool get _outOfStock => widget.maxCount == 0;
   bool get _hasImage =>
       widget.product.imagePath != null && widget.product.imagePath!.isNotEmpty;
 
@@ -146,27 +157,13 @@ class _ProductCardState extends State<_ProductCard> {
                                 ],
                               ),
                             ),
-                            // Stock badge
-                            if (p.quantity > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppColors.green.withAlpha(isDark ? 30 : 18),
-                                  borderRadius: BorderRadius.circular(7),
-                                  border: Border.all(color: AppColors.green.withAlpha(60)),
-                                ),
-                                child: Text(
-                                  '${p.quantity}',
-                                  style: const TextStyle(
-                                    fontFamily: 'Gilroy',
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.green,
-                                  ),
-                                ),
-                              ),
                           ],
                         ),
+                        // Max producible badge (recipe-based)
+                        if (widget.maxCount >= 0) ...[
+                          const SizedBox(height: 5),
+                          _MaxBadge(count: widget.maxCount, isDark: isDark),
+                        ],
                       ],
                     ),
                   ),
@@ -175,6 +172,45 @@ class _ProductCardState extends State<_ProductCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MaxBadge extends StatelessWidget {
+  final int count;
+  final bool isDark;
+  const _MaxBadge({required this.count, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color c = count == 0
+        ? AppColors.red
+        : count <= 3
+            ? AppColors.orange
+            : AppColors.green;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: c.withAlpha(isDark ? 35 : 20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.withAlpha(80)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.coffee_maker_outlined, size: 11, color: c),
+          const SizedBox(width: 4),
+          Text(
+            count == 0 ? 'Yok' : '$count',
+            style: TextStyle(
+              fontFamily: 'Gilroy',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: c,
+            ),
+          ),
+        ],
       ),
     );
   }

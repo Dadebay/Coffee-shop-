@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/color_constants.dart';
 
@@ -59,7 +58,8 @@ class LoginScreen extends StatelessWidget {
               // PIN dots
               Obx(() => Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(6, (i) => _PinDot(filled: i < auth.pin.value.length)),
+                    children: List.generate(
+                        6, (i) => _PinDot(filled: i < auth.pin.value.length)),
                   )),
               const SizedBox(height: 10),
               Obx(() => AnimatedSwitcher(
@@ -84,6 +84,7 @@ class LoginScreen extends StatelessWidget {
                 onDigit: auth.addDigit,
                 onBackspace: auth.backspace,
                 onClear: auth.clearPin,
+                onEnter: auth.tryLogin,
               ),
             ],
           ),
@@ -120,11 +121,13 @@ class _Numpad extends StatelessWidget {
   final void Function(String) onDigit;
   final VoidCallback onBackspace;
   final VoidCallback onClear;
+  final VoidCallback onEnter;
 
   const _Numpad({
     required this.onDigit,
     required this.onBackspace,
     required this.onClear,
+    required this.onEnter,
   });
 
   @override
@@ -137,31 +140,65 @@ class _Numpad extends StatelessWidget {
     ];
 
     return Column(
-      children: rows
-          .map((row) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: row
-                      .map((k) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: _NumKey(
-                              label: k,
-                              isAction: k == 'C' || k == '⌫',
-                              onTap: () {
-                                if (k == '⌫')
-                                  onBackspace();
-                                else if (k == 'C')
-                                  onClear();
-                                else
-                                  onDigit(k);
-                              },
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ))
-          .toList(),
+      children: [
+        ...rows.map((row) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: row
+                    .map((k) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: _NumKey(
+                            label: k,
+                            isAction: k == 'C' || k == '⌫',
+                            onTap: () {
+                              if (k == '⌫')
+                                onBackspace();
+                              else if (k == 'C')
+                                onClear();
+                              else
+                                onDigit(k);
+                            },
+                          ),
+                        ))
+                    .toList(),
+              ),
+            )),
+        const SizedBox(height: 4),
+        _EnterButton(onTap: onEnter),
+      ],
+    );
+  }
+}
+
+class _EnterButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _EnterButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary2,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        splashColor: Colors.white.withAlpha(40),
+        child: Container(
+          width: 258,
+          height: 52,
+          alignment: Alignment.center,
+          child: const Text(
+            'Giriş',
+            style: TextStyle(
+              fontFamily: 'Gilroy',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -171,7 +208,8 @@ class _NumKey extends StatelessWidget {
   final VoidCallback onTap;
   final bool isAction;
 
-  const _NumKey({required this.label, required this.onTap, this.isAction = false});
+  const _NumKey(
+      {required this.label, required this.onTap, this.isAction = false});
 
   @override
   Widget build(BuildContext context) {

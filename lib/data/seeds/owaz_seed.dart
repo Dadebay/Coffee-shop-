@@ -4,7 +4,10 @@ import '../database/app_database.dart';
 /// Seeds the database with data imported from owaz.atlas (test database dump).
 /// Call once after DB is created — checks if already seeded first.
 Future<void> seedOwazData(AppDatabase db) async {
-  // Guard: skip if products already exist
+  // Guard: skip if already seeded
+  final existingIngredients = await db.getAllIngredients();
+  if (existingIngredients.isNotEmpty) return;
+
   final existing = await db.getAllProducts();
   if (existing.isNotEmpty) return;
 

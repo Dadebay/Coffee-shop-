@@ -8,6 +8,7 @@ import '../../../controllers/auth_controller.dart';
 import '../../../data/database/app_database.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/numpad.dart';
 
 // ── Open Shift Dialog ─────────────────────────────────────────────────────────
 
@@ -85,32 +86,28 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              TextField(
+              NumPadField(
                 controller: _ctrl,
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                ],
+                numpadLabel: 'shift_opening_cash'.tr,
+                style: const TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18),
                 decoration: InputDecoration(
                   labelText: 'shift_opening_cash'.tr,
-                  labelStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
+                  labelStyle:
+                      const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
                   hintText: '0.00',
                   filled: true,
-                  fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
+                  fillColor:
+                      isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0),
-                    ),
-                  ),
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: isDark
+                              ? AppColors.bgBorder
+                              : const Color(0xFFE2E8F0))),
                 ),
-                style: const TextStyle(
-                  fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
-                onSubmitted: (_) => _open(),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -118,7 +115,8 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                 height: 48,
                 child: FilledButton(
                   onPressed: _loading ? null : _open,
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.green),
+                  style:
+                      FilledButton.styleFrom(backgroundColor: AppColors.green),
                   child: _loading
                       ? const SizedBox(
                           width: 20,
@@ -159,6 +157,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
   Shift? _closedShift;
   late Timer _timer;
   late DateTime _now;
+  late Worker _userWatch;
 
   @override
   void initState() {
@@ -166,6 +165,10 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
     _now = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _now = DateTime.now());
+    });
+    // Auto-close if the logged-in user changes
+    _userWatch = ever(AuthController.to.currentUser, (_) {
+      if (mounted) Get.back();
     });
   }
 
@@ -184,6 +187,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
   @override
   void dispose() {
     _timer.cancel();
+    _userWatch.dispose();
     _ctrl.dispose();
     super.dispose();
   }
@@ -205,7 +209,8 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
     final isOvertime = duration.inSeconds > targetSeconds;
 
     final openTimeStr = _fmtTime(widget.shift.openedAt);
-    final targetTimeStr = _fmtTime(widget.shift.openedAt.add(const Duration(hours: 8)));
+    final targetTimeStr =
+        _fmtTime(widget.shift.openedAt.add(const Duration(hours: 8)));
     final nowTimeStr = _fmtTime(_now);
 
     final cardBg = isDark ? AppColors.bgCard : const Color(0xFFF8FAFF);
@@ -224,7 +229,6 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               // ── Header ──────────────────────────────────────────────
               Row(
                 children: [
@@ -236,7 +240,10 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedClock01, color: AppColors.red, size: 20),
+                      child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedClock01,
+                          color: AppColors.red,
+                          size: 20),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -244,13 +251,23 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('shift_close'.tr,
-                          style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18)),
+                          style: const TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18)),
                       Row(
                         children: [
-                          const HugeIcon(icon: HugeIcons.strokeRoundedUser, size: 12, color: AppColors.textGrey),
+                          const HugeIcon(
+                              icon: HugeIcons.strokeRoundedUser,
+                              size: 12,
+                              color: AppColors.textGrey),
                           const SizedBox(width: 4),
                           Text(workerName,
-                              style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w600)),
+                              style: const TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 12,
+                                  color: AppColors.textGrey,
+                                  fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
@@ -259,12 +276,19 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                   GestureDetector(
                     onTap: () => Get.back(),
                     child: Container(
-                      width: 30, height: 30,
+                      width: 30,
+                      height: 30,
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.bgBorder : const Color(0xFFEEF0F6),
+                        color: isDark
+                            ? AppColors.bgBorder
+                            : const Color(0xFFEEF0F6),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 14, color: AppColors.textGrey)),
+                      child: const Center(
+                          child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedCancel01,
+                              size: 14,
+                              color: AppColors.textGrey)),
                     ),
                   ),
                 ],
@@ -289,9 +313,16 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(openTimeStr,
-                                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18, color: textColor)),
+                                style: TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                    color: textColor)),
                             Text('shift_opened_at'.tr,
-                                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textGrey)),
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontSize: 10,
+                                    color: AppColors.textGrey)),
                           ],
                         ),
                         const Spacer(),
@@ -304,22 +335,32 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                                 fontFamily: 'Gilroy',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 22,
-                                color: isOvertime ? AppColors.red : AppColors.primary2,
+                                color: isOvertime
+                                    ? AppColors.red
+                                    : AppColors.primary2,
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: (isOvertime ? AppColors.red : AppColors.primary2).withAlpha(15),
+                                color: (isOvertime
+                                        ? AppColors.red
+                                        : AppColors.primary2)
+                                    .withAlpha(15),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                isOvertime ? 'Mesai aşıldı!' : '${'shift_hours'.tr} 8:00',
+                                isOvertime
+                                    ? 'Mesai aşıldı!'
+                                    : '${'shift_hours'.tr} 8:00',
                                 style: TextStyle(
                                   fontFamily: 'Gilroy',
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  color: isOvertime ? AppColors.red : AppColors.primary2,
+                                  color: isOvertime
+                                      ? AppColors.red
+                                      : AppColors.primary2,
                                 ),
                               ),
                             ),
@@ -331,8 +372,16 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(targetTimeStr,
-                                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 18, color: textColor)),
-                            Text('8 saat', style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textGrey)),
+                                style: TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                    color: textColor)),
+                            Text('8 saat',
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontSize: 10,
+                                    color: AppColors.textGrey)),
                           ],
                         ),
                       ],
@@ -344,19 +393,35 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 7,
-                        backgroundColor: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0),
-                        valueColor: AlwaysStoppedAnimation(isOvertime ? AppColors.red : AppColors.primary2),
+                        backgroundColor: isDark
+                            ? AppColors.bgBorder
+                            : const Color(0xFFE2E8F0),
+                        valueColor: AlwaysStoppedAnimation(
+                            isOvertime ? AppColors.red : AppColors.primary2),
                       ),
                     ),
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(openTimeStr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textDim)),
+                        Text(openTimeStr,
+                            style: const TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontSize: 10,
+                                color: AppColors.textDim)),
                         Text(nowTimeStr,
-                            style: TextStyle(fontFamily: 'Gilroy', fontSize: 10, fontWeight: FontWeight.w700,
-                                color: isOvertime ? AppColors.red : AppColors.primary2)),
-                        Text(targetTimeStr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: AppColors.textDim)),
+                            style: TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: isOvertime
+                                    ? AppColors.red
+                                    : AppColors.primary2)),
+                        Text(targetTimeStr,
+                            style: const TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontSize: 10,
+                                color: AppColors.textDim)),
                       ],
                     ),
                   ],
@@ -365,27 +430,39 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
               const SizedBox(height: 14),
 
               // ── Info rows ───────────────────────────────────────────
-              _InfoRow('shift_opened_at'.tr, '${_fmtDate(widget.shift.openedAt)}  $openTimeStr'),
-              _InfoRow('shift_opening_cash'.tr, formatCurrency(widget.shift.openingCash)),
+              _InfoRow('shift_opened_at'.tr,
+                  '${_fmtDate(widget.shift.openedAt)}  $openTimeStr'),
+              _InfoRow('shift_opening_cash'.tr,
+                  formatCurrency(widget.shift.openingCash)),
               const SizedBox(height: 14),
 
               // ── Closing cash input ──────────────────────────────────
-              TextField(
+              NumPadField(
                 controller: _ctrl,
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+                numpadLabel: 'shift_closing_cash'.tr,
+                style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: textColor),
                 decoration: InputDecoration(
                   labelText: 'shift_closing_cash'.tr,
-                  labelStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
+                  labelStyle:
+                      const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
                   hintText: '0.00',
                   filled: true,
                   fillColor: cardBg,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: border)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: border)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: border)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: AppColors.primary2, width: 1.5)),
                 ),
-                style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 16, color: textColor),
               ),
               const SizedBox(height: 18),
 
@@ -397,10 +474,14 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                       onPressed: () => Get.back(),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: border),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                      child: Text('gen_cancel'.tr,
+                          style: const TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -409,12 +490,20 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                       onPressed: _loading ? null : _close,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: _loading
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text('shift_close'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : Text('shift_close'.tr,
+                              style: const TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],
@@ -446,7 +535,8 @@ class _ShiftSummaryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final duration = (shift.closedAt ?? DateTime.now()).difference(shift.openedAt);
+    final duration =
+        (shift.closedAt ?? DateTime.now()).difference(shift.openedAt);
     final h = duration.inHours;
     final m = duration.inMinutes.remainder(60);
 
@@ -499,7 +589,8 @@ class _ShiftSummaryView extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => Get.back(),
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.primary2),
+                  style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary2),
                   child: Text(
                     'gen_close'.tr,
                     style: const TextStyle(
@@ -546,21 +637,21 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           _StatLine('pay_method_card'.tr, formatCurrency(shift.totalCard)),
           Divider(color: borderColor, height: 20),
-          _StatLine('shift_opening_cash'.tr,
-              formatCurrency(shift.openingCash)),
+          _StatLine('shift_opening_cash'.tr, formatCurrency(shift.openingCash)),
           const SizedBox(height: 4),
-          _StatLine('shift_closing_cash'.tr,
-              formatCurrency(shift.closingCash ?? 0)),
+          _StatLine(
+              'shift_closing_cash'.tr, formatCurrency(shift.closingCash ?? 0)),
           const SizedBox(height: 4),
           _StatLine(
             'shift_cash_diff'.tr,
             formatCurrency(
                 (shift.closingCash ?? 0) - shift.openingCash - shift.totalCash),
-            color: ((shift.closingCash ?? 0) - shift.openingCash - shift.totalCash)
-                        .abs() <
-                    0.01
-                ? AppColors.green
-                : AppColors.red,
+            color:
+                ((shift.closingCash ?? 0) - shift.openingCash - shift.totalCash)
+                            .abs() <
+                        0.01
+                    ? AppColors.green
+                    : AppColors.red,
           ),
         ],
       ),
@@ -603,12 +694,17 @@ class _ShiftTimePin extends StatelessWidget {
   final String label;
   final bool isDark;
   final bool alignEnd;
-  const _ShiftTimePin({required this.time, required this.label, required this.isDark, this.alignEnd = false});
+  const _ShiftTimePin(
+      {required this.time,
+      required this.label,
+      required this.isDark,
+      this.alignEnd = false});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(
           time,
