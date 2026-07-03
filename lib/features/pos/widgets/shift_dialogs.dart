@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/shift_controller.dart';
@@ -85,31 +84,12 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
-              NumPadField(
+              const SizedBox(height: 20),
+              NumPadWidget(
                 controller: _ctrl,
-                numpadLabel: 'shift_opening_cash'.tr,
-                style: const TextStyle(
-                    fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18),
-                decoration: InputDecoration(
-                  labelText: 'shift_opening_cash'.tr,
-                  labelStyle:
-                      const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
-                  hintText: '0.00',
-                  filled: true,
-                  fillColor:
-                      isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                          color: isDark
-                              ? AppColors.bgBorder
-                              : const Color(0xFFE2E8F0))),
-                ),
+                label: 'shift_opening_cash'.tr,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -223,7 +203,8 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
         width: 420,
-        child: Padding(
+        height: MediaQuery.of(context).size.height - 80,
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -437,34 +418,11 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
               const SizedBox(height: 14),
 
               // ── Closing cash input ──────────────────────────────────
-              NumPadField(
+              NumPadWidget(
                 controller: _ctrl,
-                numpadLabel: 'shift_closing_cash'.tr,
-                style: TextStyle(
-                    fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: textColor),
-                decoration: InputDecoration(
-                  labelText: 'shift_closing_cash'.tr,
-                  labelStyle:
-                      const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
-                  hintText: '0.00',
-                  filled: true,
-                  fillColor: cardBg,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: border)),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: border)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: AppColors.primary2, width: 1.5)),
-                ),
+                label: 'shift_closing_cash'.tr,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
               // ── Buttons ─────────────────────────────────────────────
               Row(
@@ -684,45 +642,6 @@ class _StatLine extends StatelessWidget {
               fontSize: bold ? 16 : 13,
               color: color,
             )),
-      ],
-    );
-  }
-}
-
-class _ShiftTimePin extends StatelessWidget {
-  final String time;
-  final String label;
-  final bool isDark;
-  final bool alignEnd;
-  const _ShiftTimePin(
-      {required this.time,
-      required this.label,
-      required this.isDark,
-      this.alignEnd = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(
-          time,
-          style: TextStyle(
-            fontFamily: 'Gilroy',
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Gilroy',
-            fontSize: 10,
-            color: AppColors.textGrey,
-          ),
-        ),
       ],
     );
   }

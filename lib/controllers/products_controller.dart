@@ -11,15 +11,16 @@ import 'package:path_provider/path_provider.dart';
 
 import '../data/database/app_database.dart';
 import 'database_controller.dart';
+import 'pos_controller.dart';
 
 class ProductsController extends GetxController {
   static ProductsController get to => Get.find();
 
   final _db = Get.find<DatabaseController>().db;
 
-  final RxList<Product>  products   = <Product>[].obs;
+  final RxList<Product> products = <Product>[].obs;
   final RxList<Category> categories = <Category>[].obs;
-  final RxList<Unit>     units      = <Unit>[].obs;
+  final RxList<Unit> units = <Unit>[].obs;
   final RxBool loading = false.obs;
   final RxMap<int, int> maxProducible = <int, int>{}.obs;
 
@@ -31,11 +32,18 @@ class ProductsController extends GetxController {
 
   Future<void> loadAll() async {
     loading.value = true;
-    products.value   = await _db.getAllProducts();
+    products.value = await _db.getAllProducts();
     categories.value = await _db.getAllCategories();
-    units.value      = await _db.getAllUnits();
+    units.value = await _db.getAllUnits();
     loading.value = false;
     _calcMaxProducible();
+    _notifyOtherControllers();
+  }
+
+  void _notifyOtherControllers() {
+    if (Get.isRegistered<PosController>()) {
+      Get.find<PosController>().loadProducts();
+    }
   }
 
   Future<void> _calcMaxProducible() async {
@@ -52,34 +60,48 @@ class ProductsController extends GetxController {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: false,
-      withData: true, // always load bytes so we can compress
+      withData: true,
     );
     if (result == null || result.files.isEmpty) return null;
     final file = result.files.first;
-    if (file.bytes == null) return null;
 
-    // Compress to WebP 1024×1024
-    final compressed = await FlutterImageCompress.compressWithList(
-      file.bytes!,
-      minWidth: 1024,
-      minHeight: 1024,
-      quality: 85,
-      format: CompressFormat.webp,
-      keepExif: false,
-    );
+    // Get bytes: prefer in-memory, fallback to reading from path
+    Uint8List? bytes = file.bytes;
+    if (bytes == null && file.path != null && !kIsWeb) {
+      try {
+        bytes = await File(file.path!).readAsBytes();
+      } catch (_) {}
+    }
+    if (bytes == null) return null;
 
+    // Try to compress — FlutterImageCompress doesn't support Windows,
+    // so we catch any error and use the original bytes.
+    try {
+      final compressed = await FlutterImageCompress.compressWithList(
+        bytes,
+        minWidth: 1024,
+        minHeight: 1024,
+        quality: 85,
+        format: CompressFormat.webp,
+        keepExif: false,
+      );
+      bytes = compressed;
+    } catch (_) {}
+
+    final finalBytes = bytes!;
     if (kIsWeb) {
-      return _bytesToDataUrl(compressed, 'webp');
+      final ext = file.extension?.toLowerCase() ?? 'jpg';
+      return _bytesToDataUrl(finalBytes, ext);
     } else {
-      return _saveToAppDir(compressed);
+      return _saveToAppDir(finalBytes, file.extension);
     }
   }
 
-  Future<String> _saveToAppDir(Uint8List bytes) async {
+  Future<String> _saveToAppDir(Uint8List bytes, String? ext) async {
     final appDir = await getApplicationDocumentsDirectory();
     final imagesDir = Directory(p.join(appDir.path, 'kassa_images'));
     if (!imagesDir.existsSync()) imagesDir.createSync(recursive: true);
-    final destName = '${DateTime.now().millisecondsSinceEpoch}.webp';
+    final destName = '${DateTime.now().millisecondsSinceEpoch}.${ext ?? 'jpg'}';
     final destPath = p.join(imagesDir.path, destName);
     await File(destPath).writeAsBytes(bytes);
     return destPath;
@@ -90,7 +112,8 @@ class ProductsController extends GetxController {
   }
 
   Future<void> _deleteOldImage(String? path) async {
-    if (path == null || path.isEmpty || kIsWeb || path.startsWith('data:')) return;
+    if (path == null || path.isEmpty || kIsWeb || path.startsWith('data:'))
+      return;
     try {
       final f = File(path);
       if (f.existsSync()) f.deleteSync();

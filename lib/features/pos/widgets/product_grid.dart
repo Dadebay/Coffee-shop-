@@ -23,20 +23,29 @@ class ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 180,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.82,
-      ),
-      itemCount: products.length,
-      itemBuilder: (_, i) => _ProductCard(
-        product: products[i],
-        maxCount: maxProducible[products[i].id] ?? -1,
-        onTap: onTap,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final cols = (w / 160).floor().clamp(2, 10);
+        final cardW = (w - 12 * 2 - 10 * (cols - 1)) / cols;
+        final cardH = cardW / 0.82;
+        final ratio = cardW / cardH;
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cols,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: ratio,
+          ),
+          itemCount: products.length,
+          itemBuilder: (_, i) => _ProductCard(
+            product: products[i],
+            maxCount: maxProducible[products[i].id] ?? -1,
+            onTap: onTap,
+          ),
+        );
+      },
     );
   }
 }
@@ -103,65 +112,59 @@ class _ProductCardState extends State<_ProductCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Image or icon area ──
-                _hasImage
-                    ? _ImageHeader(imagePath: p.imagePath!)
-                    : _IconHeader(isDark: isDark),
-
-                // ── Info ──
+                // ── Image or icon area — flexible, 55% of card ──
                 Expanded(
+                  flex: 55,
+                  child: _hasImage
+                      ? _ImageHeader(imagePath: p.imagePath!)
+                      : _IconHeader(isDark: isDark),
+                ),
+
+                // ── Info — flexible, 45% of card ──
+                Expanded(
+                  flex: 45,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(11, 8, 11, 10),
+                    padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
                       children: [
-                        Text(
-                          p.name,
-                          style: TextStyle(
-                            fontFamily: 'Gilroy',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: textColor,
-                            height: 1.25,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (p.discount > 0)
-                                    Text(
-                                      formatCurrency(p.price),
-                                      style: const TextStyle(
-                                        fontFamily: 'Gilroy',
-                                        color: AppColors.textDim,
-                                        fontSize: 10,
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                  Text(
-                                    formatCurrency(_price),
-                                    style: const TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      color: AppColors.primary2,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        Flexible(
+                          child: Text(
+                            p.name,
+                            style: TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: textColor,
+                              height: 1.2,
                             ),
-                          ],
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        // Max producible badge (recipe-based)
+                        const SizedBox(height: 3),
+                        if (p.discount > 0)
+                          Text(
+                            formatCurrency(p.price),
+                            style: const TextStyle(
+                              fontFamily: 'Gilroy',
+                              color: AppColors.textDim,
+                              fontSize: 10,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        Text(
+                          formatCurrency(_price),
+                          style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            color: AppColors.primary2,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
                         if (widget.maxCount >= 0) ...[
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           _MaxBadge(count: widget.maxCount, isDark: isDark),
                         ],
                       ],
@@ -223,7 +226,6 @@ class _IconHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 90,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -237,7 +239,7 @@ class _IconHeader extends StatelessWidget {
       child: Center(
         child: HugeIcon(
           icon: HugeIcons.strokeRoundedCoffee01,
-          size: 40,
+          size: 36,
           color: AppColors.primary2.withAlpha(isDark ? 200 : 160),
         ),
       ),
@@ -253,11 +255,7 @@ class _ImageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      child: SizedBox(
-        height: 100,
-        width: double.infinity,
-        child: _buildImage(),
-      ),
+      child: SizedBox.expand(child: _buildImage()),
     );
   }
 

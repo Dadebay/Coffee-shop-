@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/cart_controller.dart';
@@ -188,7 +187,8 @@ class _PaymentDialogState extends State<PaymentDialog> {
                                 child: GestureDetector(
                                   onTap: () async {
                                     final res = await showNumPad(
-                                      context, _discCtrl,
+                                      context,
+                                      _discCtrl,
                                       label: 'pos_discount'.tr,
                                       allowDecimal: true,
                                       allowPercent: true,
@@ -198,17 +198,21 @@ class _PaymentDialogState extends State<PaymentDialog> {
                                   child: Container(
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: isDark ? AppColors.bgSurface : Colors.white,
+                                      color: isDark
+                                          ? AppColors.bgSurface
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(color: border),
                                     ),
                                     child: IgnorePointer(
                                       child: TextField(
                                         controller: _discCtrl,
-                                        style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
+                                        style: const TextStyle(
+                                            fontFamily: 'Gilroy', fontSize: 13),
                                         decoration: const InputDecoration(
                                           isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 8),
                                           border: InputBorder.none,
                                           enabledBorder: InputBorder.none,
                                           focusedBorder: InputBorder.none,
@@ -595,7 +599,9 @@ class _PaymentDialogState extends State<PaymentDialog> {
       );
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
       pos.loadProducts();
-      if (Get.isRegistered<StockController>()) StockController.to.loadIngredients();
+      if (Get.isRegistered<StockController>()) {
+        StockController.to.loadIngredients();
+      }
 
       // Auto-print receipt
       if (Get.isRegistered<PrintController>()) {

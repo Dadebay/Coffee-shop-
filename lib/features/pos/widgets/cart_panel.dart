@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/cart_controller.dart';
@@ -16,7 +15,7 @@ class CartPanel extends StatelessWidget {
     final cart = CartController.to;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xffE0E0E6);
-    final cardColor   = isDark ? AppColors.bgCard   : Colors.white;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
 
     return Column(
       children: [
@@ -54,9 +53,11 @@ class CartPanel extends StatelessWidget {
                       ),
                       label: Text(
                         'gen_delete'.tr,
-                        style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12),
+                        style:
+                            const TextStyle(fontFamily: 'Gilroy', fontSize: 12),
                       ),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.red),
+                      style:
+                          TextButton.styleFrom(foregroundColor: AppColors.red),
                     )),
             ],
           ),
@@ -181,77 +182,85 @@ class _CartTile extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedPercentCircle,
-                    color: AppColors.primary2,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'pos_discount'.tr,
-                    style: const TextStyle(
-                      fontFamily: 'Gilroy',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+              children: [
+                Row(
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedPercentCircle,
+                      color: AppColors.primary2,
+                      size: 22,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                item.product.name,
-                style: const TextStyle(
-                  fontFamily: 'Gilroy',
-                  color: AppColors.textGrey,
-                  fontSize: 13,
+                    const SizedBox(width: 8),
+                    Text(
+                      'pos_discount'.tr,
+                      style: const TextStyle(
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              NumPadField(
-                controller: ctrl,
-                numpadLabel: 'pos_discount'.tr,
-                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  labelText: '${'pos_discount'.tr} (max ${formatCurrency(maxDiscount)})',
-                  labelStyle: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
-                  prefixText: '- ',
-                  filled: true,
-                  fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+                const SizedBox(height: 6),
+                Text(
+                  item.product.name,
+                  style: const TextStyle(
+                    fontFamily: 'Gilroy',
+                    color: AppColors.textGrey,
+                    fontSize: 13,
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Get.back(),
-                      child: Text('gen_cancel'.tr,
-                          style: const TextStyle(fontFamily: 'Gilroy')),
+                const SizedBox(height: 16),
+                NumPadField(
+                  controller: ctrl,
+                  numpadLabel: 'pos_discount'.tr,
+                  style: const TextStyle(
+                      fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    labelText:
+                        '${'pos_discount'.tr} (max ${formatCurrency(maxDiscount)})',
+                    labelStyle:
+                        const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
+                    prefixText: '- ',
+                    filled: true,
+                    fillColor:
+                        isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: isDark
+                              ? AppColors.bgBorder
+                              : const Color(0xFFE2E8F0)),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {
-                        final val = double.tryParse(ctrl.text) ?? 0;
-                        cart.setExtraDiscount(item.product.id, val);
-                        Get.back();
-                      },
-                      style: FilledButton.styleFrom(backgroundColor: AppColors.primary2),
-                      child: Text('gen_save'.tr,
-                          style: const TextStyle(fontFamily: 'Gilroy')),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        child: Text('gen_cancel'.tr,
+                            style: const TextStyle(fontFamily: 'Gilroy')),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          final val = double.tryParse(ctrl.text) ?? 0;
+                          cart.setExtraDiscount(item.product.id, val);
+                          Get.back();
+                        },
+                        style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary2),
+                        child: Text('gen_save'.tr,
+                            style: const TextStyle(fontFamily: 'Gilroy')),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -276,7 +285,12 @@ class _CartTile extends StatelessWidget {
         border: Border.all(color: borderColor),
         boxShadow: isDark
             ? []
-            : [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 6, offset: const Offset(0, 2))],
+            : [
+                BoxShadow(
+                    color: Colors.black.withAlpha(5),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +345,9 @@ class _CartTile extends StatelessWidget {
                     child: HugeIcon(
                       icon: HugeIcons.strokeRoundedPercentCircle,
                       size: 13,
-                      color: item.extraDiscount > 0 ? AppColors.red : AppColors.textGrey,
+                      color: item.extraDiscount > 0
+                          ? AppColors.red
+                          : AppColors.textGrey,
                     ),
                   ),
                 ),

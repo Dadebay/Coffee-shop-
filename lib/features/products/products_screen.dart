@@ -12,7 +12,7 @@ import '../../core/permissions.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
-import '../../core/widgets/numpad.dart';
+import '../../core/widgets/product_thumb.dart';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -53,7 +53,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
           Expanded(
             child: Obx(() {
               if (ctrl.loading.value) {
-                return const Center(child: CircularProgressIndicator(color: AppColors.primary2));
+                return const Center(
+                    child:
+                        CircularProgressIndicator(color: AppColors.primary2));
               }
 
               final list = ctrl.products.where((p) {
@@ -88,7 +90,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void _openForm(ProductsController ctrl, {Product? product}) {
     Get.dialog(
       ProductFormDialog(product: product),
-      barrierDismissible: false,
+      barrierDismissible: true,
     );
   }
 
@@ -101,29 +103,45 @@ class _ProductsScreenState extends State<ProductsScreen> {
         decoration: BoxDecoration(
           color: isDark ? AppColors.bgSurface : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 60 : 15), blurRadius: 24, offset: const Offset(0, 8))],
+          border: Border.all(
+              color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 60 : 15),
+                blurRadius: 24,
+                offset: const Offset(0, 8))
+          ],
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(color: AppColors.red.withAlpha(15), shape: BoxShape.circle),
-              child: const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.red, size: 28),
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                  color: AppColors.red.withAlpha(15), shape: BoxShape.circle),
+              child: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlert02,
+                  color: AppColors.red,
+                  size: 28),
             ),
             const SizedBox(height: 14),
             Text(
               'prod_delete_title'.tr,
-              style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w800, fontSize: 17,
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
                   color: isDark ? Colors.white : const Color(0xFF0F172A)),
             ),
             const SizedBox(height: 8),
             Text(
               '"${p.name}" ${'prod_delete_confirm'.tr}',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Gilroy', fontSize: 13,
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontSize: 13,
                   color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
             ),
             const SizedBox(height: 24),
@@ -134,21 +152,25 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: Colors.grey.withAlpha(60)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                  child: Text('gen_cancel'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: () async { 
+                  onPressed: () async {
                     final auth = Get.find<AuthController>();
                     if (auth.can(Permission.deleteProduct)) {
                       Get.find<ProductsController>().delete(p.id);
                       Get.back();
                     } else {
-                      final approved = await auth.requireAdmin('auth_req_delete'.tr);
+                      final approved =
+                          await auth.requireAdmin('auth_req_delete'.tr);
                       if (approved) {
                         Get.find<ProductsController>().delete(p.id);
                         Get.back();
@@ -158,9 +180,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.red,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Text('gen_delete'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                  child: Text('gen_delete'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
                 ),
               ),
             ]),
@@ -196,7 +221,9 @@ class _Header extends StatelessWidget {
               Text(
                 'prod_title'.tr,
                 style: TextStyle(
-                  fontFamily: 'Gilroy', fontSize: 22, fontWeight: FontWeight.w800,
+                  fontFamily: 'Gilroy',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
@@ -204,8 +231,12 @@ class _Header extends StatelessWidget {
                 final count = Get.find<ProductsController>().products.length;
                 return Text(
                   '$count ${'prod_count'.tr}',
-                  style: TextStyle(fontFamily: 'Gilroy', fontSize: 13,
-                      color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8)),
+                  style: TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontSize: 13,
+                      color: isDark
+                          ? AppColors.textGrey
+                          : const Color(0xFF94A3B8)),
                 );
               }),
             ],
@@ -216,11 +247,18 @@ class _Header extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary2,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 18, color: Colors.white),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                size: 18,
+                color: Colors.white),
             label: Text('prod_add_new'.tr,
-                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14)),
+                style: const TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14)),
           ),
         ],
       ),
@@ -263,26 +301,43 @@ class _FilterBar extends StatelessWidget {
               child: TextField(
                 controller: searchCtrl,
                 onChanged: onSearch,
-                style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
+                style: TextStyle(
+                    fontFamily: 'Gilroy', color: textColor, fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'prod_search'.tr,
-                  hintStyle: TextStyle(fontFamily: 'Gilroy', color: hintColor, fontSize: 13),
+                  hintStyle: TextStyle(
+                      fontFamily: 'Gilroy', color: hintColor, fontSize: 13),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: hintColor, size: 14),
+                    child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedSearch01,
+                        color: hintColor,
+                        size: 14),
                   ),
                   suffixIcon: searchCtrl.text.isNotEmpty
                       ? IconButton(
-                          icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: hintColor, size: 14),
-                          onPressed: () { searchCtrl.clear(); onSearch(''); },
+                          icon: HugeIcon(
+                              icon: HugeIcons.strokeRoundedCancel01,
+                              color: hintColor,
+                              size: 14),
+                          onPressed: () {
+                            searchCtrl.clear();
+                            onSearch('');
+                          },
                         )
                       : null,
                   filled: true,
                   fillColor: fillColor,
                   contentPadding: EdgeInsets.zero,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: borderColor)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: borderColor)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.primary2)),
                 ),
               ),
             ),
@@ -303,11 +358,17 @@ class _FilterBar extends StatelessWidget {
                   child: DropdownButton<int?>(
                     value: selectedCategory,
                     dropdownColor: isDark ? AppColors.bgCard : Colors.white,
-                    style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
-                    icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: hintColor, size: 18),
+                    style: TextStyle(
+                        fontFamily: 'Gilroy', color: textColor, fontSize: 13),
+                    icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowDown01,
+                        color: hintColor,
+                        size: 18),
                     items: [
-                      DropdownMenuItem(value: null, child: Text('prod_all_cats'.tr)),
-                      ...cats.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
+                      DropdownMenuItem(
+                          value: null, child: Text('prod_all_cats'.tr)),
+                      ...cats.map((c) =>
+                          DropdownMenuItem(value: c.id, child: Text(c.name))),
                     ],
                     onChanged: onCategory,
                   ),
@@ -340,11 +401,13 @@ class _ProductTable extends StatelessWidget {
     required this.onDelete,
   });
 
-  String _catName(int? id) =>
-      id == null ? '—' : categories.firstWhereOrNull((c) => c.id == id)?.name ?? '—';
+  String _catName(int? id) => id == null
+      ? '—'
+      : categories.firstWhereOrNull((c) => c.id == id)?.name ?? '—';
 
-  String _unitShort(int? id) =>
-      id == null ? '' : units.firstWhereOrNull((u) => u.id == id)?.shortName ?? '';
+  String _unitShort(int? id) => id == null
+      ? ''
+      : units.firstWhereOrNull((u) => u.id == id)?.shortName ?? '';
 
   double _discounted(Product p) {
     if (p.discountType == 'percentage') {
@@ -356,10 +419,10 @@ class _ProductTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor   = isDark ? AppColors.bgCard   : Colors.white;
+    final cardColor = isDark ? AppColors.bgCard : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
-    final hoverColor  = isDark ? AppColors.bgSurface : const Color(0xFFF8FAFF);
-    final headerBg    = isDark ? AppColors.bgSurface : const Color(0xFFF4F6FB);
+    final hoverColor = isDark ? AppColors.bgSurface : const Color(0xFFF8FAFF);
+    final headerBg = isDark ? AppColors.bgSurface : const Color(0xFFF4F6FB);
 
     return Container(
       decoration: BoxDecoration(
@@ -368,146 +431,187 @@ class _ProductTable extends StatelessWidget {
       ),
       child: Column(
         children: [
-            // Table header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: headerBg,
-                border: Border(bottom: BorderSide(color: borderColor)),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 52),
-                  Expanded(flex: 3, child: _TH('prod_name'.tr)),
-                  Expanded(flex: 2, child: _TH('prod_category'.tr)),
-                  Expanded(flex: 2, child: _TH('prod_price'.tr)),
-                  Expanded(flex: 2, child: _TH('prod_cost'.tr)),
-                  Expanded(flex: 2, child: _TH('prod_profit'.tr)),
-                  Expanded(flex: 1, child: _TH('prod_qty'.tr)),
-                  Expanded(flex: 1, child: _TH('gen_status'.tr)),
-                  SizedBox(width: 80, child: Center(child: _TH('gen_action'.tr))),
-                ],
-              ),
+          // Table header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: headerBg,
+              border: Border(bottom: BorderSide(color: borderColor)),
             ),
-            // Rows
-            Expanded(
-              child: ListView.builder(
-                itemCount: products.length,
-                itemBuilder: (_, i) {
-                  final p = products[i];
-                  final discPrice = _discounted(p);
-                  final cost = p.useRecipeCost ? p.recipeCalculatedCost : p.purchasePrice;
-                  final profit = discPrice - cost;
-                  final unit = _unitShort(p.unitId);
-                  final isLast = i == products.length - 1;
-                  final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
-                  final subColor  = isDark ? AppColors.textDim   : const Color(0xFF94A3B8);
-                  final maxCount = maxProducible[p.id] ?? -1;
+            child: Row(
+              children: [
+                const SizedBox(width: 52),
+                Expanded(flex: 3, child: _TH('prod_name'.tr)),
+                Expanded(flex: 2, child: _TH('prod_category'.tr)),
+                Expanded(flex: 2, child: _TH('prod_price'.tr)),
+                Expanded(flex: 2, child: _TH('prod_cost'.tr)),
+                Expanded(flex: 2, child: _TH('prod_profit'.tr)),
+                Expanded(flex: 1, child: _TH('prod_qty'.tr)),
+                Expanded(flex: 1, child: _TH('gen_status'.tr)),
+                SizedBox(width: 80, child: Center(child: _TH('gen_action'.tr))),
+              ],
+            ),
+          ),
+          // Rows
+          Expanded(
+            child: ListView.builder(
+              itemCount: products.length,
+              itemBuilder: (_, i) {
+                final p = products[i];
+                final discPrice = _discounted(p);
+                final cost =
+                    p.useRecipeCost ? p.recipeCalculatedCost : p.purchasePrice;
+                final profit = discPrice - cost;
+                final unit = _unitShort(p.unitId);
+                final isLast = i == products.length - 1;
+                final textColor =
+                    isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+                final subColor =
+                    isDark ? AppColors.textDim : const Color(0xFF94A3B8);
+                final maxCount = maxProducible[p.id] ?? -1;
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: !isLast ? Border(bottom: BorderSide(color: borderColor, width: 0.5)) : null,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => onEdit(p),
-                        borderRadius: isLast
-                            ? const BorderRadius.vertical(bottom: Radius.circular(16))
-                            : null,
-                        hoverColor: hoverColor,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          child: Row(
-                            children: [
-                              _ProductThumb(imagePath: p.imagePath, isDark: isDark),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                flex: 3,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(p.name,
-                                        style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13, color: textColor),
-                                        overflow: TextOverflow.ellipsis),
-                                    Row(
-                                      children: [
-                                        Text('SKU: ${p.sku}',
-                                            style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: subColor)),
-                                        if (p.expireDate != null) ...[
-                                          const SizedBox(width: 8),
-                                          _ExpiryBadge(date: p.expireDate!),
-                                        ],
+                return Container(
+                  decoration: BoxDecoration(
+                    border: !isLast
+                        ? Border(
+                            bottom: BorderSide(color: borderColor, width: 0.5))
+                        : null,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => onEdit(p),
+                      borderRadius: isLast
+                          ? const BorderRadius.vertical(
+                              bottom: Radius.circular(16))
+                          : null,
+                      hoverColor: hoverColor,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            ProductThumb(
+                                imagePath: p.imagePath, isDark: isDark),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(p.name,
+                                      style: TextStyle(
+                                          fontFamily: 'Gilroy',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: textColor),
+                                      overflow: TextOverflow.ellipsis),
+                                  Row(
+                                    children: [
+                                      Text('SKU: ${p.sku}',
+                                          style: TextStyle(
+                                              fontFamily: 'Gilroy',
+                                              fontSize: 11,
+                                              color: subColor)),
+                                      if (p.expireDate != null) ...[
+                                        const SizedBox(width: 8),
+                                        _ExpiryBadge(date: p.expireDate!),
                                       ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(_catName(p.categoryId),
-                                    style: TextStyle(fontFamily: 'Gilroy', fontSize: 12,
-                                        color: isDark ? AppColors.textGrey : const Color(0xFF64748B))),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(formatCurrency(discPrice),
-                                        style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.primary2)),
-                                    if (p.discount > 0)
-                                      Text(formatCurrency(p.price),
-                                          style: TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: subColor, decoration: TextDecoration.lineThrough)),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(formatCurrency(cost),
-                                    style: TextStyle(fontFamily: 'Gilroy', fontSize: 12,
-                                        color: isDark ? AppColors.textGrey : const Color(0xFF64748B))),
-                              ),
-                              Expanded(flex: 2, child: _ProfitBadge(profit: profit)),
-                              Expanded(
-                                flex: 1,
-                                child: Text(
-                                  maxCount >= 0
-                                      ? '$maxCount${unit.isNotEmpty ? ' $unit' : ''}'
-                                      : '—',
-                                  style: TextStyle(
-                                    fontFamily: 'Gilroy',
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: maxCount == 0
-                                        ? AppColors.red
-                                        : maxCount > 0
-                                            ? textColor
-                                            : AppColors.textDim,
+                                    ],
                                   ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(_catName(p.categoryId),
+                                  style: TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? AppColors.textGrey
+                                          : const Color(0xFF64748B))),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(formatCurrency(discPrice),
+                                      style: const TextStyle(
+                                          fontFamily: 'Gilroy',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                          color: AppColors.primary2)),
+                                  if (p.discount > 0)
+                                    Text(formatCurrency(p.price),
+                                        style: TextStyle(
+                                            fontFamily: 'Gilroy',
+                                            fontSize: 10,
+                                            color: subColor,
+                                            decoration:
+                                                TextDecoration.lineThrough)),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(formatCurrency(cost),
+                                  style: TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? AppColors.textGrey
+                                          : const Color(0xFF64748B))),
+                            ),
+                            Expanded(
+                                flex: 2, child: _ProfitBadge(profit: profit)),
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                maxCount >= 0
+                                    ? '$maxCount${unit.isNotEmpty ? ' $unit' : ''}'
+                                    : '—',
+                                style: TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: maxCount == 0
+                                      ? AppColors.red
+                                      : maxCount > 0
+                                          ? textColor
+                                          : AppColors.textDim,
                                 ),
                               ),
-                              Expanded(flex: 1, child: _StatusBadge(active: p.status)),
-                              SizedBox(
-                                width: 80,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    _IconBtn(icon: HugeIcons.strokeRoundedPencilEdit01, color: AppColors.primary2, onTap: () => onEdit(p)),
-                                    const SizedBox(width: 4),
-                                    _IconBtn(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.red, onTap: () => onDelete(p)),
-                                  ],
-                                ),
+                            ),
+                            Expanded(
+                                flex: 1, child: _StatusBadge(active: p.status)),
+                            SizedBox(
+                              width: 80,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  _IconBtn(
+                                      icon: HugeIcons.strokeRoundedPencilEdit01,
+                                      color: AppColors.primary2,
+                                      onTap: () => onEdit(p)),
+                                  const SizedBox(width: 4),
+                                  _IconBtn(
+                                      icon: HugeIcons.strokeRoundedDelete02,
+                                      color: AppColors.red,
+                                      onTap: () => onDelete(p)),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
+          ),
         ],
       ),
     );
@@ -523,15 +627,19 @@ class _TH extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(text,
       style: const TextStyle(
-          fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w600,
-          color: AppColors.textGrey, letterSpacing: 0.5));
+          fontFamily: 'Gilroy',
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textGrey,
+          letterSpacing: 0.5));
 }
 
 class _IconBtn extends StatelessWidget {
   final List<List<dynamic>> icon;
   final Color color;
   final VoidCallback onTap;
-  const _IconBtn({required this.icon, required this.color, required this.onTap});
+  const _IconBtn(
+      {required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -540,7 +648,8 @@ class _IconBtn extends StatelessWidget {
       borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(6)),
+        decoration: BoxDecoration(
+            color: color.withAlpha(20), borderRadius: BorderRadius.circular(6)),
         child: HugeIcon(icon: icon, size: 15, color: color),
       ),
     );
@@ -565,7 +674,11 @@ class _ProfitBadge extends StatelessWidget {
         ),
         child: Text(
           '${profit >= 0 ? '+' : ''}${formatCurrency(profit)}',
-          style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700, color: color),
+          style: TextStyle(
+              fontFamily: 'Gilroy',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color),
         ),
       ),
     );
@@ -588,7 +701,10 @@ class _StatusBadge extends StatelessWidget {
         ),
         child: Text(
           active ? 'prod_status_active'.tr : 'prod_status_inactive'.tr,
-          style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700,
+          style: TextStyle(
+              fontFamily: 'Gilroy',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
               color: active ? AppColors.green : AppColors.textDim),
         ),
       ),
@@ -606,58 +722,25 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          HugeIcon(icon: HugeIcons.strokeRoundedPackage, size: 54,
-              color: isDark ? AppColors.textDim.withAlpha(120) : const Color(0xFFCBD5E1)),
+          HugeIcon(
+              icon: HugeIcons.strokeRoundedPackage,
+              size: 54,
+              color: isDark
+                  ? AppColors.textDim.withAlpha(120)
+                  : const Color(0xFFCBD5E1)),
           const SizedBox(height: 12),
           Text('prod_empty'.tr,
-              style: TextStyle(fontFamily: 'Gilroy', fontSize: 15,
-                  color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8))),
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontSize: 15,
+                  color:
+                      isDark ? AppColors.textGrey : const Color(0xFF94A3B8))),
         ],
       ),
     );
   }
 }
 
-// ─── Product Thumbnail ────────────────────────────────────────────────────────
-
-class _ProductThumb extends StatelessWidget {
-  final String? imagePath;
-  final bool isDark;
-  const _ProductThumb({required this.imagePath, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40, height: 40,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.bgSurface : const Color(0xFFF0F2F8),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: _buildImage(),
-    );
-  }
-
-  Widget _buildImage() {
-    final dimColor = isDark ? AppColors.textDim : const Color(0xFFB0B8C8);
-    if (imagePath == null || imagePath!.isEmpty) {
-      return HugeIcon(icon: HugeIcons.strokeRoundedCoffee01, size: 20, color: dimColor);
-    }
-    if (kIsWeb || imagePath!.startsWith('data:')) {
-      try {
-        final comma = imagePath!.indexOf(',');
-        if (comma < 0) throw Exception();
-        final bytes = base64Decode(imagePath!.substring(comma + 1));
-        return Image.memory(bytes, fit: BoxFit.cover);
-      } catch (_) {
-        return HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 20, color: dimColor);
-      }
-    }
-    return Image.file(File(imagePath!), fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 20, color: dimColor));
-  }
-}
 
 // ─── Form Dialog ──────────────────────────────────────────────────────────────
 
@@ -671,12 +754,14 @@ class ProductFormDialog extends StatefulWidget {
 
 class _ProductFormDialogState extends State<ProductFormDialog> {
   final _form = GlobalKey<FormState>();
-  late final _name  = TextEditingController(text: widget.product?.name ?? '');
-  late final _sku   = TextEditingController(text: widget.product?.sku ?? '');
-  late final _price = TextEditingController(text: widget.product?.price.toStringAsFixed(2) ?? '0');
-  late final _cost  = TextEditingController(text: widget.product?.purchasePrice.toStringAsFixed(2) ?? '0');
-  late final _disc  = TextEditingController(text: widget.product?.discount.toStringAsFixed(2) ?? '0');
-  late final _qty   = TextEditingController(text: widget.product?.quantity.toString() ?? '0');
+  late final _name = TextEditingController(text: widget.product?.name ?? '');
+  late final _sku = TextEditingController(text: widget.product?.sku ?? '');
+  late final _price = TextEditingController(
+      text: widget.product?.price.toStringAsFixed(2) ?? '0');
+  late final _disc = TextEditingController(
+      text: widget.product?.discount.toStringAsFixed(2) ?? '0');
+  late final _qty =
+      TextEditingController(text: widget.product?.quantity.toString() ?? '0');
 
   String _discType = 'fixed';
   bool _status = true;
@@ -693,18 +778,20 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     super.initState();
     final p = widget.product;
     if (p != null) {
-      _discType   = p.discountType;
-      _status     = p.status;
+      _discType = p.discountType;
+      _status = p.status;
       _categoryId = p.categoryId;
-      _unitId     = p.unitId;
-      _imagePath  = p.imagePath;
+      _unitId = p.unitId;
+      _imagePath = p.imagePath;
       _expireDate = p.expireDate;
     }
   }
 
   @override
   void dispose() {
-    for (final c in [_name, _sku, _price, _cost, _disc, _qty]) { c.dispose(); }
+    for (final c in [_name, _sku, _price, _disc, _qty]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -713,8 +800,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor     = isDark ? AppColors.bgSurface : Colors.white;
-    final borderColor = isDark ? AppColors.bgBorder  : const Color(0xFFE2E8F0);
+    final bgColor = isDark ? AppColors.bgSurface : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -727,7 +814,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: borderColor),
           boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha(isDark ? 120 : 20), blurRadius: 40, offset: const Offset(0, 12)),
+            BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 120 : 20),
+                blurRadius: 40,
+                offset: const Offset(0, 12)),
           ],
         ),
         child: Row(
@@ -749,7 +839,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _DialogTitle(isEdit: _isEdit, isDark: isDark, borderColor: borderColor),
+                    _DialogTitle(
+                        isEdit: _isEdit,
+                        isDark: isDark,
+                        borderColor: borderColor),
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
@@ -758,36 +851,25 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                           children: [
                             _sectionLabel('prod_basic_info'.tr, isDark),
                             const SizedBox(height: 10),
-                            _field(_name, 'prod_name'.tr, isDark: isDark, required: true),
+                            _field(_name, 'prod_name'.tr,
+                                isDark: isDark, required: true),
                             const SizedBox(height: 12),
                             _field(_sku, 'prod_sku'.tr, isDark: isDark),
                             const SizedBox(height: 20),
                             _sectionLabel('prod_pricing'.tr, isDark),
                             const SizedBox(height: 10),
-                            Row(children: [
-                              Expanded(child: _field(_price, 'prod_price'.tr, isDark: isDark, numeric: true)),
-                              const SizedBox(width: 12),
-                              Expanded(child: _field(_cost, 'prod_cost'.tr, isDark: isDark, numeric: true)),
-                            ]),
-                            const SizedBox(height: 12),
-                            Row(children: [
-                              Expanded(child: _field(_qty, 'prod_qty'.tr, isDark: isDark, numeric: true)),
-                              const SizedBox(width: 12),
-                              Expanded(child: _discTypeDropdown(isDark)),
-                            ]),
+                            _field(_price, 'prod_price'.tr,
+                                isDark: isDark, numeric: true),
                             const SizedBox(height: 20),
                             _sectionLabel('prod_stock_management'.tr, isDark),
                             const SizedBox(height: 10),
                             Row(children: [
                               Expanded(child: _categoryDropdown(isDark)),
                               const SizedBox(width: 12),
-                              Expanded(child: _unitDropdown(isDark)),
-                            ]),
-                            const SizedBox(height: 12),
-                            Row(children: [
-                              SizedBox(width: 160, child: _field(_qty, 'prod_stock_qty'.tr, isDark: isDark, numeric: true)),
-                              const SizedBox(width: 12),
-                              _StatusToggle(value: _status, onChanged: (v) => setState(() => _status = v), isDark: isDark),
+                              _StatusToggle(
+                                  value: _status,
+                                  onChanged: (v) => setState(() => _status = v),
+                                  isDark: isDark),
                             ]),
                             const SizedBox(height: 12),
                             _DatePickerField(
@@ -821,99 +903,85 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
   Widget _sectionLabel(String text, bool isDark) => Text(text,
       style: TextStyle(
-          fontFamily: 'Gilroy', fontSize: 11, fontWeight: FontWeight.w700,
+          fontFamily: 'Gilroy',
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
           color: isDark ? AppColors.textDim : const Color(0xFF94A3B8),
           letterSpacing: 1));
 
   Widget _field(TextEditingController c, String label,
       {required bool isDark, bool required = false, bool numeric = false}) {
-    final style = TextStyle(fontFamily: 'Gilroy',
-        color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13);
-    final validator = required ? (String? v) => v?.trim().isEmpty == true ? 'gen_required'.tr : null : null;
-    if (numeric) {
-      return NumPadField(
-        controller: c,
-        numpadLabel: label,
-        style: style,
-        validator: validator,
-        decoration: _inputDecoration(label, isDark),
-      );
-    }
+    final style = TextStyle(
+        fontFamily: 'Gilroy',
+        color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+        fontSize: 13);
+    final validator = required
+        ? (String? v) => v?.trim().isEmpty == true ? 'gen_required'.tr : null
+        : null;
     return TextFormField(
       controller: c,
       style: style,
       decoration: _inputDecoration(label, isDark),
       validator: validator,
-    );
-  }
-
-  Widget _discTypeDropdown(bool isDark) {
-    return DropdownButtonFormField<String>(
-      value: _discType,
-      dropdownColor: isDark ? AppColors.bgCard : Colors.white,
-      style: TextStyle(fontFamily: 'Gilroy',
-          color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
-      decoration: _inputDecoration('prod_disc_type'.tr, isDark),
-      items: [
-        DropdownMenuItem(value: 'fixed',      child: Text('prod_disc_fixed'.tr)),
-        DropdownMenuItem(value: 'percentage', child: Text('prod_disc_perc'.tr)),
-      ],
-      onChanged: (v) => setState(() => _discType = v!),
+      keyboardType: numeric
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.text,
     );
   }
 
   Widget _categoryDropdown(bool isDark) {
     return Obx(() => DropdownButtonFormField<int?>(
-          value: _categoryId,
+          initialValue: _categoryId,
           dropdownColor: isDark ? AppColors.bgCard : Colors.white,
-          style: TextStyle(fontFamily: 'Gilroy',
-              color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
+          style: TextStyle(
+              fontFamily: 'Gilroy',
+              color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+              fontSize: 13),
           decoration: _inputDecoration('prod_category'.tr, isDark),
           items: [
             DropdownMenuItem(value: null, child: Text('prod_select'.tr)),
-            ..._ctrl.categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
+            ..._ctrl.categories
+                .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
           ],
           onChanged: (v) => setState(() => _categoryId = v),
         ));
   }
 
-  Widget _unitDropdown(bool isDark) {
-    return Obx(() => DropdownButtonFormField<int?>(
-          value: _unitId,
-          dropdownColor: isDark ? AppColors.bgCard : Colors.white,
-          style: TextStyle(fontFamily: 'Gilroy',
-              color: isDark ? AppColors.textWhite : const Color(0xFF0F172A), fontSize: 13),
-          decoration: _inputDecoration('prod_unit'.tr, isDark),
-          items: [
-            DropdownMenuItem(value: null, child: Text('prod_select'.tr)),
-            ..._ctrl.units.map((u) => DropdownMenuItem(value: u.id, child: Text(u.name))),
-          ],
-          onChanged: (v) => setState(() => _unitId = v),
-        ));
-  }
-
-  InputDecoration _inputDecoration(String label, bool isDark) => InputDecoration(
+  InputDecoration _inputDecoration(String label, bool isDark) =>
+      InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(fontFamily: 'Gilroy',
-            color: isDark ? AppColors.textGrey : const Color(0xFF64748B), fontSize: 12),
+        labelStyle: TextStyle(
+            fontFamily: 'Gilroy',
+            color: isDark ? AppColors.textGrey : const Color(0xFF64748B),
+            fontSize: 12),
         filled: true,
         fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+                color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+                color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide:
+                const BorderSide(color: AppColors.primary2, width: 1.5)),
+        errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AppColors.red)),
       );
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
-    
+
     final newPrice = double.tryParse(_price.text) ?? 0;
-    if (_isEdit && widget.product != null && widget.product!.price != newPrice) {
+    if (_isEdit &&
+        widget.product != null &&
+        widget.product!.price != newPrice) {
       final auth = Get.find<AuthController>();
       if (!auth.can(Permission.changePrice)) {
         final approved = await auth.requireAdmin('auth_req_price'.tr);
@@ -928,7 +996,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         name: _name.text.trim(),
         sku: _sku.text.trim(),
         price: double.tryParse(_price.text) ?? 0,
-        purchasePrice: double.tryParse(_cost.text) ?? 0,
+        purchasePrice: 0,
         discount: double.tryParse(_disc.text) ?? 0,
         discountType: _discType,
         quantity: int.tryParse(_qty.text) ?? 0,
@@ -950,9 +1018,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       );
     } catch (e) {
       Get.snackbar('gen_error'.tr, e.toString(),
-          backgroundColor: AppColors.red, colorText: Colors.white,
+          backgroundColor: AppColors.red,
+          colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(16), borderRadius: 10);
+          margin: const EdgeInsets.all(16),
+          borderRadius: 10);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -967,14 +1037,18 @@ class _ImagePanel extends StatelessWidget {
   final VoidCallback onPick;
   final VoidCallback onRemove;
 
-  const _ImagePanel({required this.imagePath, required this.isDark, required this.onPick, required this.onRemove});
+  const _ImagePanel(
+      {required this.imagePath,
+      required this.isDark,
+      required this.onPick,
+      required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
-    final fillColor   = isDark ? AppColors.bgCard   : const Color(0xFFF4F6FB);
+    final fillColor = isDark ? AppColors.bgCard : const Color(0xFFF4F6FB);
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
-    final textColor   = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
-    final dimColor    = isDark ? AppColors.textDim  : const Color(0xFFB0B8C8);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+    final dimColor = isDark ? AppColors.textDim : const Color(0xFFB0B8C8);
 
     return SizedBox(
       width: 240,
@@ -984,7 +1058,11 @@ class _ImagePanel extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             child: Text('prod_photo'.tr,
-                style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w700, color: textColor)),
+                style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: textColor)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -997,7 +1075,9 @@ class _ImagePanel extends StatelessWidget {
                   color: fillColor,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: imagePath != null ? AppColors.primary2.withAlpha(80) : borderColor,
+                    color: imagePath != null
+                        ? AppColors.primary2.withAlpha(80)
+                        : borderColor,
                     width: imagePath != null ? 1.5 : 1,
                   ),
                 ),
@@ -1006,18 +1086,28 @@ class _ImagePanel extends StatelessWidget {
                     ? Stack(fit: StackFit.expand, children: [
                         _buildPreview(imagePath!),
                         Positioned(
-                          bottom: 0, left: 0, right: 0,
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                                colors: [Colors.transparent, Colors.black.withAlpha(160)],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withAlpha(160)
+                                ],
                               ),
                             ),
                             child: Center(
                               child: Text('gen_change'.tr,
-                                  style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                                  style: const TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white)),
                             ),
                           ),
                         ),
@@ -1026,16 +1116,29 @@ class _ImagePanel extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 52, height: 52,
-                            decoration: BoxDecoration(color: AppColors.primary2.withAlpha(20), borderRadius: BorderRadius.circular(12)),
-                            child: const HugeIcon(icon: HugeIcons.strokeRoundedImageAdd01, size: 26, color: AppColors.primary2),
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                                color: AppColors.primary2.withAlpha(20),
+                                borderRadius: BorderRadius.circular(12)),
+                            child: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedImageAdd01,
+                                size: 26,
+                                color: AppColors.primary2),
                           ),
                           const SizedBox(height: 12),
                           Text('gen_photo_select'.tr,
-                              style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
+                              style: TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor)),
                           const SizedBox(height: 4),
                           Text('gen_formats'.tr,
-                              style: TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: dimColor)),
+                              style: TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 11,
+                                  color: dimColor)),
                         ],
                       ),
               ),
@@ -1052,11 +1155,19 @@ class _ImagePanel extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary2,
                     side: const BorderSide(color: AppColors.primary2, width: 1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedUpload01, size: 16, color: AppColors.primary2),
-                  label: Text('gen_upload'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600)),
+                  icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedUpload01,
+                      size: 16,
+                      color: AppColors.primary2),
+                  label: Text('gen_upload'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600)),
                 ),
                 if (imagePath != null) ...[
                   const SizedBox(height: 8),
@@ -1065,11 +1176,19 @@ class _ImagePanel extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.red,
                       side: const BorderSide(color: AppColors.red, width: 1),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(9)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 16, color: AppColors.red),
-                    label: Text('gen_remove'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600)),
+                    icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedDelete02,
+                        size: 16,
+                        color: AppColors.red),
+                    label: Text('gen_remove'.tr,
+                        style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600)),
                   ),
                 ],
               ],
@@ -1087,11 +1206,18 @@ class _ImagePanel extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle, size: 13, color: dimColor),
+                  HugeIcon(
+                      icon: HugeIcons.strokeRoundedInformationCircle,
+                      size: 13,
+                      color: dimColor),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text('gen_max_file'.tr,
-                        style: TextStyle(fontFamily: 'Gilroy', fontSize: 10, color: dimColor, height: 1.5)),
+                        style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 10,
+                            color: dimColor,
+                            height: 1.5)),
                   ),
                 ],
               ),
@@ -1111,11 +1237,18 @@ class _ImagePanel extends StatelessWidget {
         final bytes = base64Decode(path.substring(comma + 1));
         return Image.memory(bytes, fit: BoxFit.cover);
       } catch (_) {
-        return HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 32, color: dimColor);
+        return HugeIcon(
+            icon: HugeIcons.strokeRoundedImageNotFound01,
+            size: 32,
+            color: dimColor);
       }
     }
-    return Image.file(File(path), fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, size: 32, color: dimColor));
+    return Image.file(File(path),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => HugeIcon(
+            icon: HugeIcons.strokeRoundedImageNotFound01,
+            size: 32,
+            color: dimColor));
   }
 }
 
@@ -1125,29 +1258,40 @@ class _DialogTitle extends StatelessWidget {
   final bool isEdit;
   final bool isDark;
   final Color borderColor;
-  const _DialogTitle({required this.isEdit, required this.isDark, required this.borderColor});
+  const _DialogTitle(
+      {required this.isEdit, required this.isDark, required this.borderColor});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(28, 24, 16, 16),
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor))),
+      decoration:
+          BoxDecoration(border: Border(bottom: BorderSide(color: borderColor))),
       child: Row(
         children: [
           Container(
-            width: 8, height: 8,
-            decoration: BoxDecoration(color: AppColors.primary2, borderRadius: BorderRadius.circular(4)),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+                color: AppColors.primary2,
+                borderRadius: BorderRadius.circular(4)),
           ),
           const SizedBox(width: 10),
           Text(
             isEdit ? 'prod_edit'.tr : 'prod_add'.tr,
-            style: TextStyle(fontFamily: 'Gilroy', fontSize: 16, fontWeight: FontWeight.w700,
+            style: TextStyle(
+                fontFamily: 'Gilroy',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : const Color(0xFF0F172A)),
           ),
           const Spacer(),
           IconButton(
             onPressed: Get.back,
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.textGrey, size: 20),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedCancel01,
+                color: AppColors.textGrey,
+                size: 20),
             splashRadius: 16,
           ),
         ],
@@ -1162,7 +1306,8 @@ class _StatusToggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
   final bool isDark;
-  const _StatusToggle({required this.value, required this.onChanged, required this.isDark});
+  const _StatusToggle(
+      {required this.value, required this.onChanged, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -1183,7 +1328,8 @@ class _StatusToggle extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 8, height: 8,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(
                 color: value ? AppColors.green : AppColors.textDim,
                 borderRadius: BorderRadius.circular(4),
@@ -1192,7 +1338,10 @@ class _StatusToggle extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               value ? 'prod_status_active'.tr : 'prod_status_inactive'.tr,
-              style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600,
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: value ? AppColors.green : AppColors.textGrey),
             ),
           ],
@@ -1212,16 +1361,20 @@ class _ActionBar extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onSave;
   const _ActionBar({
-    required this.loading, required this.isEdit,
-    required this.isDark, required this.borderColor,
-    required this.onCancel, required this.onSave,
+    required this.loading,
+    required this.isEdit,
+    required this.isDark,
+    required this.borderColor,
+    required this.onCancel,
+    required this.onSave,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(28, 14, 28, 20),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: borderColor))),
+      decoration:
+          BoxDecoration(border: Border(top: BorderSide(color: borderColor))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -1231,9 +1384,12 @@ class _ActionBar extends StatelessWidget {
               foregroundColor: AppColors.textGrey,
               side: BorderSide(color: Colors.grey.withAlpha(60)),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9)),
             ),
-            child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+            child: Text('gen_cancel'.tr,
+                style: const TextStyle(
+                    fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
           ),
           const SizedBox(width: 10),
           FilledButton(
@@ -1242,13 +1398,20 @@ class _ActionBar extends StatelessWidget {
               backgroundColor: AppColors.primary2,
               disabledBackgroundColor: AppColors.primary2.withAlpha(80),
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9)),
             ),
             child: loading
-                ? const SizedBox(width: 18, height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
                 : Text(isEdit ? 'set_update'.tr : 'gen_save'.tr,
-                    style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14)),
+                    style: const TextStyle(
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14)),
           ),
         ],
       ),
@@ -1292,7 +1455,8 @@ class _DatePickerField extends StatelessWidget {
           onTap: () async {
             final date = await showDatePicker(
               context: context,
-              initialDate: value ?? DateTime.now().add(const Duration(days: 30)),
+              initialDate:
+                  value ?? DateTime.now().add(const Duration(days: 30)),
               firstDate: DateTime(2020),
               lastDate: DateTime(2030),
             );
@@ -1322,10 +1486,16 @@ class _DatePickerField extends StatelessWidget {
                 if (value != null)
                   GestureDetector(
                     onTap: () => onChanged(null),
-                    child: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.textGrey, size: 16),
+                    child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: AppColors.textGrey,
+                        size: 16),
                   )
                 else
-                  const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, color: AppColors.textGrey, size: 16),
+                  const HugeIcon(
+                      icon: HugeIcons.strokeRoundedCalendar03,
+                      color: AppColors.textGrey,
+                      size: 16),
               ],
             ),
           ),
@@ -1343,12 +1513,19 @@ class _ExpiryBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final isExpired = date.isBefore(now);
-    final isExpiringSoon = !isExpired && date.isBefore(now.add(const Duration(days: 7)));
-    
-    if (!isExpired && !isExpiringSoon) return const SizedBox.shrink(); // No badge if safe
+    final isExpiringSoon =
+        !isExpired && date.isBefore(now.add(const Duration(days: 7)));
+
+    if (!isExpired && !isExpiringSoon) {
+      return const SizedBox.shrink();
+    } // No badge if safe
 
     final color = isExpired ? AppColors.red : AppColors.orange;
-    final text = isExpired ? 'exp_expired'.tr : 'exp_warning'.tr.replaceAll('{days}', date.difference(now).inDays.toString());
+    final text = isExpired
+        ? 'exp_expired'.tr
+        : 'exp_warning'
+            .tr
+            .replaceAll('{days}', date.difference(now).inDays.toString());
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(

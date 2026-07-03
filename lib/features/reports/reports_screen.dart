@@ -24,11 +24,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
     if (_shifts != null) return;
     setState(() => _shiftsLoading = true);
     final result = await ShiftController.to.getShiftsWithUser();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _shifts = result;
         _shiftsLoading = false;
       });
+    }
   }
 
   @override
@@ -49,8 +50,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 fontFamily: 'Gilroy')),
         actions: [
           Obx(() {
-            if (ctrl.activeTab.value == 'shifts')
+            if (ctrl.activeTab.value == 'shifts') {
               return const SizedBox.shrink();
+            }
             return TextButton.icon(
               icon: const HugeIcon(
                   icon: HugeIcons.strokeRoundedCalendar03,
@@ -68,8 +70,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
             );
           }),
           Obx(() {
-            if (ctrl.activeTab.value == 'shifts')
+            if (ctrl.activeTab.value == 'shifts') {
               return const SizedBox.shrink();
+            }
             return Padding(
               padding: const EdgeInsets.only(right: 12),
               child: FilledButton.icon(
@@ -144,37 +147,45 @@ class _ReportsScreenState extends State<ReportsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Obx(() => Row(
             children: [
-              _TabButton(
-                title: 'rep_general'.tr,
-                isActive: ctrl.activeTab.value == 'general',
-                onTap: () => ctrl.setTab('general'),
-                isDark: isDark,
+              Flexible(
+                child: _TabButton(
+                  title: 'rep_general'.tr,
+                  isActive: ctrl.activeTab.value == 'general',
+                  onTap: () => ctrl.setTab('general'),
+                  isDark: isDark,
+                ),
               ),
-              const SizedBox(width: 12),
-              _TabButton(
-                title: 'rep_employees'.tr,
-                isActive: ctrl.activeTab.value == 'employees',
-                onTap: () => ctrl.setTab('employees'),
-                isDark: isDark,
+              const SizedBox(width: 8),
+              Flexible(
+                child: _TabButton(
+                  title: 'rep_employees'.tr,
+                  isActive: ctrl.activeTab.value == 'employees',
+                  onTap: () => ctrl.setTab('employees'),
+                  isDark: isDark,
+                ),
               ),
-              const SizedBox(width: 12),
-              _TabButton(
-                title: 'rep_shifts'.tr,
-                isActive: ctrl.activeTab.value == 'shifts',
-                onTap: () {
-                  ctrl.setTab('shifts');
-                  _loadShifts();
-                },
-                isDark: isDark,
-                icon: HugeIcons.strokeRoundedClock01,
+              const SizedBox(width: 8),
+              Flexible(
+                child: _TabButton(
+                  title: 'rep_shifts'.tr,
+                  isActive: ctrl.activeTab.value == 'shifts',
+                  onTap: () {
+                    ctrl.setTab('shifts');
+                    _loadShifts();
+                  },
+                  isDark: isDark,
+                  icon: HugeIcons.strokeRoundedClock01,
+                ),
               ),
-              const SizedBox(width: 12),
-              _TabButton(
-                title: 'rep_orders_tab'.tr,
-                isActive: ctrl.activeTab.value == 'orders',
-                onTap: () => ctrl.setTab('orders'),
-                isDark: isDark,
-                icon: HugeIcons.strokeRoundedShoppingCart01,
+              const SizedBox(width: 8),
+              Flexible(
+                child: _TabButton(
+                  title: 'rep_orders_tab'.tr,
+                  isActive: ctrl.activeTab.value == 'orders',
+                  onTap: () => ctrl.setTab('orders'),
+                  isDark: isDark,
+                  icon: HugeIcons.strokeRoundedShoppingCart01,
+                ),
               ),
             ],
           )),
@@ -337,17 +348,20 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           )),
                       SizedBox(
                           width: colWidths[5],
-                          child: o.discount > 0
-                              ? Text(formatCurrency(o.discount),
-                                  style: const TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      fontSize: 12,
-                                      color: AppColors.orange))
-                              : Text('—',
-                                  style: TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      fontSize: 14,
-                                      color: subColor.withAlpha(100)))),
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: o.discount > 0
+                                ? Text(formatCurrency(o.discount),
+                                    style: const TextStyle(
+                                        fontFamily: 'Gilroy',
+                                        fontSize: 12,
+                                        color: AppColors.orange))
+                                : Text('—',
+                                    style: TextStyle(
+                                        fontFamily: 'Gilroy',
+                                        fontSize: 14,
+                                        color: subColor.withAlpha(100))),
+                          )),
                       SizedBox(
                           width: colWidths[6],
                           child: Container(
@@ -515,7 +529,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                     child: Row(children: [
                       if (order.discount > 0) ...[
-                        Text('${'rep_disc_short'.tr}: ${formatCurrency(order.discount)}',
+                        Text(
+                            '${'rep_disc_short'.tr}: ${formatCurrency(order.discount)}',
                             style: const TextStyle(
                                 fontFamily: 'Gilroy',
                                 fontSize: 12,
@@ -1121,15 +1136,19 @@ class _TabButton extends StatelessWidget {
                   color: isActive ? Colors.white : AppColors.textGrey),
               const SizedBox(width: 6),
             ],
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: isActive
-                    ? Colors.white
-                    : (isDark ? AppColors.textGrey : const Color(0xFF475569)),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: isActive
+                      ? Colors.white
+                      : (isDark ? AppColors.textGrey : const Color(0xFF475569)),
+                ),
               ),
             ),
           ],
@@ -1184,14 +1203,18 @@ class _BigStatCard extends StatelessWidget {
                     Center(child: HugeIcon(icon: icon, color: color, size: 22)),
               ),
               const SizedBox(width: 12),
-              Text(label,
-                  style: TextStyle(
-                      fontFamily: 'Gilroy',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.textGrey
-                          : const Color(0xFF64748B))),
+              Flexible(
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontFamily: 'Gilroy',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.textGrey
+                            : const Color(0xFF64748B))),
+              ),
             ],
           ),
           const SizedBox(height: 20),

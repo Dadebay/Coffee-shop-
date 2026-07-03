@@ -2,11 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "kassa-windows",
+      "runtimeExecutable": "C:\\Users\\Admin\\fvm\\versions\\3.41.0\\bin\\flutter.bat",
+      "runtimeArgs": ["run", "-d", "windows"],
+      "port": 0
+    },
+    {
       "name": "kassa-web",
-      "runtimeExecutable": "/Users/gurbanowdadebay/Developer/flutter/bin/flutter",
+      "runtimeExecutable": "C:\\Users\\Admin\\fvm\\versions\\3.41.0\\bin\\flutter.bat",
       "runtimeArgs": ["run", "-d", "chrome", "--web-port=9090"],
-      "port": 9090,
-      "autoPort": false
+      "port": 9090
     }
   ]
 }

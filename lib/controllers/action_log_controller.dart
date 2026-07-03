@@ -18,7 +18,6 @@ class ActionLogController extends GetxController {
 
   static const List<String> actionTypes = [
     'sale',
-    'return',
     'cancel',
     'price_change',
     'stock_adjust',

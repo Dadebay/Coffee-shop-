@@ -1020,10 +1020,10 @@ class _StockDialogState extends State<_StockDialog> {
 
             // Unit cost (only for receipt)
             if (widget.showCost) ...[
-              NumPadField(
+              TextFormField(
                 controller: widget.costCtrl,
-                numpadLabel: 'stock_unit_cost'.tr,
                 style: TextStyle(fontFamily: 'Gilroy', color: textColor),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: inputDecoration.copyWith(
                   labelText: 'stock_unit_cost'.tr,
                   prefixIcon: const Padding(

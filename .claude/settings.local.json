@@ -48,7 +48,10 @@
       "PowerShell(head -20)",
       "Bash(flutter build *)",
       "Bash(timeout 30)",
-      "Bash(grep -v \"//\")"
+      "Bash(grep -v \"//\")",
+      "Skill(code-review)",
+      "Skill(code-review:*)",
+      "Bash(where flutter *)"
     ]
   }
 }

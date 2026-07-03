@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -91,7 +93,7 @@ class AuthController extends GetxController {
   Future<bool> requireAdmin(String reason) async {
     // Already an admin
     if (isAdmin) return true;
-    
+
     // Otherwise ask for an admin PIN
     final success = await Get.dialog<bool>(
       _AdminOverrideDialog(reason: reason, db: _db),
@@ -176,43 +178,72 @@ class _AdminOverrideDialogState extends State<_AdminOverrideDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 10),
-            const HugeIcon(icon: HugeIcons.strokeRoundedShield02, size: 48, color: AppColors.red),
+            const HugeIcon(
+                icon: HugeIcons.strokeRoundedShield02,
+                size: 48,
+                color: AppColors.red),
             const SizedBox(height: 16),
             Text('auth_admin_approval'.tr,
-                style: TextStyle(fontFamily: 'Gilroy', fontSize: 20, fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.textWhite : const Color(0xFF0F172A))),
+                style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? AppColors.textWhite
+                        : const Color(0xFF0F172A))),
             const SizedBox(height: 8),
             Text('auth_admin_req_desc'.tr,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: AppColors.textGrey)),
+                style: const TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 13,
+                    color: AppColors.textGrey)),
             const SizedBox(height: 8),
             Text(widget.reason,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: 'Gilroy', fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.red)),
+                style: const TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.red)),
             const SizedBox(height: 24),
 
             // PIN Dots
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(6, (i) => _PinDot(filled: i < _pin.length, isDark: isDark)),
+              children: List.generate(
+                  6, (i) => _PinDot(filled: i < _pin.length, isDark: isDark)),
             ),
             const SizedBox(height: 10),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: _error.isEmpty
                   ? const SizedBox(height: 16)
-                  : Text(_error, key: const ValueKey('err'),
-                      style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.red, fontSize: 12, fontWeight: FontWeight.w600)),
+                  : Text(_error,
+                      key: const ValueKey('err'),
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy',
+                          color: AppColors.red,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
             ),
             const SizedBox(height: 16),
 
             // Numpad
-            _SmallNumpad(onDigit: _addDigit, onBackspace: _backspace, onClear: _clearPin, isDark: isDark),
+            _SmallNumpad(
+                onDigit: _addDigit,
+                onBackspace: _backspace,
+                onClear: _clearPin,
+                isDark: isDark),
             const SizedBox(height: 20),
-            
+
             TextButton(
               onPressed: () => Get.back(result: false),
-              child: Text('auth_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', color: AppColors.textGrey, fontWeight: FontWeight.w600)),
+              child: Text('auth_cancel'.tr,
+                  style: const TextStyle(
+                      fontFamily: 'Gilroy',
+                      color: AppColors.textGrey,
+                      fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -237,7 +268,9 @@ class _PinDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: filled ? AppColors.primary2 : Colors.transparent,
         border: Border.all(
-          color: filled ? AppColors.primary2 : (isDark ? AppColors.bgBorder : const Color(0xFFCBD5E1)),
+          color: filled
+              ? AppColors.primary2
+              : (isDark ? AppColors.bgBorder : const Color(0xFFCBD5E1)),
           width: 2,
         ),
       ),
@@ -251,31 +284,47 @@ class _SmallNumpad extends StatelessWidget {
   final VoidCallback onClear;
   final bool isDark;
 
-  const _SmallNumpad({required this.onDigit, required this.onBackspace, required this.onClear, required this.isDark});
+  const _SmallNumpad(
+      {required this.onDigit,
+      required this.onBackspace,
+      required this.onClear,
+      required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final rows = [['1','2','3'],['4','5','6'],['7','8','9'],['C','0','⌫']];
+    final rows = [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      ['C', '0', '⌫']
+    ];
     return Column(
-      children: rows.map((r) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: r.map((k) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: _NumKeySmall(
-              label: k,
-              isAction: k == 'C' || k == '⌫',
-              isDark: isDark,
-              onTap: () {
-                if (k == '⌫') onBackspace();
-                else if (k == 'C') onClear();
-                else onDigit(k);
-              },
-            ),
-          )).toList(),
-        ),
-      )).toList(),
+      children: rows
+          .map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: r
+                      .map((k) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: _NumKeySmall(
+                              label: k,
+                              isAction: k == 'C' || k == '⌫',
+                              isDark: isDark,
+                              onTap: () {
+                                if (k == '⌫')
+                                  onBackspace();
+                                else if (k == 'C')
+                                  onClear();
+                                else
+                                  onDigit(k);
+                              },
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ))
+          .toList(),
     );
   }
 }
@@ -286,13 +335,23 @@ class _NumKeySmall extends StatelessWidget {
   final bool isAction;
   final bool isDark;
 
-  const _NumKeySmall({required this.label, required this.onTap, this.isAction = false, required this.isDark});
+  const _NumKeySmall(
+      {required this.label,
+      required this.onTap,
+      this.isAction = false,
+      required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final bg = isAction ? Colors.transparent : (isDark ? AppColors.bgCard : const Color(0xFFF1F5F9));
-    final border = isAction ? Colors.transparent : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0));
-    final textCol = isAction ? AppColors.textGrey : (isDark ? AppColors.textWhite : const Color(0xFF0F172A));
+    final bg = isAction
+        ? Colors.transparent
+        : (isDark ? AppColors.bgCard : const Color(0xFFF1F5F9));
+    final border = isAction
+        ? Colors.transparent
+        : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0));
+    final textCol = isAction
+        ? AppColors.textGrey
+        : (isDark ? AppColors.textWhite : const Color(0xFF0F172A));
 
     return Material(
       color: bg,
@@ -310,7 +369,11 @@ class _NumKeySmall extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: TextStyle(fontFamily: 'Gilroy', fontSize: 18, fontWeight: FontWeight.w600, color: textCol),
+            style: TextStyle(
+                fontFamily: 'Gilroy',
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: textCol),
           ),
         ),
       ),

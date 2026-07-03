@@ -280,6 +280,194 @@ class _NumPadDialogState extends State<_NumPadDialog> {
   }
 }
 
+// ─── NumPadWidget — inline numpad (display + keys) ───────────────────────────
+
+class NumPadWidget extends StatefulWidget {
+  final TextEditingController controller;
+  final String? label;
+  final String? suffix;
+  final bool allowDecimal;
+
+  const NumPadWidget({
+    super.key,
+    required this.controller,
+    this.label,
+    this.suffix,
+    this.allowDecimal = true,
+  });
+
+  @override
+  State<NumPadWidget> createState() => _NumPadWidgetState();
+}
+
+class _NumPadWidgetState extends State<NumPadWidget> {
+  late String _val;
+
+  @override
+  void initState() {
+    super.initState();
+    _val = widget.controller.text;
+  }
+
+  void _press(String key) {
+    setState(() {
+      switch (key) {
+        case '⌫':
+          if (_val.isNotEmpty) _val = _val.substring(0, _val.length - 1);
+        case '.':
+          if (!_val.contains('.')) _val = _val.isEmpty ? '0.' : '$_val.';
+        case 'C':
+          _val = '';
+        default:
+          if (_val.length < 10) _val += key;
+      }
+      widget.controller.text = _val;
+      widget.controller.selection =
+          TextSelection.collapsed(offset: _val.length);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+    final displayBg = isDark ? AppColors.bgSurface : const Color(0xFFF4F6FB);
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final btnColor = isDark ? AppColors.bgCard : const Color(0xFFF0F0F5);
+    final displayValue = _val.isEmpty ? '0' : _val;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: displayBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (widget.label != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    widget.label!,
+                    style: const TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontSize: 12,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        displayValue,
+                        style: TextStyle(
+                          fontFamily: 'Gilroy',
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: textColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (widget.suffix != null && widget.suffix!.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.suffix!,
+                      style: const TextStyle(
+                        fontFamily: 'Gilroy',
+                        fontSize: 14,
+                        color: AppColors.textGrey,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _kRow(['7', '8', '9'], textColor, btnColor),
+        const SizedBox(height: 8),
+        _kRow(['4', '5', '6'], textColor, btnColor),
+        const SizedBox(height: 8),
+        _kRow(['1', '2', '3'], textColor, btnColor),
+        const SizedBox(height: 8),
+        Row(children: [
+          if (widget.allowDecimal)
+            _kKey('.', textColor, btnColor)
+          else
+            _kKey('C', textColor, btnColor, color: AppColors.red.withAlpha(180)),
+          const SizedBox(width: 8),
+          _kKey('0', textColor, btnColor),
+          const SizedBox(width: 8),
+          _kKey('⌫', textColor, btnColor, isBack: true),
+        ]),
+      ],
+    );
+  }
+
+  Widget _kRow(List<String> keys, Color textColor, Color btnColor) {
+    return Row(
+      children: keys.asMap().entries.map((e) {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: e.key == 0 ? 0 : 8),
+            child: _kBody(e.value, textColor, btnColor),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _kKey(String label, Color textColor, Color btnColor,
+      {Color? color, bool isBack = false}) {
+    return Expanded(
+        child: _kBody(label, textColor, btnColor, color: color, isBack: isBack));
+  }
+
+  Widget _kBody(String label, Color textColor, Color btnColor,
+      {Color? color, bool isBack = false}) {
+    return GestureDetector(
+      onTap: () => _press(label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        height: 52,
+        decoration: BoxDecoration(
+          color: isBack ? AppColors.red.withAlpha(20) : btnColor,
+          borderRadius: BorderRadius.circular(10),
+          border: isBack ? Border.all(color: AppColors.red.withAlpha(60)) : null,
+        ),
+        child: Center(
+          child: isBack
+              ? const Icon(Icons.backspace_outlined, color: AppColors.red, size: 20)
+              : Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: label.length > 1 ? 16 : 20,
+                    fontWeight: FontWeight.w600,
+                    color: color ?? textColor,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─── NumPadField — drop-in replacement for numeric TextFormField ─────────────
 
 class NumPadField extends StatelessWidget {

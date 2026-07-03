@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/ingredients_controller.dart';
-import '../../controllers/locale_controller.dart';
-import '../../controllers/theme_controller.dart';
 import '../../core/constants/color_constants.dart';
 import '../pos/pos_screen.dart';
 import '../products/products_screen.dart';
@@ -17,8 +14,8 @@ import '../stock/stock_movements_screen.dart';
 import '../stock/stock_report_screen.dart';
 
 const double _kCollapsedWidth = 72.0;
-const double _kExpandedWidth  = 220.0;
-const double _kDesktopBreak   = 1000.0;
+const double _kExpandedWidth = 220.0;
+const double _kDesktopBreak = 1000.0;
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -32,15 +29,15 @@ class _AppShellState extends State<AppShell> {
   late final bool _isAdmin;
   bool _expanded = true; // manually toggled by user
 
-  static const _allPages = [
-    PosScreen(),
-    ProductsScreen(),
-    IngredientsScreen(),
-    RecipesScreen(),
-    ReportsScreen(),
-    SettingsScreen(),
-    StockMovementsScreen(),
-    StockReportScreen(),
+  static final _allPages = [
+    const PosScreen(),
+    const ProductsScreen(),
+    const IngredientsScreen(),
+    const RecipesScreen(),
+    const ReportsScreen(),
+    const SettingsScreen(),
+    const StockMovementsScreen(),
+    const StockReportScreen(),
   ];
 
   static final _allIcons = [
@@ -65,13 +62,14 @@ class _AppShellState extends State<AppShell> {
     'nav_stock_report',
   ];
 
-  static const _adminOrder   = [4, 0, 1, 6, 7, 2, 3, 5];
+  static const _adminOrder = [4, 0, 1, 6, 7, 2, 3, 5];
   static const _cashierOrder = [0, 1, 2, 6, 7, 3, 4, 5];
 
-  List<int>               get _order    => _isAdmin ? _adminOrder : _cashierOrder;
-  List<Widget>            get _pages    => _order.map((i) => _allPages[i]).toList();
-  List<List<List<dynamic>>> get _navIcons => _order.map((i) => _allIcons[i]).toList();
-  List<String>            get _navKeys  => _order.map((i) => _allKeys[i]).toList();
+  List<int> get _order => _isAdmin ? _adminOrder : _cashierOrder;
+  List<Widget> get _pages => _order.map((i) => _allPages[i]).toList();
+  List<List<List<dynamic>>> get _navIcons =>
+      _order.map((i) => _allIcons[i]).toList();
+  List<String> get _navKeys => _order.map((i) => _allKeys[i]).toList();
 
   @override
   void initState() {
@@ -97,7 +95,8 @@ class _AppShellState extends State<AppShell> {
           _AnimatedRail(
             expanded: showExpanded,
             isDesktop: isDesktop,
-            onToggle: isDesktop ? () => setState(() => _expanded = !_expanded) : null,
+            onToggle:
+                isDesktop ? () => setState(() => _expanded = !_expanded) : null,
             idx: _idx,
             navIcons: _navIcons,
             navKeys: _navKeys,
@@ -140,16 +139,17 @@ class _AnimatedRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth    = AuthController.to;
-    final isDark  = Theme.of(context).brightness == Brightness.dark;
+    final auth = AuthController.to;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.bgSurface : Colors.white;
-    final border  = isDark ? AppColors.bgBorder  : const Color(0xffE8E8EE);
+    final border = isDark ? AppColors.bgBorder : const Color(0xffE8E8EE);
     final targetW = expanded ? _kExpandedWidth : _kCollapsedWidth;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeInOut,
       width: targetW,
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: surface,
         border: Border(right: BorderSide(color: border)),
@@ -186,7 +186,8 @@ class _AnimatedRail extends StatelessWidget {
                             children: [
                               const SizedBox(width: 10),
                               ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 110),
+                                constraints:
+                                    const BoxConstraints(maxWidth: 110),
                                 child: Text(
                                   'Owaz Coffee',
                                   maxLines: 1,
@@ -195,7 +196,9 @@ class _AnimatedRail extends StatelessWidget {
                                     fontFamily: 'Gilroy',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+                                    color: isDark
+                                        ? AppColors.textWhite
+                                        : const Color(0xFF0F172A),
                                   ),
                                 ),
                               ),
@@ -206,7 +209,8 @@ class _AnimatedRail extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (onToggle != null)
-                  _ToggleBtn(expanded: expanded, onTap: onToggle!, compact: !expanded),
+                  _ToggleBtn(
+                      expanded: expanded, onTap: onToggle!, compact: !expanded),
               ],
             ),
           ),
@@ -223,7 +227,8 @@ class _AnimatedRail extends StatelessWidget {
               itemBuilder: (_, i) {
                 final selected = idx == i;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
                   child: Tooltip(
                     message: expanded ? '' : navKeys[i].tr,
                     preferBelow: false,
@@ -238,42 +243,56 @@ class _AnimatedRail extends StatelessWidget {
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           border: selected
-                              ? Border.all(color: AppColors.primary2.withAlpha(isDark ? 80 : 60), width: 1.2)
+                              ? Border.all(
+                                  color: AppColors.primary2
+                                      .withAlpha(isDark ? 80 : 60),
+                                  width: 1.2)
                               : null,
                         ),
                         child: Row(
                           children: [
-                            SizedBox(
-                              width: _kCollapsedWidth - 16,
-                              child: Center(
-                                child: HugeIcon(
-                                  icon: navIcons[i],
-                                  size: 20,
-                                  color: selected
-                                      ? AppColors.primary2
-                                      : AppColors.textGrey,
+                            if (expanded)
+                              SizedBox(
+                                // 2px narrower than exact fit to absorb
+                                // float-precision at animation end
+                                width: _kCollapsedWidth - 18,
+                                child: Center(
+                                  child: HugeIcon(
+                                    icon: navIcons[i],
+                                    size: 20,
+                                    color: selected
+                                        ? AppColors.primary2
+                                        : AppColors.textGrey,
+                                  ),
+                                ),
+                              )
+                            else
+                              Expanded(
+                                child: Center(
+                                  child: HugeIcon(
+                                    icon: navIcons[i],
+                                    size: 20,
+                                    color: selected
+                                        ? AppColors.primary2
+                                        : AppColors.textGrey,
+                                  ),
                                 ),
                               ),
-                            ),
                             if (expanded)
                               Expanded(
-                                child: AnimatedOpacity(
-                                  opacity: expanded ? 1.0 : 0.0,
-                                  duration: const Duration(milliseconds: 150),
-                                  child: Text(
-                                    navKeys[i].tr,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'Gilroy',
-                                      fontSize: 13,
-                                      fontWeight: selected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: selected
-                                          ? AppColors.primary2
-                                          : AppColors.textGrey,
-                                    ),
+                                child: Text(
+                                  navKeys[i].tr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontSize: 13,
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: selected
+                                        ? AppColors.primary2
+                                        : AppColors.textGrey,
                                   ),
                                 ),
                               ),
@@ -293,118 +312,137 @@ class _AnimatedRail extends StatelessWidget {
           Divider(color: border, indent: 12, endIndent: 12, height: 1),
 
           // ── Bottom: user + logout ──────────────────────────────────
-          Obx(() {
-            final user    = auth.currentUser.value;
-            final initial = user?.name.substring(0, 1).toUpperCase() ?? '?';
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              child: expanded
-                  ? Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: AppColors.primary.withAlpha(40),
-                          child: Text(initial,
+          if (expanded)
+            Obx(() {
+              final user = auth.currentUser.value;
+              final initial = user?.name.substring(0, 1).toUpperCase() ?? '?';
+              // Minimum width: 26+6+0+20 = 52px < 56px (collapsed sidebar).
+              // Ensures no overflow even at animation start (container=72px).
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 13,
+                      backgroundColor: AppColors.primary.withAlpha(40),
+                      child: Text(initial,
+                          style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            color: AppColors.primary2,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          )),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            user?.name ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.textWhite
+                                  : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            user?.role ?? '',
+                            style: const TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontSize: 10,
+                              color: AppColors.textGrey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Tooltip(
+                        message: 'gen_logout'.tr,
+                        child: GestureDetector(
+                          onTap: auth.logout,
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedLogout01,
+                            size: 18,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            })
+          else
+            Obx(() {
+              final user = auth.currentUser.value;
+              final initial = user?.name.substring(0, 1).toUpperCase() ?? '?';
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Tooltip(
+                      message: user?.name ?? '',
+                      child: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: AppColors.primary.withAlpha(40),
+                        child: Text(initial,
                             style: const TextStyle(
                               fontFamily: 'Gilroy',
                               color: AppColors.primary2,
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
                             )),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                user?.name ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
-                                ),
-                              ),
-                              Text(
-                                user?.role ?? '',
-                                style: const TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  fontSize: 10,
-                                  color: AppColors.textGrey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Tooltip(
-                          message: 'gen_logout'.tr,
-                          child: GestureDetector(
-                            onTap: auth.logout,
-                            child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedLogout01,
-                              size: 18,
-                              color: AppColors.textGrey,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Tooltip(
-                          message: user?.name ?? '',
-                          child: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: AppColors.primary.withAlpha(40),
-                            child: Text(initial,
-                              style: const TextStyle(
-                                fontFamily: 'Gilroy',
-                                color: AppColors.primary2,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              )),
-                          ),
-                        ),
-                        if (user != null) ...[
-                          const SizedBox(height: 4),
-                          SizedBox(
-                            width: 52,
-                            child: Text(
-                              user.name.split(' ').first,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? AppColors.textWhite.withAlpha(180) : const Color(0xFF334155),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Tooltip(
-                          message: 'gen_logout'.tr,
-                          child: GestureDetector(
-                            onTap: auth.logout,
-                            child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedLogout01,
-                              size: 18,
-                              color: AppColors.textGrey,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-            );
-          }),
+                    if (user != null) ...[
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 52,
+                        child: Text(
+                          user.name.split(' ').first,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.textWhite.withAlpha(180)
+                                : const Color(0xFF334155),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Tooltip(
+                      message: 'gen_logout'.tr,
+                      child: GestureDetector(
+                        onTap: auth.logout,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedLogout01,
+                          size: 18,
+                          color: AppColors.textGrey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -416,7 +454,8 @@ class _ToggleBtn extends StatelessWidget {
   final bool expanded;
   final bool compact;
   final VoidCallback onTap;
-  const _ToggleBtn({required this.expanded, required this.onTap, this.compact = false});
+  const _ToggleBtn(
+      {required this.expanded, required this.onTap, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -424,8 +463,8 @@ class _ToggleBtn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 25,
+        height: 25,
         margin: EdgeInsets.only(right: compact ? 0 : 6),
         decoration: BoxDecoration(
           color: isDark ? AppColors.bgCard : const Color(0xFFE8E8EE),
@@ -445,40 +484,6 @@ class _ToggleBtn extends StatelessWidget {
   }
 }
 
-// ── Language switcher cycling between RU → TK ─────────────────────────────────
-class _LangSwitcher extends StatelessWidget {
-  final LocaleController localeCtrl;
-  const _LangSwitcher({required this.localeCtrl});
-
-  static const _locales = [Locale('ru'), Locale('tk')];
-  static const _flags   = ['assets/icons/ruflag.svg', 'assets/icons/tmflag.svg'];
-  static const _labels  = ['RU', 'TM'];
-
-  @override
-  Widget build(BuildContext context) {
-    final code    = localeCtrl.currentCode;
-    final idx     = _locales.indexWhere((l) => l.languageCode == code).clamp(0, 1);
-    final nextIdx = (idx + 1) % _locales.length;
-
-    return Tooltip(
-      message: '${'set_language'.tr}: ${_labels[nextIdx]}',
-      child: GestureDetector(
-        onTap: () => localeCtrl.setLocale(_locales[nextIdx]),
-        child: Container(
-          width: 36,
-          height: 28,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.bgBorder),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: SvgPicture.asset(_flags[idx], fit: BoxFit.cover, width: 36, height: 28),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Low stock badge — safe wrapper around IngredientsController ───────────────
 class _LowStockBadge extends StatelessWidget {
   final bool expanded;
@@ -491,6 +496,43 @@ class _LowStockBadge extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final ctrl = Get.find<IngredientsController>();
+
+    if (!expanded) {
+      return Obx(() {
+        final count = ctrl.lowStock.length;
+        if (count == 0) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Tooltip(
+            message: '$count ${'gen_low_stock_warning'.tr}',
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppColors.red.withAlpha(30),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.red.withAlpha(80)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text('$count',
+                      style: const TextStyle(
+                        fontFamily: 'Gilroy',
+                        color: AppColors.red,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      )),
+                ),
+              ),
+            ),
+          ),
+        );
+      });
+    }
+
     return Obx(() {
       final count = ctrl.lowStock.length;
       if (count == 0) return const SizedBox.shrink();
@@ -502,64 +544,49 @@ class _LowStockBadge extends StatelessWidget {
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
               onTap: onTap,
-              child: expanded
-              ? Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.red.withAlpha(20),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.red.withAlpha(60)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 20, height: 20,
-                        decoration: BoxDecoration(
-                          color: AppColors.red.withAlpha(30),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text('$count',
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.red.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.red.withAlpha(60)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: AppColors.red.withAlpha(30),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text('$count',
                           style: const TextStyle(
                             fontFamily: 'Gilroy',
                             color: AppColors.red,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           )),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'gen_low_stock_warning'.tr,
-                          style: const TextStyle(
-                            fontFamily: 'Gilroy',
-                            color: AppColors.red,
-                            fontSize: 11,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'gen_low_stock_warning'.tr,
+                        style: const TextStyle(
+                          fontFamily: 'Gilroy',
+                          color: AppColors.red,
+                          fontSize: 11,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                )
-              : Container(
-                  width: 28, height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.red.withAlpha(30),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.red.withAlpha(80)),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text('$count',
-                    style: const TextStyle(
-                      fontFamily: 'Gilroy',
-                      color: AppColors.red,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    )),
+                    ),
+                  ],
                 ),
+              ),
             ),
           ),
         ),

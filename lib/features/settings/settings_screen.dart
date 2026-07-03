@@ -33,11 +33,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     final users = await _db.getAllUsers();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _users = users;
         _loading = false;
       });
+    }
   }
 
   @override
@@ -51,7 +52,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: bg,
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary2))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary2))
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
               child: Column(
@@ -203,27 +205,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Keep for backward compat (used nowhere else but just in case)
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Text(
-      text.toUpperCase(),
-      style: TextStyle(
-        fontFamily: 'Gilroy',
-        fontWeight: FontWeight.w700,
-        fontSize: 11,
-        letterSpacing: 0.8,
-        color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8),
-      ),
-    );
-  }
-}
-
 // ── Appearance card ───────────────────────────────────────────────────────────
 class _AppearanceCard extends StatelessWidget {
   @override
@@ -264,7 +245,9 @@ class _AppearanceCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: HugeIcon(
-                      icon: dark ? HugeIcons.strokeRoundedMoon02 : HugeIcons.strokeRoundedSun03,
+                      icon: dark
+                          ? HugeIcons.strokeRoundedMoon02
+                          : HugeIcons.strokeRoundedSun03,
                       size: 20,
                       color: AppColors.primary2,
                     ),
@@ -297,7 +280,7 @@ class _AppearanceCard extends StatelessWidget {
                 Switch(
                   value: dark,
                   onChanged: themeCtrl.setDark,
-                  activeColor: AppColors.primary2,
+                  activeThumbColor: AppColors.primary2,
                 ),
               ],
             ),
@@ -346,9 +329,12 @@ class _LanguageCard extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 margin: const EdgeInsets.only(bottom: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.primary.withAlpha(20) : Colors.transparent,
+                  color: selected
+                      ? AppColors.primary.withAlpha(20)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: selected ? AppColors.primary2 : Colors.transparent,
@@ -386,7 +372,10 @@ class _LanguageCard extends StatelessWidget {
                           color: AppColors.primary2,
                           shape: BoxShape.circle,
                         ),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, size: 13, color: Colors.white),
+                        child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                            size: 13,
+                            color: Colors.white),
                       ),
                   ],
                 ),
@@ -441,16 +430,20 @@ class _CategoryCard extends StatelessWidget {
               final color = _hexColor(cat.color);
               return Container(
                 decoration: BoxDecoration(
-                  border: e.key < cats.length - 1 ? Border(bottom: BorderSide(color: borderColor)) : null,
+                  border: e.key < cats.length - 1
+                      ? Border(bottom: BorderSide(color: borderColor))
+                      : null,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
                     children: [
                       Container(
                         width: 12,
                         height: 12,
-                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                        decoration:
+                            BoxDecoration(color: color, shape: BoxShape.circle),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -460,7 +453,8 @@ class _CategoryCard extends StatelessWidget {
                             fontFamily: 'Gilroy',
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                       ),
@@ -489,7 +483,8 @@ class _CategoryCard extends StatelessWidget {
                 bottom: const Radius.circular(14),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
                     Container(
@@ -499,7 +494,10 @@ class _CategoryCard extends StatelessWidget {
                         color: AppColors.primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 15, color: AppColors.primary2),
+                      child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedAdd01,
+                          size: 15,
+                          color: AppColors.primary2),
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -521,7 +519,8 @@ class _CategoryCard extends StatelessWidget {
     });
   }
 
-  void _showCatDialog(BuildContext context, ProductsController ctrl, {Category? cat}) {
+  void _showCatDialog(BuildContext context, ProductsController ctrl,
+      {Category? cat}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final nameCtrl = TextEditingController(text: cat?.name ?? '');
     String selectedColor = cat?.color ?? _palette[0];
@@ -539,7 +538,12 @@ class _CategoryCard extends StatelessWidget {
             color: bg,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: borderColor),
-            boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 60 : 15), blurRadius: 24, offset: const Offset(0, 8))],
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withAlpha(isDark ? 60 : 15),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8))
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -552,13 +556,22 @@ class _CategoryCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(color: AppColors.primary.withAlpha(20), borderRadius: BorderRadius.circular(9)),
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedGrid, size: 16, color: AppColors.primary2),
+                      decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(20),
+                          borderRadius: BorderRadius.circular(9)),
+                      child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedGrid,
+                          size: 16,
+                          color: AppColors.primary2),
                     ),
                     const SizedBox(width: 10),
                     Text(
                       cat == null ? 'set_cat_new'.tr : 'set_cat_edit'.tr,
-                      style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w800, fontSize: 16, color: textColor),
+                      style: TextStyle(
+                          fontFamily: 'Gilroy',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: textColor),
                     ),
                     const Spacer(),
                     GestureDetector(
@@ -566,15 +579,21 @@ class _CategoryCard extends StatelessWidget {
                       child: Container(
                         width: 28,
                         height: 28,
-                        decoration: BoxDecoration(color: Colors.grey.withAlpha(20), borderRadius: BorderRadius.circular(7)),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 15, color: AppColors.textGrey),
+                        decoration: BoxDecoration(
+                            color: Colors.grey.withAlpha(20),
+                            borderRadius: BorderRadius.circular(7)),
+                        child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedCancel01,
+                            size: 15,
+                            color: AppColors.textGrey),
                       ),
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Divider(color: borderColor, height: 1),
               ),
               Padding(
@@ -585,21 +604,43 @@ class _CategoryCard extends StatelessWidget {
                     // Name field
                     TextField(
                       controller: nameCtrl,
-                      style: TextStyle(fontFamily: 'Gilroy', fontSize: 14, color: textColor),
+                      style: TextStyle(
+                          fontFamily: 'Gilroy', fontSize: 14, color: textColor),
                       decoration: InputDecoration(
                         labelText: 'set_cat_name'.tr,
-                        labelStyle: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
+                        labelStyle: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 13,
+                            color: isDark
+                                ? AppColors.textGrey
+                                : const Color(0xFF64748B)),
                         filled: true,
-                        fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
+                        fillColor:
+                            isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                                color: AppColors.primary2, width: 1.5)),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Color picker
-                    Text('set_cat_color'.tr, style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.textGrey : const Color(0xFF64748B))),
+                    Text('set_cat_color'.tr,
+                        style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.textGrey
+                                : const Color(0xFF64748B))),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -620,9 +661,21 @@ class _CategoryCard extends StatelessWidget {
                                 color: sel ? Colors.white : Colors.transparent,
                                 width: 2.5,
                               ),
-                              boxShadow: sel ? [BoxShadow(color: color.withAlpha(120), blurRadius: 6)] : [],
+                              boxShadow: sel
+                                  ? [
+                                      BoxShadow(
+                                          color: color.withAlpha(120),
+                                          blurRadius: 6)
+                                    ]
+                                  : [],
                             ),
-                            child: sel ? HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, size: 14, color: Colors.white) : null,
+                            child: sel
+                                ? HugeIcon(
+                                    icon: HugeIcons
+                                        .strokeRoundedCheckmarkCircle01,
+                                    size: 14,
+                                    color: Colors.white)
+                                : null,
                           ),
                         );
                       }).toList(),
@@ -636,10 +689,15 @@ class _CategoryCard extends StatelessWidget {
                             onPressed: Get.back,
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: Colors.grey.withAlpha(60)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              side:
+                                  BorderSide(color: Colors.grey.withAlpha(60)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                             ),
-                            child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                            child: Text('gen_cancel'.tr,
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w600)),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -651,16 +709,22 @@ class _CategoryCard extends StatelessWidget {
                               if (cat == null) {
                                 await ctrl.addCategory(name, selectedColor);
                               } else {
-                                await ctrl.updateCategory(cat, name, selectedColor);
+                                await ctrl.updateCategory(
+                                    cat, name, selectedColor);
                               }
                               Get.back();
                             },
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary2,
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                             ),
-                            child: Text(cat == null ? 'gen_add'.tr : 'gen_save'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                            child: Text(
+                                cat == null ? 'gen_add'.tr : 'gen_save'.tr,
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],
@@ -675,7 +739,8 @@ class _CategoryCard extends StatelessWidget {
     }));
   }
 
-  void _confirmDelete(BuildContext context, ProductsController ctrl, Category cat) {
+  void _confirmDelete(
+      BuildContext context, ProductsController ctrl, Category cat) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     Get.dialog(Dialog(
       backgroundColor: Colors.transparent,
@@ -685,8 +750,14 @@ class _CategoryCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? AppColors.bgSurface : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 60 : 15), blurRadius: 24, offset: const Offset(0, 8))],
+          border: Border.all(
+              color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 60 : 15),
+                blurRadius: 24,
+                offset: const Offset(0, 8))
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -694,20 +765,31 @@ class _CategoryCard extends StatelessWidget {
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(color: AppColors.red.withAlpha(15), shape: BoxShape.circle),
-              child: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.red, size: 24),
+              decoration: BoxDecoration(
+                  color: AppColors.red.withAlpha(15), shape: BoxShape.circle),
+              child: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedDelete02,
+                  color: AppColors.red,
+                  size: 24),
             ),
             const SizedBox(height: 12),
             Text(
               '"${cat.name}" ${'set_cat_delete_title'.tr}',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A)),
             ),
             const SizedBox(height: 6),
             Text(
               'set_cat_delete_body'.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontSize: 12,
+                  color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
             ),
             const SizedBox(height: 20),
             Row(children: [
@@ -717,9 +799,12 @@ class _CategoryCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     side: BorderSide(color: Colors.grey.withAlpha(60)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Text('gen_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
+                  child: Text('gen_cancel'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy', fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -732,9 +817,12 @@ class _CategoryCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.red,
                     padding: const EdgeInsets.symmetric(vertical: 11),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Text('gen_delete'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
+                  child: Text('gen_delete'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy', fontWeight: FontWeight.w700)),
                 ),
               ),
             ]),
@@ -763,9 +851,13 @@ class _CatIconBtn extends StatelessWidget {
       child: Container(
         width: 26,
         height: 26,
-        decoration: BoxDecoration(color: color.withAlpha(15), borderRadius: BorderRadius.circular(6)),
+        decoration: BoxDecoration(
+            color: color.withAlpha(15), borderRadius: BorderRadius.circular(6)),
         alignment: Alignment.center,
-        child: HugeIcon(icon: hugeIcon ?? HugeIcons.strokeRoundedEdit02, size: 14, color: color),
+        child: HugeIcon(
+            icon: hugeIcon ?? HugeIcons.strokeRoundedEdit02,
+            size: 14,
+            color: color),
       ),
     );
   }
@@ -785,10 +877,14 @@ class _AddUserBtn extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
-      icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserAdd01, size: 16, color: Colors.white),
+      icon: const HugeIcon(
+          icon: HugeIcons.strokeRoundedUserAdd01,
+          size: 16,
+          color: Colors.white),
       label: Text(
         'set_add_user'.tr,
-        style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13),
+        style: const TextStyle(
+            fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13),
       ),
     );
   }
@@ -823,7 +919,9 @@ class _UserTileState extends State<_UserTile> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _hovered ? (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF)) : cardColor,
+          color: _hovered
+              ? (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF))
+              : cardColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: _hovered ? AppColors.primary.withAlpha(60) : borderColor,
@@ -849,7 +947,9 @@ class _UserTileState extends State<_UserTile> {
               ),
               child: Center(
                 child: HugeIcon(
-                  icon: isAdmin ? HugeIcons.strokeRoundedShieldUser : HugeIcons.strokeRoundedUser,
+                  icon: isAdmin
+                      ? HugeIcons.strokeRoundedShieldUser
+                      : HugeIcons.strokeRoundedUser,
                   color: roleColor,
                   size: 20,
                 ),
@@ -879,8 +979,12 @@ class _UserTileState extends State<_UserTile> {
                       ),
                       const SizedBox(width: 6),
                       _MetaChip(
-                        label: isAdmin ? 'set_role_admin'.tr : 'set_role_cashier'.tr,
-                        hugeIcon: isAdmin ? HugeIcons.strokeRoundedShield02 : HugeIcons.strokeRoundedCashier,
+                        label: isAdmin
+                            ? 'set_role_admin'.tr
+                            : 'set_role_cashier'.tr,
+                        hugeIcon: isAdmin
+                            ? HugeIcons.strokeRoundedShield02
+                            : HugeIcons.strokeRoundedCashier,
                         color: roleColor,
                       ),
                     ],
@@ -916,7 +1020,8 @@ class _MetaChip extends StatelessWidget {
       children: [
         HugeIcon(icon: hugeIcon, size: 11, color: c),
         const SizedBox(width: 3),
-        Text(label, style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: c)),
+        Text(label,
+            style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: c)),
       ],
     );
   }
@@ -939,7 +1044,10 @@ class _StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 6),
           Text(
             active ? 'prod_status_active'.tr : 'prod_status_inactive'.tr,
@@ -983,7 +1091,9 @@ class _EditBtnState extends State<_EditBtn> {
             color: _hov ? AppColors.primary.withAlpha(20) : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
             border: Border.all(
-              color: _hov ? AppColors.primary.withAlpha(60) : Colors.grey.withAlpha(40),
+              color: _hov
+                  ? AppColors.primary.withAlpha(60)
+                  : Colors.grey.withAlpha(40),
             ),
           ),
           child: Center(
@@ -1057,7 +1167,9 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: HugeIcon(
-                        icon: isEdit ? HugeIcons.strokeRoundedPencilEdit01 : HugeIcons.strokeRoundedUserAdd01,
+                        icon: isEdit
+                            ? HugeIcons.strokeRoundedPencilEdit01
+                            : HugeIcons.strokeRoundedUserAdd01,
                         size: 18,
                         color: AppColors.primary2,
                       ),
@@ -1084,7 +1196,8 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                   controller: _name,
                   label: 'set_name'.tr,
                   hugeIcon: HugeIcons.strokeRoundedUser,
-                  validator: (v) => v?.isEmpty == true ? 'gen_required'.tr : null,
+                  validator: (v) =>
+                      v?.isEmpty == true ? 'gen_required'.tr : null,
                 ),
                 const SizedBox(height: 14),
 
@@ -1125,9 +1238,11 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                         onPressed: Get.back,
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: Text('set_cancel'.tr, style: const TextStyle(fontFamily: 'Gilroy')),
+                        child: Text('set_cancel'.tr,
+                            style: const TextStyle(fontFamily: 'Gilroy')),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1137,13 +1252,20 @@ class _UserFormDialogState extends State<_UserFormDialog> {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary2,
                           padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
                         ),
                         child: _saving
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
                             : Text(
                                 isEdit ? 'set_update'.tr : 'set_save'.tr,
-                                style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w700),
                               ),
                       ),
                     ),
@@ -1192,7 +1314,10 @@ class _CloseBtn extends StatelessWidget {
           color: Colors.grey.withAlpha(20),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 16, color: AppColors.textGrey),
+        child: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            size: 16,
+            color: AppColors.textGrey),
       ),
     );
   }
@@ -1233,14 +1358,17 @@ class _FormField extends StatelessWidget {
         ),
         filled: true,
         fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+          borderSide: BorderSide(
+              color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+          borderSide: BorderSide(
+              color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1266,7 +1394,9 @@ class _RoleSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('set_role'.tr, style: TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey)),
+        Text('set_role'.tr,
+            style: TextStyle(
+                fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -1329,13 +1459,24 @@ class _RoleChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? activeColor : (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF)),
+          color: selected
+              ? activeColor
+              : (isDark ? AppColors.bgCard : const Color(0xFFF8FAFF)),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: selected ? activeColor : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+            color: selected
+                ? activeColor
+                : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
             width: 1.5,
           ),
-          boxShadow: selected ? [BoxShadow(color: activeColor.withAlpha(60), blurRadius: 8, offset: const Offset(0, 3))] : [],
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                      color: activeColor.withAlpha(60),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3))
+                ]
+              : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1357,7 +1498,10 @@ class _RoleChip extends StatelessWidget {
             ),
             if (selected) ...[
               const SizedBox(width: 6),
-              HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, size: 14, color: Colors.white),
+              HugeIcon(
+                  icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                  size: 14,
+                  color: Colors.white),
             ],
           ],
         ),
@@ -1386,18 +1530,26 @@ class _ActiveToggle extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'set_active'.tr,
-                style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, fontWeight: FontWeight.w600, color: color),
+                style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: color),
               ),
             ),
             Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: AppColors.green,
+              activeThumbColor: AppColors.green,
               inactiveThumbColor: AppColors.red,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -1425,7 +1577,12 @@ class _PrinterCard extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: border),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 8), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(isDark ? 0 : 8),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Obx(() {
@@ -1440,25 +1597,50 @@ class _PrinterCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.primary2.withAlpha(20),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedPrinter, size: 18, color: AppColors.primary2)),
+                  child: const Center(
+                      child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedPrinter,
+                          size: 18,
+                          color: AppColors.primary2)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: printers.isEmpty
-                      ? Text('set_printer_none'.tr, style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: AppColors.textGrey))
+                      ? Text('set_printer_none'.tr,
+                          style: TextStyle(
+                              fontFamily: 'Gilroy',
+                              fontSize: 13,
+                              color: AppColors.textGrey))
                       : DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: printers.contains(selected) ? selected : null,
-                            hint: Text('set_printer_select'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13)),
+                            value:
+                                printers.contains(selected) ? selected : null,
+                            hint: Text('set_printer_select'.tr,
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy', fontSize: 13)),
                             isExpanded: true,
-                            style: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-                            dropdownColor: isDark ? AppColors.bgCard : Colors.white,
-                            items: printers.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13)))).toList(),
+                            style: TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontSize: 13,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A)),
+                            dropdownColor:
+                                isDark ? AppColors.bgCard : Colors.white,
+                            items: printers
+                                .map((p) => DropdownMenuItem(
+                                    value: p,
+                                    child: Text(p,
+                                        style: const TextStyle(
+                                            fontFamily: 'Gilroy',
+                                            fontSize: 13))))
+                                .toList(),
                             onChanged: (v) => print.selectPrinter(v ?? ''),
                           ),
                         ),
@@ -1468,13 +1650,20 @@ class _PrinterCard extends StatelessWidget {
                 GestureDetector(
                   onTap: print.refreshPrinters,
                   child: Container(
-                    width: 34, height: 34,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.bgSurface : const Color(0xFFF1F5F9),
+                      color: isDark
+                          ? AppColors.bgSurface
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(9),
                       border: Border.all(color: border),
                     ),
-                    child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 16, color: AppColors.textGrey)),
+                    child: const Center(
+                        child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedRefresh,
+                            size: 16,
+                            color: AppColors.textGrey)),
                   ),
                 ),
               ],
@@ -1492,13 +1681,27 @@ class _PrinterCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('set_printer_auto'.tr, style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 13, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                        Text('set_printer_auto'.tr,
+                            style: TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A))),
                         const SizedBox(height: 2),
-                        Text('set_printer_auto_desc'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 11, color: AppColors.textGrey)),
+                        Text('set_printer_auto_desc'.tr,
+                            style: const TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontSize: 11,
+                                color: AppColors.textGrey)),
                       ],
                     ),
                   ),
-                  Switch(value: auto, onChanged: print.setAutoPrint, activeColor: AppColors.primary2),
+                  Switch(
+                      value: auto,
+                      onChanged: print.setAutoPrint,
+                      activeThumbColor: AppColors.primary2),
                 ],
               ),
             ),
@@ -1515,8 +1718,11 @@ class _PrinterCard extends StatelessWidget {
                     final ok = await print.testPrint();
                     Get.snackbar(
                       ok ? 'gen_success'.tr : 'gen_error'.tr,
-                      ok ? 'set_printer_test_ok'.tr : 'set_printer_test_fail'.tr,
-                      backgroundColor: (ok ? AppColors.green : AppColors.red).withAlpha(200),
+                      ok
+                          ? 'set_printer_test_ok'.tr
+                          : 'set_printer_test_fail'.tr,
+                      backgroundColor:
+                          (ok ? AppColors.green : AppColors.red).withAlpha(200),
                       colorText: Colors.white,
                       duration: const Duration(seconds: 2),
                       snackPosition: SnackPosition.BOTTOM,
@@ -1525,10 +1731,18 @@ class _PrinterCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     side: BorderSide(color: AppColors.primary2.withAlpha(80)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedPrinter, size: 16, color: AppColors.primary2),
-                  label: Text('set_printer_test'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, color: AppColors.primary2)),
+                  icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedPrinter,
+                      size: 16,
+                      color: AppColors.primary2),
+                  label: Text('set_printer_test'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary2)),
                 ),
               ),
             ],
@@ -1557,7 +1771,12 @@ class _ActionLogNavCard extends StatelessWidget {
           color: bg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: border),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(isDark ? 0 : 5), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 0 : 5),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
         ),
         child: Row(
           children: [
@@ -1569,7 +1788,10 @@ class _ActionLogNavCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Center(
-                child: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.purple, size: 20),
+                child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedTask01,
+                    color: AppColors.purple,
+                    size: 20),
               ),
             ),
             const SizedBox(width: 14),
@@ -1577,9 +1799,20 @@ class _ActionLogNavCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('log_title'.tr, style: TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700, fontSize: 14, color: isDark ? AppColors.textWhite : const Color(0xFF0F172A))),
+                  Text('log_title'.tr,
+                      style: TextStyle(
+                          fontFamily: 'Gilroy',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: isDark
+                              ? AppColors.textWhite
+                              : const Color(0xFF0F172A))),
                   const SizedBox(height: 2),
-                  Text('log_subtitle'.tr, style: const TextStyle(fontFamily: 'Gilroy', fontSize: 12, color: AppColors.textGrey)),
+                  Text('log_subtitle'.tr,
+                      style: const TextStyle(
+                          fontFamily: 'Gilroy',
+                          fontSize: 12,
+                          color: AppColors.textGrey)),
                 ],
               ),
             ),

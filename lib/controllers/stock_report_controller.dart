@@ -27,21 +27,35 @@ class StockReportController extends GetxController {
   Future<void> loadReportData() async {
     isLoading.value = true;
     try {
-      summary.value = await _db.getStockSummary();
+      final rawSummary = await _db.getStockSummary();
       allProducts.value = await _db.getAllProducts();
       criticalIngredients.value = await _db.getCriticalStockIngredients();
+
+      // Compute maxProducible first so zeroStock is recipe-accurate
+      final map = <int, int>{};
+      for (final p in allProducts) {
+        map[p.id] = await _db.getMaxProducible(p.id);
+      }
+      maxProducible.value = map;
+
+      // zeroStock: use maxProducible if a recipe exists, else fallback to p.quantity
+      int zeroStock = 0;
+      double totalValue = 0;
+      for (final p in allProducts) {
+        final max = map[p.id] ?? -1;
+        final effectiveQty = max >= 0 ? max : p.quantity;
+        if (effectiveQty == 0) zeroStock++;
+        totalValue += p.price * effectiveQty;
+      }
+
+      summary.value = {
+        ...rawSummary,
+        'zeroStock': zeroStock,
+        'totalProductValue': totalValue,
+      };
     } finally {
       isLoading.value = false;
     }
-    _calcMaxProducible();
-  }
-
-  Future<void> _calcMaxProducible() async {
-    final map = <int, int>{};
-    for (final p in allProducts) {
-      map[p.id] = await _db.getMaxProducible(p.id);
-    }
-    maxProducible.value = map;
   }
 
   void setFilter(String filter) {
@@ -55,7 +69,8 @@ class StockReportController extends GetxController {
     return allProducts.where((p) {
       switch (filterType.value) {
         case 'zero':
-          return (maxProducible[p.id] ?? p.quantity) == 0;
+          final max = maxProducible[p.id] ?? -1;
+          return (max >= 0 ? max : p.quantity) == 0;
         case 'expired':
           return p.expireDate != null && p.expireDate!.isBefore(now);
         case 'expiring':

@@ -5,7 +5,6 @@ import '../../controllers/ingredients_controller.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
-import '../../core/widgets/numpad.dart';
 
 class IngredientsScreen extends StatelessWidget {
   const IngredientsScreen({super.key});
@@ -23,19 +22,22 @@ class IngredientsScreen extends StatelessWidget {
           _TopBar(),
           Expanded(
             child: Obx(() => ctrl.loading.value
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary2))
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary2))
                 : ctrl.ingredients.isEmpty
                     ? _EmptyState()
                     : GridView.builder(
                         padding: const EdgeInsets.all(20),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
                           childAspectRatio: 2.2,
                         ),
                         itemCount: ctrl.ingredients.length,
-                        itemBuilder: (_, i) => _IngTile(ingredient: ctrl.ingredients[i]),
+                        itemBuilder: (_, i) =>
+                            _IngTile(ingredient: ctrl.ingredients[i]),
                       )),
           ),
         ],
@@ -71,13 +73,15 @@ class _TopBar extends StatelessWidget {
                 ),
               ),
               Obx(() {
-                final count = Get.find<IngredientsController>().ingredients.length;
+                final count =
+                    Get.find<IngredientsController>().ingredients.length;
                 return Text(
                   '$count ${'ing_count'.tr}',
                   style: TextStyle(
                     fontFamily: 'Gilroy',
                     fontSize: 12,
-                    color: isDark ? AppColors.textGrey : const Color(0xFF94A3B8),
+                    color:
+                        isDark ? AppColors.textGrey : const Color(0xFF94A3B8),
                   ),
                 );
               }),
@@ -88,13 +92,20 @@ class _TopBar extends StatelessWidget {
             onPressed: () => Get.dialog(const IngredientFormDialog()),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             ),
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 18, color: Colors.white),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                size: 18,
+                color: Colors.white),
             label: Text(
               'ing_add'.tr,
-              style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 13),
+              style: const TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13),
             ),
           ),
         ],
@@ -116,7 +127,10 @@ class _EmptyState extends StatelessWidget {
               color: AppColors.primary.withAlpha(15),
               shape: BoxShape.circle,
             ),
-            child: HugeIcon(icon: HugeIcons.strokeRoundedWarehouse, size: 40, color: AppColors.primary2),
+            child: HugeIcon(
+                icon: HugeIcons.strokeRoundedWarehouse,
+                size: 40,
+                color: AppColors.primary2),
           ),
           const SizedBox(height: 16),
           Text(
@@ -125,15 +139,21 @@ class _EmptyState extends StatelessWidget {
               fontFamily: 'Gilroy',
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : const Color(0xFF64748B),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textGrey
+                  : const Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () => Get.dialog(const IngredientFormDialog()),
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary2),
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 16, color: Colors.white),
-            label: Text('ing_add'.tr, style: const TextStyle(fontFamily: 'Gilroy')),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                size: 16,
+                color: Colors.white),
+            label: Text('ing_add'.tr,
+                style: const TextStyle(fontFamily: 'Gilroy')),
           ),
         ],
       ),
@@ -152,16 +172,24 @@ class _IngTile extends StatefulWidget {
 class _IngTileState extends State<_IngTile> {
   bool _hovered = false;
 
-  bool get _isLow => widget.ingredient.minStock > 0 && widget.ingredient.stock <= widget.ingredient.minStock;
+  bool get _isLow =>
+      widget.ingredient.minStock > 0 &&
+      widget.ingredient.stock <= widget.ingredient.minStock;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ing = widget.ingredient;
     final cardColor = isDark ? AppColors.bgCard : Colors.white;
-    final borderColor = _isLow ? AppColors.red.withAlpha(100) : (_hovered ? AppColors.primary.withAlpha(60) : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)));
+    final borderColor = _isLow
+        ? AppColors.red.withAlpha(100)
+        : (_hovered
+            ? AppColors.primary.withAlpha(60)
+            : (isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)));
     final barColor = _isLow ? AppColors.red : AppColors.green;
-    final pct = ing.minStock > 0 ? (ing.stock / (ing.minStock * 3)).clamp(0.0, 1.0) : 1.0;
+    final pct = ing.minStock > 0
+        ? (ing.stock / (ing.minStock * 3)).clamp(0.0, 1.0)
+        : 1.0;
     final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
 
     return MouseRegion(
@@ -193,7 +221,8 @@ class _IngTileState extends State<_IngTile> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(color: barColor, shape: BoxShape.circle),
+                  decoration:
+                      BoxDecoration(color: barColor, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -212,13 +241,17 @@ class _IngTileState extends State<_IngTile> {
                 if (_isLow)
                   Container(
                     margin: const EdgeInsets.only(right: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.red.withAlpha(20),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppColors.red.withAlpha(70)),
                     ),
-                    child: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 10, color: AppColors.red),
+                    child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlert02,
+                        size: 10,
+                        color: AppColors.red),
                   ),
                 _SmallIconBtn(
                   icon: HugeIcons.strokeRoundedAdd01,
@@ -229,7 +262,8 @@ class _IngTileState extends State<_IngTile> {
                 _SmallIconBtn(
                   icon: HugeIcons.strokeRoundedPencilEdit01,
                   color: AppColors.textGrey,
-                  onTap: () => Get.dialog(IngredientFormDialog(ingredient: ing)),
+                  onTap: () =>
+                      Get.dialog(IngredientFormDialog(ingredient: ing)),
                 ),
               ],
             ),
@@ -240,7 +274,8 @@ class _IngTileState extends State<_IngTile> {
               borderRadius: BorderRadius.circular(3),
               child: LinearProgressIndicator(
                 value: pct,
-                backgroundColor: isDark ? AppColors.bgBorder : const Color(0xFFEEF2FF),
+                backgroundColor:
+                    isDark ? AppColors.bgBorder : const Color(0xFFEEF2FF),
                 color: barColor,
                 minHeight: 4,
               ),
@@ -256,7 +291,8 @@ class _IngTileState extends State<_IngTile> {
                     style: TextStyle(
                       fontFamily: 'Gilroy',
                       fontSize: 11,
-                      color: isDark ? AppColors.textDim : const Color(0xFF94A3B8),
+                      color:
+                          isDark ? AppColors.textDim : const Color(0xFF94A3B8),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -283,7 +319,8 @@ class _SmallIconBtn extends StatefulWidget {
   final List<List<dynamic>> icon;
   final Color color;
   final VoidCallback onTap;
-  const _SmallIconBtn({required this.icon, required this.color, required this.onTap});
+  const _SmallIconBtn(
+      {required this.icon, required this.color, required this.onTap});
 
   @override
   State<_SmallIconBtn> createState() => _SmallIconBtnState();
@@ -322,7 +359,8 @@ class _DialogShell extends StatelessWidget {
   final String title;
   final Widget content;
   final double width;
-  const _DialogShell({required this.title, required this.content, this.width = 420});
+  const _DialogShell(
+      {required this.title, required this.content, this.width = 420});
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +448,10 @@ class _CloseX extends StatelessWidget {
           color: Colors.grey.withAlpha(20),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 16, color: AppColors.textGrey),
+        child: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            size: 16,
+            color: AppColors.textGrey),
       ),
     );
   }
@@ -442,27 +483,38 @@ class _DField extends StatelessWidget {
     final dec = InputDecoration(
       labelText: label,
       suffixText: suffix,
-      labelStyle: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
+      labelStyle: TextStyle(
+          fontFamily: 'Gilroy',
+          fontSize: 13,
+          color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
       filled: true,
       fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+              color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+              color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
+      errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.red)),
     );
 
-    if (numeric) {
-      return NumPadField(
-        controller: controller,
-        numpadLabel: label,
-        numpadSuffix: suffix,
-        validator: validator,
-        style: textStyle,
-        decoration: dec,
-      );
-    }
-    return TextFormField(controller: controller, validator: validator, style: textStyle, decoration: dec);
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      style: textStyle,
+      decoration: dec,
+      keyboardType: numeric
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.text,
+    );
   }
 }
 
@@ -488,11 +540,13 @@ class _DialogActions extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 13),
               side: BorderSide(color: Colors.grey.withAlpha(60)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             child: Text(
               cancelLabel,
-              style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -503,13 +557,19 @@ class _DialogActions extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary2,
               padding: const EdgeInsets.symmetric(vertical: 13),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             child: loading
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
                 : Text(
                     confirmLabel,
-                    style: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        fontFamily: 'Gilroy', fontWeight: FontWeight.w700),
                   ),
           ),
         ),
@@ -531,9 +591,12 @@ class IngredientFormDialog extends StatefulWidget {
 class _IngredientFormDialogState extends State<IngredientFormDialog> {
   final _form = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.ingredient?.name ?? '');
-  late final _cost = TextEditingController(text: widget.ingredient?.cost.toStringAsFixed(2) ?? '0');
-  late final _stock = TextEditingController(text: widget.ingredient?.stock.toStringAsFixed(2) ?? '0');
-  late final _minStock = TextEditingController(text: widget.ingredient?.minStock.toStringAsFixed(2) ?? '0');
+  late final _cost = TextEditingController(
+      text: widget.ingredient?.cost.toStringAsFixed(2) ?? '0');
+  late final _stock = TextEditingController(
+      text: widget.ingredient?.stock.toStringAsFixed(2) ?? '0');
+  late final _minStock = TextEditingController(
+      text: widget.ingredient?.minStock.toStringAsFixed(2) ?? '0');
   String _unit = 'g';
   bool _saving = false;
 
@@ -570,15 +633,31 @@ class _IngredientFormDialogState extends State<IngredientFormDialog> {
             ),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: _UnitDropdown(value: _unit, onChanged: (v) => setState(() => _unit = v), isDark: isDark)),
+              Expanded(
+                  child: _UnitDropdown(
+                      value: _unit,
+                      onChanged: (v) => setState(() => _unit = v),
+                      isDark: isDark)),
               const SizedBox(width: 12),
-              Expanded(child: _DField(controller: _cost, label: 'ing_cost'.tr, numeric: true)),
+              Expanded(
+                  child: _DField(
+                      controller: _cost, label: 'ing_cost'.tr, numeric: true)),
             ]),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: _DField(controller: _stock, label: 'ing_stock'.tr, numeric: true, suffix: _unit)),
+              Expanded(
+                  child: _DField(
+                      controller: _stock,
+                      label: 'ing_stock'.tr,
+                      numeric: true,
+                      suffix: _unit)),
               const SizedBox(width: 12),
-              Expanded(child: _DField(controller: _minStock, label: 'ing_min_stock'.tr, numeric: true, suffix: _unit)),
+              Expanded(
+                  child: _DField(
+                      controller: _minStock,
+                      label: 'ing_min_stock'.tr,
+                      numeric: true,
+                      suffix: _unit)),
             ]),
             const SizedBox(height: 20),
             _DialogActions(
@@ -608,7 +687,8 @@ class _IngredientFormDialogState extends State<IngredientFormDialog> {
       Get.back();
     } catch (e) {
       setState(() => _saving = false);
-      Get.snackbar('gen_error'.tr, e.toString(), backgroundColor: AppColors.red, colorText: Colors.white);
+      Get.snackbar('gen_error'.tr, e.toString(),
+          backgroundColor: AppColors.red, colorText: Colors.white);
     }
   }
 }
@@ -617,12 +697,13 @@ class _UnitDropdown extends StatelessWidget {
   final String value;
   final void Function(String) onChanged;
   final bool isDark;
-  const _UnitDropdown({required this.value, required this.onChanged, required this.isDark});
+  const _UnitDropdown(
+      {required this.value, required this.onChanged, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       dropdownColor: isDark ? AppColors.bgCard : Colors.white,
       style: TextStyle(
         fontFamily: 'Gilroy',
@@ -631,13 +712,26 @@ class _UnitDropdown extends StatelessWidget {
       ),
       decoration: InputDecoration(
         labelText: 'ing_unit'.tr,
-        labelStyle: TextStyle(fontFamily: 'Gilroy', fontSize: 13, color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
+        labelStyle: TextStyle(
+            fontFamily: 'Gilroy',
+            fontSize: 13,
+            color: isDark ? AppColors.textGrey : const Color(0xFF64748B)),
         filled: true,
         fillColor: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary2, width: 1.5)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+                color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+                color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide:
+                const BorderSide(color: AppColors.primary2, width: 1.5)),
       ),
       items: [
         DropdownMenuItem(value: 'g', child: Text('ing_unit_g'.tr)),
@@ -691,7 +785,10 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
             ),
             child: Row(
               children: [
-                HugeIcon(icon: HugeIcons.strokeRoundedWarehouse, size: 16, color: AppColors.primary2),
+                HugeIcon(
+                    icon: HugeIcons.strokeRoundedWarehouse,
+                    size: 16,
+                    color: AppColors.primary2),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -721,9 +818,21 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
           // Add / Remove toggle
           Row(
             children: [
-              Expanded(child: _TypeBtn(label: 'gen_add'.tr, type: 'add', color: AppColors.green, selected: _type == 'add', onTap: () => setState(() => _type = 'add'))),
+              Expanded(
+                  child: _TypeBtn(
+                      label: 'gen_add'.tr,
+                      type: 'add',
+                      color: AppColors.green,
+                      selected: _type == 'add',
+                      onTap: () => setState(() => _type = 'add'))),
               const SizedBox(width: 10),
-              Expanded(child: _TypeBtn(label: 'ing_remove'.tr, type: 'remove', color: AppColors.red, selected: _type == 'remove', onTap: () => setState(() => _type = 'remove'))),
+              Expanded(
+                  child: _TypeBtn(
+                      label: 'ing_remove'.tr,
+                      type: 'remove',
+                      color: AppColors.red,
+                      selected: _type == 'remove',
+                      onTap: () => setState(() => _type = 'remove'))),
             ],
           ),
           const SizedBox(height: 14),
@@ -752,7 +861,8 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
     final val = double.tryParse(_ctrl.text) ?? 0;
     if (val <= 0) return;
     setState(() => _saving = true);
-    await Get.find<IngredientsController>().adjustStock(widget.ingredient.id, _type == 'add' ? val : -val);
+    await Get.find<IngredientsController>()
+        .adjustStock(widget.ingredient.id, _type == 'add' ? val : -val);
     Get.back();
   }
 }
@@ -763,7 +873,12 @@ class _TypeBtn extends StatelessWidget {
   final Color color;
   final bool selected;
   final VoidCallback onTap;
-  const _TypeBtn({required this.label, required this.type, required this.color, required this.selected, required this.onTap});
+  const _TypeBtn(
+      {required this.label,
+      required this.type,
+      required this.color,
+      required this.selected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -785,7 +900,9 @@ class _TypeBtn extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             HugeIcon(
-              icon: type == 'add' ? HugeIcons.strokeRoundedAddCircle : HugeIcons.strokeRoundedRemoveCircle,
+              icon: type == 'add'
+                  ? HugeIcons.strokeRoundedAddCircle
+                  : HugeIcons.strokeRoundedRemoveCircle,
               size: 16,
               color: selected ? color : AppColors.textGrey,
             ),

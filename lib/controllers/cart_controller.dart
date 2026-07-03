@@ -36,15 +36,19 @@ class CartController extends GetxController {
         );
         items.refresh();
       } else {
-        Get.snackbar('Stok Yetersiz', '${product.name} için stok limiti doldu',
-            duration: const Duration(seconds: 2));
+        if (!Get.isSnackbarOpen) {
+          Get.snackbar('Stok Yetersiz', '${product.name} için stok limiti doldu',
+              duration: const Duration(seconds: 2));
+        }
       }
     } else {
       if (max != 0) {
         items.add(CartItem(product: product));
       } else {
-        Get.snackbar('Stok Yok', '${product.name} stokta bulunmuyor',
-            duration: const Duration(seconds: 2));
+        if (!Get.isSnackbarOpen) {
+          Get.snackbar('Stok Yok', '${product.name} stokta bulunmuyor',
+              duration: const Duration(seconds: 2));
+        }
       }
     }
   }

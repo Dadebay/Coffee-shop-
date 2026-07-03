@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/stock_report_controller.dart';
 import '../../core/constants/color_constants.dart';
+import '../../core/widgets/product_thumb.dart';
 
 class StockReportScreen extends StatelessWidget {
   const StockReportScreen({super.key});
@@ -307,24 +308,10 @@ class StockReportScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withAlpha(20),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          p.name.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(
-                            fontFamily: 'Gilroy',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary2,
-                          ),
-                        ),
-                      ),
+                    ProductThumb(
+                      imagePath: p.imagePath,
+                      isDark: isDark,
+                      size: 48,
                     ),
                     const SizedBox(width: 16),
                     Expanded(

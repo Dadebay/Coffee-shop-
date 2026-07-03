@@ -204,7 +204,7 @@ const Map<String, String> _ru = {
   'prod_name': 'Название',
   'prod_sku': 'Артикул / Код',
   'prod_price': 'Цена продажи',
-  'prod_cost': 'Себестоимость',
+  'prod_cost': 'Asyl bahasy',
   'prod_qty': 'Остаток',
   'prod_category': 'Категория',
   'prod_unit': 'Единица',
@@ -237,7 +237,7 @@ const Map<String, String> _ru = {
   'gen_info': 'Информация',
   'rep_title': 'Отчёты',
   'rep_revenue': 'Выручка',
-      'rep_cost': 'Себестоимость',
+  'rep_cost': 'Asyl bahasy',
   'rep_profit': 'Прибыль',
   'rep_margin': 'Маржа',
   'rep_general': 'Общий',
@@ -359,7 +359,7 @@ const Map<String, String> _ru = {
   'stock_rep_expiring': 'Скоро испортятся',
   'stock_rep_expired': 'Испортились',
   'stock_rep_export': 'Экспорт Excel',
-  
+
   // ── Feature 7 & Auth & Hardcoded ──
   'exp_order_no': 'Заказ №',
   'exp_date': 'Дата',
@@ -377,7 +377,7 @@ const Map<String, String> _ru = {
   'exp_qty': 'Количество',
   'exp_unit_cost': 'Ед. стоимость',
   'exp_ref_no': 'Ссылка №',
-  
+
   'prod_unit_select': '— Выбрать —',
   'prod_disc_type': 'Тип скидки',
   'prod_disc_perc': 'Процент (%)',
@@ -386,21 +386,25 @@ const Map<String, String> _ru = {
   'prod_expiry_short': 'Срок:',
   'prod_remaining': 'Осталось:',
   'prod_days': 'дней',
-  
+
   'auth_admin_approval': 'Подтверждение администратора',
-  'auth_admin_req_desc': 'Для этого действия требуется одобрение администратора:',
+  'auth_admin_req_desc':
+      'Для этого действия требуется одобрение администратора:',
   'auth_admin_pin': 'Введите PIN администратора',
   'auth_confirm': 'Подтвердить',
   'auth_cancel': 'Отмена',
   'auth_invalid_pin': 'Неверный или неавторизованный PIN!',
   'auth_req_delete': 'Для удаления товара требуется одобрение администратора',
-  'auth_req_price': 'Для изменения цены товара требуется одобрение администратора',
-  'auth_req_return': 'Для оформления возврата требуется одобрение администратора',
-  'auth_req_discount': 'Для скидки более 10% требуется одобрение администратора',
-  
+  'auth_req_price':
+      'Для изменения цены товара требуется одобрение администратора',
+  'auth_req_return':
+      'Для оформления возврата требуется одобрение администратора',
+  'auth_req_discount':
+      'Для скидки более 10% требуется одобрение администратора',
+
   'rep_excel_success': 'Отчёт сохранен в формате Excel.',
   'rep_excel_fail': 'Ошибка экспорта: ',
-  
+
   'prod_disc_fixed': 'Фиксированная (TMT)',
   'prod_select': '— Выбрать —',
   'gen_updated': 'Обновлено',
@@ -442,7 +446,7 @@ const Map<String, String> _ru = {
   'rep_order_detail': 'Заказ #',
   'rep_order_items': 'Товары в этом заказе',
   'order_status_paid': 'Оплачено',
-  'order_status_returned': 'Возвращён',
+  'order_status_returned': 'Возврат',
   'order_status_debt': 'В долг',
   // ── Stock used-in ──
   'stock_used_in_btn': 'В каких товарах',
@@ -496,7 +500,7 @@ const Map<String, String> _tk = {
   'prod_name': 'Haryt ady',
   'prod_sku': 'Kod / Belgi',
   'prod_price': 'Satyş bahasy',
-  'prod_cost': 'Tannarhy',
+  'prod_cost': 'Asyl bahasy',
   'prod_qty': 'Ammardaky mukdar',
   'prod_category': 'Kategoriýa',
   'prod_unit': 'Birlik',
@@ -529,7 +533,7 @@ const Map<String, String> _tk = {
   'gen_info': 'Maglumat',
   'rep_title': 'Hasabatlar',
   'rep_revenue': 'Girdeji',
-  'rep_cost': 'Tannarhy',
+  'rep_cost': 'Asyl bahasy',
   'rep_profit': 'Peýda',
   'rep_margin': 'Marža',
   'rep_general': 'Umumy',
@@ -651,7 +655,7 @@ const Map<String, String> _tk = {
   'stock_rep_expiring': 'Möhleti golaýlaşanlar',
   'stock_rep_expired': 'Möhleti geçenler',
   'stock_rep_export': 'Excel Eksport',
-  
+
   // ── Feature 7 & Auth & Hardcoded ──
   'exp_order_no': 'Sargyt No',
   'exp_date': 'Sene',
@@ -669,7 +673,7 @@ const Map<String, String> _tk = {
   'exp_qty': 'Möçber',
   'exp_unit_cost': 'Birlik bahasy',
   'exp_ref_no': 'Salgylanma No',
-  
+
   'prod_unit_select': '— Saýlaň —',
   'prod_disc_type': 'Arzanladyş görnüşi',
   'prod_disc_perc': 'Göterim (%)',
@@ -678,7 +682,7 @@ const Map<String, String> _tk = {
   'prod_expiry_short': 'Möhlet:',
   'prod_remaining': 'Galdy:',
   'prod_days': 'gün',
-  
+
   'auth_admin_approval': 'Administrator tassyklamasy',
   'auth_admin_req_desc': 'Bu amal üçin administrator tassyklamasy gerek:',
   'auth_admin_pin': 'Administrator PIN koduny giriziň',
@@ -686,13 +690,15 @@ const Map<String, String> _tk = {
   'auth_cancel': 'Ýatyr',
   'auth_invalid_pin': 'Nädogry ýa-da rugsatsyz PIN!',
   'auth_req_delete': 'Harydy pozmak üçin administrator tassyklamasy gerek',
-  'auth_req_price': 'Haryt bahasyny üýtgetmek üçin administrator tassyklamasy gerek',
+  'auth_req_price':
+      'Haryt bahasyny üýtgetmek üçin administrator tassyklamasy gerek',
   'auth_req_return': 'Yzyna gaýtarmak üçin administrator tassyklamasy gerek',
-  'auth_req_discount': '10%-den ýokary arzanladyş üçin administrator tassyklamasy gerek',
-  
+  'auth_req_discount':
+      '10%-den ýokary arzanladyş üçin administrator tassyklamasy gerek',
+
   'rep_excel_success': 'Hasabat Excel formatynda ýazdyryldy.',
   'rep_excel_fail': 'Eksport şowsuz: ',
-  
+
   'prod_disc_fixed': 'Kesgitli (TMT)',
   'prod_select': '— Saýlaň —',
   'gen_updated': 'Täzelendi',

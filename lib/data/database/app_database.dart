@@ -572,6 +572,7 @@ class AppDatabase extends _$AppDatabase {
       userId: userId,
       openingCash: Value(openingCash),
     ));
+    await _logAction(userId, 'shift_open', 'Vardiya #$id açıldı. Açılış nakit: $openingCash');
     return (select(shifts)..where((s) => s.id.equals(id))).getSingle();
   }
 
