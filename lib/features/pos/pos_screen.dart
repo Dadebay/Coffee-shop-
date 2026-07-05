@@ -28,7 +28,7 @@ class _PosScreenState extends State<PosScreen> {
       if (!shift.isOpen) {
         Get.dialog(
           const OpenShiftDialog(),
-          barrierDismissible: false,
+          barrierDismissible: true,
         );
       }
     });
@@ -81,9 +81,12 @@ class _PosScreenState extends State<PosScreen> {
                         ),
                       );
                     }
+                    // Recalculate max for all products accounting for shared ingredients in cart
+                    final cartQtys = {for (final i in cart.items) i.product.id: i.quantity};
+                    final adjustedMax = pos.calcAdjustedMax(cartQtys);
                     return ProductGrid(
                       products: pos.products,
-                      maxProducible: pos.maxProducible,
+                      maxProducible: adjustedMax,
                       onTap: cart.addProduct,
                     );
                   }),
@@ -99,10 +102,19 @@ class _PosScreenState extends State<PosScreen> {
               border: Border(left: BorderSide(color: borderColor)),
             ),
             child: CartPanel(
-              onCheckout: () => Get.dialog(
-                const PaymentDialog(),
-                barrierDismissible: false,
-              ),
+              onCheckout: () {
+                if (!ShiftController.to.isOpen) {
+                  Get.dialog(
+                    const OpenShiftDialog(),
+                    barrierDismissible: false,
+                  );
+                  return;
+                }
+                Get.dialog(
+                  const PaymentDialog(),
+                  barrierDismissible: false,
+                );
+              },
             ),
           ),
         ],
@@ -203,7 +215,7 @@ class _PosScreenState extends State<PosScreen> {
                           shift: ShiftController.to.activeShift.value!));
                     } else {
                       Get.dialog(const OpenShiftDialog(),
-                          barrierDismissible: false);
+                          barrierDismissible: true);
                     }
                   },
                   badge: isOpen,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' show Colors;
 import 'package:get/get.dart';
 import '../controllers/database_controller.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/ingredients_controller.dart';
 import '../core/constants/color_constants.dart';
 import '../data/database/app_database.dart';
 
@@ -78,6 +79,9 @@ class StockController extends GetxController {
         note: note,
       );
       await loadIngredients();
+      if (Get.isRegistered<IngredientsController>()) {
+        await IngredientsController.to.loadAll();
+      }
       Get.snackbar(
         'gen_success'.tr,
         'stock_receipt_added'.tr,
@@ -111,6 +115,9 @@ class StockController extends GetxController {
         userId: userId,
       );
       await loadIngredients();
+      if (Get.isRegistered<IngredientsController>()) {
+        await IngredientsController.to.loadAll();
+      }
       Get.snackbar(
         'gen_success'.tr,
         'stock_writeoff_done'.tr,

@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/ingredients_controller.dart';
+import '../../controllers/pos_controller.dart';
+import '../../controllers/products_controller.dart';
+import '../../controllers/stock_report_controller.dart';
 import '../../core/constants/color_constants.dart';
 import '../pos/pos_screen.dart';
 import '../products/products_screen.dart';
@@ -10,7 +13,6 @@ import '../ingredients/ingredients_screen.dart';
 import '../recipes/recipes_screen.dart';
 import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
-import '../stock/stock_movements_screen.dart';
 import '../stock/stock_report_screen.dart';
 
 const double _kCollapsedWidth = 72.0;
@@ -27,7 +29,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   late int _idx;
   late final bool _isAdmin;
-  bool _expanded = true; // manually toggled by user
+  bool _expanded = true;
 
   static final _allPages = [
     const PosScreen(),
@@ -36,7 +38,6 @@ class _AppShellState extends State<AppShell> {
     const RecipesScreen(),
     const ReportsScreen(),
     const SettingsScreen(),
-    const StockMovementsScreen(),
     const StockReportScreen(),
   ];
 
@@ -47,7 +48,6 @@ class _AppShellState extends State<AppShell> {
     HugeIcons.strokeRoundedBook02,
     HugeIcons.strokeRoundedChartBarLine,
     HugeIcons.strokeRoundedSettings01,
-    HugeIcons.strokeRoundedDeliveryReturn01,
     HugeIcons.strokeRoundedAnalytics01,
   ];
 
@@ -58,12 +58,11 @@ class _AppShellState extends State<AppShell> {
     'nav_recipes',
     'nav_reports',
     'nav_settings',
-    'nav_stock_movements',
     'nav_stock_report',
   ];
 
-  static const _adminOrder = [4, 0, 1, 6, 7, 2, 3, 5];
-  static const _cashierOrder = [0, 1, 2, 6, 7, 3, 4, 5];
+  static const _adminOrder = [4, 0, 1, 6, 2, 3, 5];
+  static const _cashierOrder = [0, 1, 2, 6, 3, 4, 5];
 
   List<int> get _order => _isAdmin ? _adminOrder : _cashierOrder;
   List<Widget> get _pages => _order.map((i) => _allPages[i]).toList();
@@ -78,15 +77,35 @@ class _AppShellState extends State<AppShell> {
     _idx = 0;
   }
 
+  void _onNavigate(int navIdx) {
+    setState(() => _idx = navIdx);
+    final pageIdx = _order[navIdx];
+    switch (pageIdx) {
+      case 0:
+        if (Get.isRegistered<PosController>()) PosController.to.loadProducts();
+      case 1:
+        if (Get.isRegistered<ProductsController>())
+          ProductsController.to.loadAll();
+      case 2:
+        if (Get.isRegistered<IngredientsController>())
+          IngredientsController.to.loadAll();
+      case 6:
+        if (Get.isRegistered<StockReportController>())
+          StockReportController.to.loadReportData();
+    }
+  }
+
+  void _onLowStockTap() {
+    final target = _order.indexOf(2); // IngredientsScreen
+    if (target != -1) _onNavigate(target);
+  }
+
   bool _isDesktop(double width) => width >= _kDesktopBreak;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isDesktop = _isDesktop(width);
-
-    // On tablet: always collapsed unless user explicitly expanded
-    // On desktop: default expanded, user can collapse
     final bool showExpanded = isDesktop ? _expanded : false;
 
     return Scaffold(
@@ -100,13 +119,8 @@ class _AppShellState extends State<AppShell> {
             idx: _idx,
             navIcons: _navIcons,
             navKeys: _navKeys,
-            onSelect: (i) => setState(() => _idx = i),
-            onLowStockTap: () {
-              final target = _order.indexOf(6); // 6 is StockMovementsScreen
-              if (target != -1) {
-                setState(() => _idx = target);
-              }
-            },
+            onSelect: _onNavigate,
+            onLowStockTap: _onLowStockTap,
           ),
           Expanded(child: _pages[_idx]),
         ],
@@ -157,15 +171,11 @@ class _AnimatedRail extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 14),
-
-          // ── Header: logo + toggle button ─────────────────────────
-          // collapsed=72px: 8+36+Spacer(0)+28+0margin = 72 ✓
-          // expanded=220px: 14+36+text+Spacer+28+6margin = fine ✓
           SizedBox(
             height: 44,
             child: Row(
               children: [
-                SizedBox(width: expanded ? 14 : 8),
+                const SizedBox(width: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Image.asset(
@@ -210,16 +220,13 @@ class _AnimatedRail extends StatelessWidget {
                 const Spacer(),
                 if (onToggle != null)
                   _ToggleBtn(
-                      expanded: expanded, onTap: onToggle!, compact: !expanded),
+                      expanded: expanded, onTap: onToggle!, compact: true),
               ],
             ),
           ),
-
           const SizedBox(height: 12),
           Divider(color: border, indent: 12, endIndent: 12, height: 1),
           const SizedBox(height: 8),
-
-          // ── Nav items ─────────────────────────────────────────────
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.zero,
@@ -253,9 +260,7 @@ class _AnimatedRail extends StatelessWidget {
                           children: [
                             if (expanded)
                               SizedBox(
-                                // 2px narrower than exact fit to absorb
-                                // float-precision at animation end
-                                width: _kCollapsedWidth - 18,
+                                width: _kCollapsedWidth - 24,
                                 child: Center(
                                   child: HugeIcon(
                                     icon: navIcons[i],
@@ -305,19 +310,12 @@ class _AnimatedRail extends StatelessWidget {
               },
             ),
           ),
-
-          // ── Low stock badge ────────────────────────────────────────
           _LowStockBadge(expanded: expanded, onTap: onLowStockTap),
-
           Divider(color: border, indent: 12, endIndent: 12, height: 1),
-
-          // ── Bottom: user + logout ──────────────────────────────────
           if (expanded)
             Obx(() {
               final user = auth.currentUser.value;
               final initial = user?.name.substring(0, 1).toUpperCase() ?? '?';
-              // Minimum width: 26+6+0+20 = 52px < 56px (collapsed sidebar).
-              // Ensures no overflow even at animation start (container=72px).
               return Padding(
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -484,7 +482,7 @@ class _ToggleBtn extends StatelessWidget {
   }
 }
 
-// ── Low stock badge — safe wrapper around IngredientsController ───────────────
+// ── Low stock badge ───────────────────────────────────────────────────────────
 class _LowStockBadge extends StatelessWidget {
   final bool expanded;
   final VoidCallback onTap;

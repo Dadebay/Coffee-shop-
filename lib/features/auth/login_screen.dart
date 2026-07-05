@@ -26,7 +26,6 @@ class LoginScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Logo
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
@@ -56,8 +55,6 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-
-              // PIN dots
               Obx(() => Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -80,8 +77,6 @@ class LoginScreen extends StatelessWidget {
                           ),
                   )),
               const SizedBox(height: 20),
-
-              // Numpad
               _Numpad(
                 onDigit: auth.addDigit,
                 onBackspace: auth.backspace,

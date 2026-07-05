@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart';
 import '../data/database/app_database.dart';
 import 'database_controller.dart';
+import 'recipes_controller.dart';
 
 class IngredientsController extends GetxController {
   static IngredientsController get to => Get.find();
@@ -23,6 +24,9 @@ class IngredientsController extends GetxController {
     ingredients.value = await _db.getAllIngredients();
     lowStock.value = await _db.getLowStockIngredients();
     loading.value = false;
+    if (Get.isRegistered<RecipesController>()) {
+      Get.find<RecipesController>().loadData();
+    }
   }
 
   Future<void> save({

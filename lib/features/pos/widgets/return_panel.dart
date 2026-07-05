@@ -51,7 +51,10 @@ class _ReturnPanelState extends State<ReturnPanel> {
       Dialog(
         backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: SizedBox(
+          width: 420,
+          child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -162,6 +165,7 @@ class _ReturnPanelState extends State<ReturnPanel> {
             ],
           ),
         ),
+        ),
       ),
     );
 
@@ -202,6 +206,7 @@ class _ReturnPanelState extends State<ReturnPanel> {
     return Dialog(
       backgroundColor: isDark ? AppColors.bgSurface : const Color(0xFFF8FAFF),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: SizedBox(
         width: 560,
         height: 560,

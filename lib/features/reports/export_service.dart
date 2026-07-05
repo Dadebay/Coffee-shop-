@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:excel/excel.dart';
@@ -6,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/constants/color_constants.dart';
 import '../../data/database/app_database.dart';
 
 class ExportService {
@@ -80,7 +82,6 @@ class ExportService {
     if (bytes == null) return;
 
     if (kIsWeb) {
-      // Web download
       final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       final url = html.Url.createObjectUrlFromBlob(blob);
       html.AnchorElement(href: url)
@@ -88,12 +89,39 @@ class ExportService {
         ..click();
       html.Url.revokeObjectUrl(url);
     } else {
-      // Desktop/Mobile download to documents
       final directory = await getApplicationDocumentsDirectory();
       final path = '${directory.path}/$fileName';
       File(path)
         ..createSync(recursive: true)
         ..writeAsBytesSync(bytes);
+
+      Get.showSnackbar(GetSnackBar(
+        title: 'exp_saved_to'.tr,
+        message: path,
+        duration: const Duration(seconds: 6),
+        backgroundColor: AppColors.green,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(12),
+        icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+        mainButton: TextButton(
+          onPressed: () {
+            Get.closeCurrentSnackbar();
+            if (Platform.isWindows) {
+              Process.run('explorer.exe', ['/select,', path]);
+            } else if (Platform.isMacOS) {
+              Process.run('open', [directory.path]);
+            }
+          },
+          child: Text(
+            'exp_open_folder'.tr,
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ));
     }
   }
 }

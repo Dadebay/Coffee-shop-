@@ -16,6 +16,10 @@ class PosController extends GetxController {
   final RxBool loadingProducts = false.obs;
   final RxMap<int, int> maxProducible = <int, int>{}.obs; // productId → max count (-1 = no recipe)
 
+  // Cached for live adjustment
+  final RxList<Ingredient> _ingredients = <Ingredient>[].obs;
+  final RxMap<int, List<Recipe>> _productRecipes = <int, List<Recipe>>{}.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -36,15 +40,64 @@ class PosController extends GetxController {
       search: search.value.isEmpty ? null : search.value,
     );
     loadingProducts.value = false;
-    _calcMaxProducible();
+    await _calcMaxProducible();
   }
 
   Future<void> _calcMaxProducible() async {
+    // Load all ingredients and recipes for all products once
+    _ingredients.value = await _db.getAllIngredients();
+    final recipeMap = <int, List<Recipe>>{};
+    for (final p in products) {
+      recipeMap[p.id] = await _db.getRecipesForProduct(p.id);
+    }
+    _productRecipes.value = recipeMap;
+
     final map = <int, int>{};
     for (final p in products) {
       map[p.id] = await _db.getMaxProducible(p.id);
     }
     maxProducible.value = map;
+  }
+
+  /// Returns maxProducible adjusted for ingredient consumption in [cartQtys].
+  /// cartQtys: productId → quantity in cart
+  Map<int, int> calcAdjustedMax(Map<int, int> cartQtys) {
+    if (cartQtys.isEmpty || _ingredients.isEmpty) return Map.from(maxProducible);
+
+    // Total ingredient consumption from cart
+    final ingConsumed = <int, double>{};
+    for (final entry in cartQtys.entries) {
+      final recipes = _productRecipes[entry.key] ?? [];
+      for (final r in recipes) {
+        ingConsumed[r.ingredientId] = (ingConsumed[r.ingredientId] ?? 0) + r.quantity * entry.value;
+      }
+    }
+
+    // Adjusted stock per ingredient
+    final ingStock = <int, double>{for (final i in _ingredients) i.id: i.stock};
+    final adjStock = <int, double>{};
+    for (final entry in ingStock.entries) {
+      adjStock[entry.key] = entry.value - (ingConsumed[entry.key] ?? 0);
+    }
+
+    // Recalculate max for each product from adjusted stock
+    final result = <int, int>{};
+    for (final p in products) {
+      final recipes = _productRecipes[p.id] ?? [];
+      if (recipes.isEmpty) {
+        result[p.id] = maxProducible[p.id] ?? -1;
+      } else {
+        int max = 99999;
+        for (final r in recipes) {
+          if (r.quantity <= 0) continue;
+          final stock = adjStock[r.ingredientId] ?? 0;
+          final fromThis = (stock / r.quantity).floor();
+          if (fromThis < max) max = fromThis;
+        }
+        result[p.id] = max == 99999 ? -1 : max.clamp(0, 99999);
+      }
+    }
+    return result;
   }
 
   void selectCategory(int? id) => selectedCategory.value = id;
@@ -74,6 +127,7 @@ class PosController extends GetxController {
     );
 
     cart.clear();
+    await loadProducts();
     return order;
   }
 }

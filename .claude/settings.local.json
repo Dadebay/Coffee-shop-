@@ -51,7 +51,11 @@
       "Bash(grep -v \"//\")",
       "Skill(code-review)",
       "Skill(code-review:*)",
-      "Bash(where flutter *)"
+      "Bash(where flutter *)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\stock\\\\stock_movements_screen.dart\")",
+      "Bash(xargs wc -l)",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\recipes\\\\widgets\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\settings\\\\widgets\")"
     ]
   }
 }

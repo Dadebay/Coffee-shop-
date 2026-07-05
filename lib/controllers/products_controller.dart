@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import '../data/database/app_database.dart';
 import 'database_controller.dart';
 import 'pos_controller.dart';
+import 'recipes_controller.dart';
 
 class ProductsController extends GetxController {
   static ProductsController get to => Get.find();
@@ -43,6 +44,9 @@ class ProductsController extends GetxController {
   void _notifyOtherControllers() {
     if (Get.isRegistered<PosController>()) {
       Get.find<PosController>().loadProducts();
+    }
+    if (Get.isRegistered<RecipesController>()) {
+      Get.find<RecipesController>().loadData();
     }
   }
 
@@ -112,8 +116,9 @@ class ProductsController extends GetxController {
   }
 
   Future<void> _deleteOldImage(String? path) async {
-    if (path == null || path.isEmpty || kIsWeb || path.startsWith('data:'))
+    if (path == null || path.isEmpty || kIsWeb || path.startsWith('data:')) {
       return;
+    }
     try {
       final f = File(path);
       if (f.existsSync()) f.deleteSync();
