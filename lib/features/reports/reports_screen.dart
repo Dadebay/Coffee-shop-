@@ -6,6 +6,7 @@ import '../../controllers/shift_controller.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/app_date_range_picker.dart';
 import 'widgets/order_detail_dialog.dart';
 import 'widgets/rep_widgets.dart';
 import 'widgets/shift_detail_panel.dart';
@@ -26,6 +27,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   void initState() {
     super.initState();
+    // ReportsController is a persistent singleton that only auto-loads once
+    // (onInit), so re-entering this screen would otherwise keep showing
+    // whatever snapshot was fetched the very first time it was opened.
+    // Force a fresh load every time the screen is (re)mounted.
+    Get.find<ReportsController>().load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Get.find<ReportsController>().activeTab.value == 'shifts') {
         _loadShifts();
@@ -34,8 +40,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _loadShifts() async {
-    if (_shifts != null) return;
-    setState(() => _shiftsLoading = true);
+    // Always refetch (not just on first view) so a shift still in progress
+    // shows its up-to-date order count / revenue rather than a cached 0.
+    if (_shifts == null) setState(() => _shiftsLoading = true);
     final result = await ShiftController.to.getShiftsWithUser();
     if (mounted) {
       setState(() {
@@ -87,10 +94,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
               child: FilledButton.icon(
                 onPressed: () async {
                   try {
-                    await ctrl.exportOrders();
-                    Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
-                        backgroundColor: AppColors.green,
-                        colorText: Colors.white);
+                    final saved = await ctrl.exportOrders();
+                    if (saved) {
+                      Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
+                          backgroundColor: AppColors.green,
+                          colorText: Colors.white);
+                    }
                   } catch (e) {
                     Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',
                         backgroundColor: AppColors.red,
@@ -372,25 +381,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Future<void> _pickRange(
       BuildContext context, ReportsController ctrl) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final range = await showDateRangePicker(
+    final range = await showAppDateRangePicker(
       context: context,
       firstDate: DateTime(2024),
       lastDate: DateTime.now(),
       initialDateRange:
           DateTimeRange(start: ctrl.from.value, end: ctrl.to.value),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: isDark
-              ? const ColorScheme.dark(
-                  primary: AppColors.primary2,
-                  surface: AppColors.bgSurface)
-              : const ColorScheme.light(
-                  primary: AppColors.primary2,
-                  surface: Colors.white),
-        ),
-        child: child!,
-      ),
     );
     if (range != null) ctrl.setRange(range.start, range.end);
   }

@@ -114,10 +114,17 @@ class ReportsController extends GetxController {
     loading.value = false;
   }
 
-  Future<void> exportOrders() async {
+  /// Returns `true` if the file was saved, `false` if the user cancelled
+  /// the save dialog.
+  Future<bool> exportOrders() async {
     final start = DateTime(from.value.year, from.value.month, from.value.day);
     final end = DateTime(to.value.year, to.value.month, to.value.day, 23, 59, 59);
     final orders = await _db.getOrdersInRange(start, end);
-    await ExportService.exportOrders(orders);
+    return ExportService.exportOrders(
+      orders,
+      periodFrom: from.value,
+      periodTo: to.value,
+      usersMap: usersMap,
+    );
   }
 }

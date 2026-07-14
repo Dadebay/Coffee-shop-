@@ -82,8 +82,17 @@ class StockReportController extends GetxController {
     }).toList();
   }
 
-  Future<void> exportMovements() async {
+  /// Returns `true` if the file was saved, `false` if the user cancelled
+  /// the save dialog.
+  Future<bool> exportMovements() async {
     final movements = await _db.getRecentTransactions(limit: 500);
-    await ExportService.exportStockMovements(movements);
+    final ingredients = await _db.getAllIngredients();
+    final namesMap = {for (final i in ingredients) i.id: i.name};
+    final unitsMap = {for (final i in ingredients) i.id: i.unit};
+    return ExportService.exportStockMovements(
+      movements,
+      ingredientsMap: namesMap,
+      ingredientUnits: unitsMap,
+    );
   }
 }

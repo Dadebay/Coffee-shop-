@@ -15,12 +15,23 @@ class CartController extends GetxController {
   double totalAfterOrderDiscount(double orderDiscount) =>
       (subTotal - totalItemDiscount - orderDiscount).clamp(0.0, double.infinity);
 
-  // -1 = no recipe (use product.quantity), >=0 = ingredient-based max
+  // -1 = no recipe (use product.quantity), >=0 = ingredient-based max.
+  //
+  // Uses calcAdjustedMax rather than the raw per-product maxProducible:
+  // two recipes can share an ingredient, so how many of THIS product can
+  // still be added depends on what's already sitting in the cart for
+  // OTHER products too — not just this product's own standalone ceiling.
   int _effectiveMax(Product product) {
     if (!Get.isRegistered<PosController>()) return product.quantity;
-    final mp = PosController.to.maxProducible[product.id];
-    if (mp == null || mp < 0) return product.quantity;
-    return mp;
+    final pos = PosController.to;
+    final staticMax = pos.maxProducible[product.id];
+    if (staticMax == null || staticMax < 0) return product.quantity;
+
+    final cartQtys = {for (final i in items) i.product.id: i.quantity};
+    final currentQty = cartQtys[product.id] ?? 0;
+    final additional = pos.calcAdjustedMax(cartQtys)[product.id];
+    if (additional == null || additional < 0) return staticMax;
+    return currentQty + additional;
   }
 
   void addProduct(Product product) {

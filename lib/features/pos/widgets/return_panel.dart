@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../../controllers/settings_controller.dart';
+import '../../../controllers/shift_controller.dart';
 import '../../../controllers/stock_controller.dart';
 import '../../../data/database/app_database.dart';
 import '../../../controllers/database_controller.dart';
@@ -20,6 +22,8 @@ class _ReturnPanelState extends State<ReturnPanel> {
   final _db = Get.find<DatabaseController>().db;
   List<Order> _orders = [];
   Map<int, List<OrderItem>> _itemsMap = {};
+  int _returnedCount = 0;
+  double _returnedTotal = 0;
   bool _loading = true;
 
   @override
@@ -30,8 +34,19 @@ class _ReturnPanelState extends State<ReturnPanel> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final today = await _db.getOrdersForDay(DateTime.now());
-    final activeOrders = today.where((o) => !o.isReturned).toList();
+
+    // Scope to the currently open shift (not just "today") so a shift that
+    // spans midnight still shows its own orders, matching how the shift
+    // close summary computes its totals.
+    final shift = Get.isRegistered<ShiftController>()
+        ? ShiftController.to.activeShift.value
+        : null;
+    final ordersInScope = shift != null
+        ? await _db.getOrdersInRange(shift.openedAt, DateTime.now())
+        : await _db.getOrdersForDay(DateTime.now());
+
+    final activeOrders = ordersInScope.where((o) => !o.isReturned).toList();
+    final returnedOrders = ordersInScope.where((o) => o.isReturned).toList();
     final map = <int, List<OrderItem>>{};
     for (final o in activeOrders) {
       map[o.id] = await _db.getOrderItems(o.id);
@@ -40,6 +55,8 @@ class _ReturnPanelState extends State<ReturnPanel> {
       setState(() {
         _orders = activeOrders;
         _itemsMap = map;
+        _returnedCount = returnedOrders.length;
+        _returnedTotal = returnedOrders.fold(0.0, (s, o) => s + o.total);
         _loading = false;
       });
     }
@@ -180,7 +197,8 @@ class _ReturnPanelState extends State<ReturnPanel> {
       }
       
       try {
-        await _db.cancelOrder(order.id, user.id);
+        final restoreStock = SettingsController.to.restoreStockOnReturn.value;
+        await _db.cancelOrder(order.id, user.id, restoreStock: restoreStock);
         if (Get.isRegistered<StockController>()) StockController.to.loadIngredients();
         Get.snackbar(
           'gen_success'.tr,
@@ -386,6 +404,20 @@ class _ReturnPanelState extends State<ReturnPanel> {
                           },
                         ),
             ),
+
+            // Shift summary footer
+            if (!_loading) _ShiftSummaryFooter(
+              orderCount: _orders.length,
+              revenue: _orders.fold(0.0, (s, o) => s + o.total),
+              cash: _orders
+                  .where((o) => o.paymentMethod == 'cash')
+                  .fold(0.0, (s, o) => s + o.total),
+              card: _orders
+                  .where((o) => o.paymentMethod != 'cash')
+                  .fold(0.0, (s, o) => s + o.total),
+              returnedCount: _returnedCount,
+              returnedTotal: _returnedTotal,
+            ),
           ],
         ),
       ),
@@ -434,6 +466,113 @@ class _PayMethodBadge extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: c,
         ),
+      ),
+    );
+  }
+}
+
+// ── Shift summary footer ────────────────────────────────────────────────────
+class _ShiftSummaryFooter extends StatelessWidget {
+  final int orderCount;
+  final double revenue;
+  final double cash;
+  final double card;
+  final int returnedCount;
+  final double returnedTotal;
+
+  const _ShiftSummaryFooter({
+    required this.orderCount,
+    required this.revenue,
+    required this.cash,
+    required this.card,
+    required this.returnedCount,
+    required this.returnedTotal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.bgCard : const Color(0xFFF8FAFF);
+    final border = isDark ? AppColors.bgBorder : const Color(0xffE0E0E6);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border(top: BorderSide(color: border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _FooterStat(label: 'shift_orders'.tr, value: '$orderCount'),
+              _FooterStat(
+                  label: 'rep_revenue'.tr,
+                  value: formatCurrency(revenue),
+                  color: AppColors.green,
+                  bold: true),
+              _FooterStat(
+                  label: 'pay_method_cash'.tr, value: formatCurrency(cash)),
+              _FooterStat(
+                  label: 'pay_method_card'.tr, value: formatCurrency(card)),
+            ],
+          ),
+          if (returnedCount > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${'pos_returns'.tr}: $returnedCount — ${formatCurrency(returnedTotal)}',
+              style: const TextStyle(
+                fontFamily: 'Gilroy',
+                fontSize: 11,
+                color: AppColors.red,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FooterStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? color;
+  final bool bold;
+
+  const _FooterStat({
+    required this.label,
+    required this.value,
+    this.color,
+    this.bold = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Gilroy',
+              fontSize: 11,
+              color: AppColors.textGrey,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Gilroy',
+              fontSize: 14,
+              fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

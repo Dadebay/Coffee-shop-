@@ -84,14 +84,17 @@ class _AppShellState extends State<AppShell> {
       case 0:
         if (Get.isRegistered<PosController>()) PosController.to.loadProducts();
       case 1:
-        if (Get.isRegistered<ProductsController>())
+        if (Get.isRegistered<ProductsController>()) {
           ProductsController.to.loadAll();
+        }
       case 2:
-        if (Get.isRegistered<IngredientsController>())
+        if (Get.isRegistered<IngredientsController>()) {
           IngredientsController.to.loadAll();
+        }
       case 6:
-        if (Get.isRegistered<StockReportController>())
+        if (Get.isRegistered<StockReportController>()) {
           StockReportController.to.loadReportData();
+        }
     }
   }
 

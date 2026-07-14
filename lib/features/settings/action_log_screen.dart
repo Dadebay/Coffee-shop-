@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/action_log_controller.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/app_date_range_picker.dart';
 import '../../data/database/app_database.dart';
 
 class ActionLogScreen extends StatelessWidget {
@@ -193,20 +194,11 @@ class ActionLogScreen extends StatelessWidget {
 
   Future<void> _pickRange(ActionLogController ctrl) async {
     final context = Get.context!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final range = await showDateRangePicker(
+    final range = await showAppDateRangePicker(
       context: context,
       firstDate: DateTime(2024),
       lastDate: DateTime.now(),
       initialDateRange: DateTimeRange(start: ctrl.fromDate.value, end: ctrl.toDate.value),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: isDark
-              ? const ColorScheme.dark(primary: AppColors.primary2, surface: AppColors.bgSurface)
-              : const ColorScheme.light(primary: AppColors.primary2, surface: Colors.white),
-        ),
-        child: child!,
-      ),
     );
     if (range != null) ctrl.setDateRange(range.start, range.end);
   }

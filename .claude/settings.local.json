@@ -55,7 +55,15 @@
       "Bash(Remove-Item \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\stock\\\\stock_movements_screen.dart\")",
       "Bash(xargs wc -l)",
       "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\recipes\\\\widgets\")",
-      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\settings\\\\widgets\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Admin\\\\Coffee-shop-\\\\lib\\\\features\\\\settings\\\\widgets\")",
+      "Bash(find / -path \"*/file_picker-8*/lib/src/file_picker.dart\" 2>/dev/null | head -5)",
+      "Bash(flutter devices *)",
+      "Bash(python scripts/extract_translations.py)",
+      "Bash(python -c ' *)",
+      "Bash(python scripts/_find_escapes.py)",
+      "Bash(rm -rf scripts)",
+      "Bash(python scratch_tr_fill.py)",
+      "Bash(rm scratch_missing.txt scratch_tr_fill.py)"
     ]
   }
 }

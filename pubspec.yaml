@@ -48,6 +48,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/lottie/
+    - assets/translations/
   fonts:
     - family: Gilroy
       fonts:

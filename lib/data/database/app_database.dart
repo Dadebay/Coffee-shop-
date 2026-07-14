@@ -512,26 +512,107 @@ class AppDatabase extends _$AppDatabase {
         }
       }
 
+      // Keep the open shift's live totals in sync so reports don't have to
+      // wait until shift close to show today's sales.
+      final openShift = await getOpenShift();
+      if (openShift != null) {
+        await _adjustShiftTotals(openShift.id,
+            orderDelta: 1, revenue: total, paymentMethod: paymentMethod);
+      }
+
       await _logAction(userId, 'sale', 'Sipariş #$orderId tamamlandı. Toplam: $total');
 
       return (select(orders)..where((o) => o.id.equals(orderId))).getSingle();
     });
   }
 
-  // Cancel/return an order
-  Future<void> cancelOrder(int orderId, int userId) async {
+  // Cancel/return an order. When [restoreStock] is true, the sold products
+  // and their recipe ingredients are added back to stock; otherwise the
+  // order is just marked returned and stock is left as-is (default).
+  Future<void> cancelOrder(int orderId, int userId, {required bool restoreStock}) async {
     await transaction(() async {
       final order = await (select(orders)..where((o) => o.id.equals(orderId))).getSingle();
       if (order.isReturned) throw Exception('Bu sipariş zaten iptal edilmiş.');
-
-      // Cancelling an order does not restore stock or log inventory movements
 
       await (update(orders)..where((o) => o.id.equals(orderId))).write(
         const OrdersCompanion(isReturned: Value(true), status: Value(0)),
       );
 
-      await _logAction(userId, 'cancel', 'Sipariş #$orderId iptal edildi');
+      if (restoreStock) {
+        final items = await getOrderItems(orderId);
+        for (final item in items) {
+          await customUpdate(
+            'UPDATE products SET quantity = quantity + ? WHERE id = ?',
+            variables: [Variable.withInt(item.quantity), Variable.withInt(item.productId)],
+            updates: {products},
+          );
+
+          final prodRecipes = await getRecipesForProduct(item.productId);
+          for (final recipe in prodRecipes) {
+            final restored = recipe.quantity * item.quantity;
+            await adjustIngredientStock(recipe.ingredientId, restored);
+            await into(inventoryTransactions).insert(InventoryTransactionsCompanion.insert(
+              ingredientId: recipe.ingredientId,
+              type: 'restore',
+              quantity: restored,
+              referenceType: const Value('order'),
+              referenceId: Value(orderId),
+              userId: Value(userId),
+              note: Value('Sipariş #$orderId iptali için stoğa iade edildi'),
+            ));
+          }
+        }
+      }
+
+      // The order may belong to a shift that has since closed (e.g. return
+      // processed the next day) — find whichever shift was open at the
+      // time of sale, not just the currently open one.
+      final saleShift = await _shiftContaining(order.createdAt);
+      if (saleShift != null) {
+        await _adjustShiftTotals(saleShift.id,
+            orderDelta: -1, revenue: -order.total, paymentMethod: order.paymentMethod);
+      }
+
+      await _logAction(userId, 'cancel',
+          'Sipariş #$orderId iptal edildi${restoreStock ? ' (stok iade edildi)' : ''}');
     });
+  }
+
+  Future<Shift?> _shiftContaining(DateTime at) {
+    return (select(shifts)
+          ..where((s) =>
+              s.openedAt.isSmallerOrEqualValue(at) &
+              (s.closedAt.isNull() | s.closedAt.isBiggerOrEqualValue(at)))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  /// Live-updates a shift's order/revenue counters as sales happen, so the
+  /// shift report doesn't sit at 0 until close. [closeShift] recomputes
+  /// these from scratch anyway, so this is just a running preview.
+  Future<void> _adjustShiftTotals(
+    int shiftId, {
+    required int orderDelta,
+    required double revenue,
+    required String paymentMethod,
+  }) async {
+    final isCash = paymentMethod == 'cash';
+    await customUpdate(
+      'UPDATE shifts SET '
+      'order_count = MAX(0, order_count + ?), '
+      'total_revenue = MAX(0, total_revenue + ?), '
+      'total_cash = MAX(0, total_cash + ?), '
+      'total_card = MAX(0, total_card + ?) '
+      'WHERE id = ?',
+      variables: [
+        Variable.withInt(orderDelta),
+        Variable.withReal(revenue),
+        Variable.withReal(isCash ? revenue : 0),
+        Variable.withReal(isCash ? 0 : revenue),
+        Variable.withInt(shiftId),
+      ],
+      updates: {shifts},
+    );
   }
 
   // ── Reports ───────────────────────────────────────────────────────────────

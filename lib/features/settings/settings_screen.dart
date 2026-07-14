@@ -9,6 +9,7 @@ import '../../controllers/locale_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/color_constants.dart';
 import '../../controllers/print_controller.dart';
+import '../../controllers/settings_controller.dart';
 import 'action_log_screen.dart';
 import 'widgets/set_widgets.dart';
 
@@ -96,6 +97,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 10),
                             const _PrinterCard(),
+                            const SizedBox(height: 24),
+                            _SectionHeader(
+                              icon: HugeIcons.strokeRoundedReturnRequest,
+                              label: 'pos_returns'.tr,
+                            ),
+                            const SizedBox(height: 10),
+                            const _ReturnsCard(),
                             if (isAdmin) ...[
                               const SizedBox(height: 24),
                               _SectionHeader(
@@ -578,6 +586,70 @@ class _PrinterCard extends StatelessWidget {
               ),
             ],
           ],
+        );
+      }),
+    );
+  }
+}
+
+// ── Returns card ──────────────────────────────────────────────────────────────
+class _ReturnsCard extends StatelessWidget {
+  const _ReturnsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.bgCard : Colors.white;
+    final border = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final settings = SettingsController.to;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(isDark ? 0 : 8),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Obx(() {
+        final restore = settings.restoreStockOnReturn.value;
+        return GestureDetector(
+          onTap: () => settings.setRestoreStockOnReturn(!restore),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('set_restore_stock'.tr,
+                        style: TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A))),
+                    const SizedBox(height: 2),
+                    Text('set_restore_stock_desc'.tr,
+                        style: const TextStyle(
+                            fontFamily: 'Gilroy',
+                            fontSize: 11,
+                            color: AppColors.textGrey)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Switch(
+                  value: restore,
+                  onChanged: settings.setRestoreStockOnReturn,
+                  activeThumbColor: AppColors.primary2),
+            ],
+          ),
         );
       }),
     );

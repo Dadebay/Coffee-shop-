@@ -94,9 +94,11 @@ class StockReportScreen extends StatelessWidget {
           FilledButton.icon(
             onPressed: () async {
               try {
-                await Get.find<StockReportController>().exportMovements();
-                Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
-                    backgroundColor: AppColors.green, colorText: Colors.white);
+                final saved = await Get.find<StockReportController>().exportMovements();
+                if (saved) {
+                  Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
+                      backgroundColor: AppColors.green, colorText: Colors.white);
+                }
               } catch (e) {
                 Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',
                     backgroundColor: AppColors.red, colorText: Colors.white);
