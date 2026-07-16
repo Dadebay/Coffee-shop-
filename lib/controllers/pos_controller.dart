@@ -44,19 +44,19 @@ class PosController extends GetxController {
   }
 
   Future<void> _calcMaxProducible() async {
-    // Load all ingredients and recipes for all products once
+    // Load all ingredients and recipes once (3 queries total, was 2 per product)
     _ingredients.value = await _db.getAllIngredients();
-    final recipeMap = <int, List<Recipe>>{};
-    for (final p in products) {
-      recipeMap[p.id] = await _db.getRecipesForProduct(p.id);
+    final allRecipes = await _db.getAllRecipes();
+    final recipeMap = <int, List<Recipe>>{for (final p in products) p.id: []};
+    for (final r in allRecipes) {
+      recipeMap[r.productId]?.add(r);
     }
     _productRecipes.value = recipeMap;
 
-    final map = <int, int>{};
-    for (final p in products) {
-      map[p.id] = await _db.getMaxProducible(p.id);
-    }
-    maxProducible.value = map;
+    final maxMap = await _db.getMaxProducibleMap();
+    maxProducible.value = {
+      for (final p in products) p.id: maxMap[p.id] ?? -1,
+    };
   }
 
   /// Returns maxProducible adjusted for ingredient consumption in [cartQtys].

@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../data/database/app_database.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/pricing.dart';
 import '../../../core/widgets/product_thumb.dart';
 
 // ─── Table ────────────────────────────────────────────────────────────────────
@@ -35,12 +36,7 @@ class ProductTable extends StatelessWidget {
       ? ''
       : units.firstWhereOrNull((u) => u.id == id)?.shortName ?? '';
 
-  double _discounted(Product p) {
-    if (p.discountType == 'percentage') {
-      return (p.price - p.price * p.discount / 100).clamp(0, double.infinity);
-    }
-    return (p.price - p.discount).clamp(0, double.infinity);
-  }
+  double _discounted(Product p) => p.discountedPrice;
 
   @override
   Widget build(BuildContext context) {

@@ -173,15 +173,6 @@
   "exp_expired": "Süresi doldu",
   "nav_stock_report": "Stok Raporu",
   "stock_rep_title": "Stok Durumu",
-  "stock_rep_summary": "Genel Bakış",
-  "stock_rep_products": "Ürünler",
-  "stock_rep_ingredients": "Malzemeler",
-  "stock_rep_total_value": "Toplam Değer",
-  "stock_rep_critical": "Kritik Stok",
-  "stock_rep_zero": "Stokta Yok",
-  "stock_rep_expiring": "Yakında Sona Erecek",
-  "stock_rep_expired": "Süresi Dolmuş",
-  "stock_rep_export": "Excel Dışa Aktar",
   "exp_order_no": "Sipariş No",
   "exp_date": "Tarih",
   "exp_status": "Durum",
@@ -308,5 +299,6 @@
   "exp_total_excl_returns": "iadeler hariç",
   "exp_due": "Borç",
   "set_restore_stock": "İptalde stoğa iade",
-  "set_restore_stock_desc": "Açık — iade edilen siparişin ürünleri ve malzemeleri stoğa geri eklenir. Kapalı — sipariş sadece iade olarak işaretlenir, stok değişmez."
+  "set_restore_stock_desc": "Açık — iade edilen siparişin ürünleri ve malzemeleri stoğa geri eklenir. Kapalı — sipariş sadece iade olarak işaretlenir, stok değişmez.",
+  "ing_search": "Malzeme ara..."
 }

@@ -188,10 +188,10 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
     final progress = (duration.inSeconds / targetSeconds).clamp(0.0, 1.0);
     final isOvertime = duration.inSeconds > targetSeconds;
 
-    final openTimeStr = _fmtTime(widget.shift.openedAt);
+    final openTimeStr = formatTime(widget.shift.openedAt);
     final targetTimeStr =
-        _fmtTime(widget.shift.openedAt.add(const Duration(hours: 8)));
-    final nowTimeStr = _fmtTime(_now);
+        formatTime(widget.shift.openedAt.add(const Duration(hours: 8)));
+    final nowTimeStr = formatTime(_now);
 
     final cardBg = isDark ? AppColors.bgCard : const Color(0xFFF8FAFF);
     final border = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
@@ -412,7 +412,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
 
               // ── Info rows ───────────────────────────────────────────
               _InfoRow('shift_opened_at'.tr,
-                  '${_fmtDate(widget.shift.openedAt)}  $openTimeStr'),
+                  '${formatDate(widget.shift.openedAt)}  $openTimeStr'),
               _InfoRow('shift_opening_cash'.tr,
                   formatCurrency(widget.shift.openingCash)),
               const SizedBox(height: 14),
@@ -473,15 +473,6 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
     );
   }
 
-  String _fmtTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
-
-  String _fmtDate(DateTime dt) {
-    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
-  }
 }
 
 // ── Shift Summary ─────────────────────────────────────────────────────────────

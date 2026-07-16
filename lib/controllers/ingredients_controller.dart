@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart';
 import '../data/database/app_database.dart';
+import '../features/reports/export_service.dart';
 import 'database_controller.dart';
 import 'recipes_controller.dart';
 
@@ -60,5 +61,18 @@ class IngredientsController extends GetxController {
   Future<void> adjustStock(int id, double delta) async {
     await _db.adjustIngredientStock(id, delta);
     await loadAll();
+  }
+
+  /// Returns `true` if the file was saved, `false` if the user cancelled
+  /// the save dialog.
+  Future<bool> exportMovements() async {
+    final movements = await _db.getRecentTransactions(limit: 500);
+    final namesMap = {for (final i in ingredients) i.id: i.name};
+    final unitsMap = {for (final i in ingredients) i.id: i.unit};
+    return ExportService.exportStockMovements(
+      movements,
+      ingredientsMap: namesMap,
+      ingredientUnits: unitsMap,
+    );
   }
 }

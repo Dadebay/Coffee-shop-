@@ -8,6 +8,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../data/database/app_database.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/pricing.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<Product> products;
@@ -64,13 +65,7 @@ class _ProductCard extends StatefulWidget {
 class _ProductCardState extends State<_ProductCard> {
   bool _hov = false;
 
-  double get _price {
-    final p = widget.product;
-    if (p.discountType == 'percentage') {
-      return (p.price - p.price * p.discount / 100).clamp(0, double.infinity);
-    }
-    return (p.price - p.discount).clamp(0, double.infinity);
-  }
+  double get _price => widget.product.discountedPrice;
 
   bool get _outOfStock => widget.maxCount == 0;
   bool get _hasImage =>

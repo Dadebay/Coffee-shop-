@@ -8,9 +8,11 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../controllers/products_controller.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../../controllers/database_controller.dart';
 import '../../../core/permissions.dart';
 import '../../../data/database/app_database.dart';
 import '../../../core/constants/color_constants.dart';
+import '../../../core/utils/formatters.dart';
 
 // ─── Form Dialog ──────────────────────────────────────────────────────────────
 
@@ -25,7 +27,8 @@ class ProductFormDialog extends StatefulWidget {
 class _ProductFormDialogState extends State<ProductFormDialog> {
   final _form = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.product?.name ?? '');
-  late final _sku = TextEditingController(text: widget.product?.sku ?? '');
+  late final _sku = TextEditingController(
+      text: widget.product?.sku ?? _generateDefaultSku());
   late final _price = TextEditingController(
       text: widget.product?.price.toStringAsFixed(2) ?? '0');
   late final _disc = TextEditingController(
@@ -42,6 +45,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   bool _loading = false;
 
   final _ctrl = Get.find<ProductsController>();
+  final _db = Get.find<DatabaseController>().db;
+
+  List<Ingredient> _allIngredients = [];
+  final List<_RecipeRowData> _recipeRows = [];
+  bool _loadingIngredients = true;
 
   @override
   void initState() {
@@ -55,12 +63,45 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       _imagePath = p.imagePath;
       _expireDate = p.expireDate;
     }
+    _loadIngredients();
+  }
+
+  Future<void> _loadIngredients() async {
+    final ingredients = await _db.getAllIngredients();
+    final existing = widget.product != null
+        ? await _db.getRecipesForProduct(widget.product!.id)
+        : <Recipe>[];
+    if (!mounted) return;
+    setState(() {
+      _allIngredients = ingredients;
+      _recipeRows.addAll(existing.map((r) => _RecipeRowData(
+            ingredientId: r.ingredientId,
+            qtyCtrl: TextEditingController(text: _fmtQty(r.quantity)),
+          )));
+      _loadingIngredients = false;
+    });
+  }
+
+  // Matches the fallback ProductsController.save() would generate anyway if
+  // left empty — shown upfront so the user sees what will be saved.
+  static String _generateDefaultSku() =>
+      'SKU-${DateTime.now().millisecondsSinceEpoch}';
+
+  String _fmtQty(double v) {
+    if (v % 1 == 0) return v.toInt().toString();
+    return v
+        .toStringAsFixed(3)
+        .replaceAll(RegExp(r'0+$'), '')
+        .replaceAll(RegExp(r'\.$'), '');
   }
 
   @override
   void dispose() {
     for (final c in [_name, _sku, _price, _disc, _qty]) {
       c.dispose();
+    }
+    for (final row in _recipeRows) {
+      row.qtyCtrl.dispose();
     }
     super.dispose();
   }
@@ -72,13 +113,18 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.bgSurface : Colors.white;
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    // The recipe + pricing sections make this dialog taller than most forms
+    // — grow with the window instead of clipping content at a fixed height.
+    final maxDialogHeight =
+        (MediaQuery.of(context).size.height - 40).clamp(400.0, 860.0);
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
       child: Container(
         width: 820,
-        constraints: const BoxConstraints(maxHeight: 640),
+        constraints: BoxConstraints(maxHeight: maxDialogHeight),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(20),
@@ -126,11 +172,6 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                             const SizedBox(height: 12),
                             _field(_sku, 'prod_sku'.tr, isDark: isDark),
                             const SizedBox(height: 20),
-                            _sectionLabel('prod_pricing'.tr, isDark),
-                            const SizedBox(height: 10),
-                            _field(_price, 'prod_price'.tr,
-                                isDark: isDark, numeric: true),
-                            const SizedBox(height: 20),
                             _sectionLabel('prod_stock_management'.tr, isDark),
                             const SizedBox(height: 10),
                             Row(children: [
@@ -148,6 +189,14 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                               isDark: isDark,
                               onChanged: (d) => setState(() => _expireDate = d),
                             ),
+                            const SizedBox(height: 20),
+                            _sectionLabel('nav_recipes'.tr, isDark),
+                            const SizedBox(height: 10),
+                            _buildRecipeSection(isDark),
+                            const SizedBox(height: 20),
+                            _sectionLabel('prod_pricing'.tr, isDark),
+                            const SizedBox(height: 10),
+                            _buildPricingRow(isDark),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -180,7 +229,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           letterSpacing: 1));
 
   Widget _field(TextEditingController c, String label,
-      {required bool isDark, bool required = false, bool numeric = false}) {
+      {required bool isDark,
+      bool required = false,
+      bool numeric = false,
+      ValueChanged<String>? onChanged}) {
     final style = TextStyle(
         fontFamily: 'Gilroy',
         color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
@@ -193,6 +245,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       style: style,
       decoration: _inputDecoration(label, isDark),
       validator: validator,
+      onChanged: onChanged,
       keyboardType: numeric
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.text,
@@ -215,6 +268,224 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           ],
           onChanged: (v) => setState(() => _categoryId = v),
         ));
+  }
+
+  // ── Recipe / ingredients ─────────────────────────────────────────────────
+
+  Widget _buildRecipeSection(bool isDark) {
+    if (_loadingIngredients) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    if (_allIngredients.isEmpty) {
+      return Text('rec_no_ingredients'.tr,
+          style: const TextStyle(
+              fontFamily: 'Gilroy', color: AppColors.textGrey, fontSize: 13));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < _recipeRows.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _recipeRow(i, isDark),
+          ),
+        OutlinedButton.icon(
+          onPressed: _canAddRow ? _addRecipeRow : null,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary2,
+            side: const BorderSide(color: AppColors.primary2, width: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(9)),
+          ),
+          icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedAdd01,
+              size: 15,
+              color: AppColors.primary2),
+          label: Text(
+            _canAddRow ? 'rec_add_ingredient'.tr : 'rec_all_added'.tr,
+            style: const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool get _canAddRow => _recipeRows.length < _allIngredients.length;
+
+  void _addRecipeRow() {
+    setState(() {
+      _recipeRows.add(_RecipeRowData(qtyCtrl: TextEditingController()));
+    });
+  }
+
+  void _removeRecipeRow(int index) {
+    setState(() {
+      _recipeRows.removeAt(index).qtyCtrl.dispose();
+    });
+  }
+
+  Widget _recipeRow(int index, bool isDark) {
+    final row = _recipeRows[index];
+    final usedElsewhere = _recipeRows
+        .where((r) => r != row)
+        .map((r) => r.ingredientId)
+        .toSet();
+    final ing = _allIngredients.firstWhereOrNull((i) => i.id == row.ingredientId);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 3,
+          child: DropdownButtonFormField<int?>(
+            initialValue: row.ingredientId,
+            isExpanded: true,
+            dropdownColor: isDark ? AppColors.bgCard : Colors.white,
+            style: TextStyle(
+                fontFamily: 'Gilroy',
+                color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+                fontSize: 13),
+            decoration: _inputDecoration('rec_ingredient'.tr, isDark),
+            items: _allIngredients
+                .where((i) => i.id == row.ingredientId || !usedElsewhere.contains(i.id))
+                .map((i) => DropdownMenuItem(value: i.id, child: Text(i.name)))
+                .toList(),
+            onChanged: (v) => setState(() => row.ingredientId = v),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: TextFormField(
+            controller: row.qtyCtrl,
+            style: TextStyle(
+                fontFamily: 'Gilroy',
+                color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
+                fontSize: 13),
+            decoration: _inputDecoration(
+                '${'rec_qty'.tr}${ing != null ? ' (${ing.unit})' : ''}', isDark),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: IconButton(
+            onPressed: () => _removeRecipeRow(index),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedDelete02,
+                size: 16,
+                color: AppColors.red),
+            splashRadius: 16,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Pricing ───────────────────────────────────────────────────────────────
+
+  /// Live sum of ingredient.cost × quantity across the current recipe rows —
+  /// a client-side preview of what recalculateAndSaveRecipeCost will persist.
+  double get _recipeCost {
+    double sum = 0;
+    for (final row in _recipeRows) {
+      final ing = _allIngredients.firstWhereOrNull((i) => i.id == row.ingredientId);
+      if (ing == null) continue;
+      final qty = double.tryParse(row.qtyCtrl.text) ?? 0;
+      sum += ing.cost * qty;
+    }
+    return sum;
+  }
+
+  Widget _buildPricingRow(bool isDark) {
+    final cost = _recipeCost;
+    final price = double.tryParse(_price.text) ?? 0;
+    final profit = price - cost;
+    final valueColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _pricingBox(
+            'prod_price'.tr,
+            isDark,
+            child: TextField(
+              controller: _price,
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: valueColor),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _pricingBox('rec_cost'.tr, isDark,
+              child: _pricingValue(formatCurrency(cost), AppColors.red)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _pricingBox('prod_profit'.tr, isDark,
+              child: _pricingValue(formatCurrency(profit),
+                  profit >= 0 ? AppColors.green : AppColors.red)),
+        ),
+      ],
+    );
+  }
+
+  Widget _pricingValue(String text, Color color) => Text(text,
+      style: TextStyle(
+          fontFamily: 'Gilroy',
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: color));
+
+  /// Shared frame for all three pricing columns so the editable price field
+  /// and the two computed (cost/profit) values look like one consistent set
+  /// instead of a Material text field next to plain boxes.
+  Widget _pricingBox(String label, bool isDark, {required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  fontFamily: 'Gilroy',
+                  fontSize: 12,
+                  color:
+                      isDark ? AppColors.textGrey : const Color(0xFF64748B))),
+          const SizedBox(height: 4),
+          child,
+        ],
+      ),
+    );
   }
 
   InputDecoration _inputDecoration(String label, bool isDark) =>
@@ -261,7 +532,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
     setState(() => _loading = true);
     try {
-      await _ctrl.save(
+      final productId = await _ctrl.save(
         existing: widget.product,
         name: _name.text.trim(),
         sku: _sku.text.trim(),
@@ -275,6 +546,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         imagePath: _imagePath,
         expireDate: _expireDate,
       );
+      await _saveRecipeRows(productId);
       Get.back();
       Get.snackbar(
         _isEdit ? 'gen_updated'.tr : 'gen_added'.tr,
@@ -297,6 +569,33 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  /// Replaces the product's recipe with the current rows. Simpler and just
+  /// as correct as diffing, since recipe rows carry no identity of their own.
+  Future<void> _saveRecipeRows(int productId) async {
+    await _db.deleteRecipesForProduct(productId);
+    var any = false;
+    for (final row in _recipeRows) {
+      final qty = double.tryParse(row.qtyCtrl.text) ?? 0;
+      if (row.ingredientId == null || qty <= 0) continue;
+      await _db.createRecipe(RecipesCompanion.insert(
+        productId: productId,
+        ingredientId: row.ingredientId!,
+        quantity: qty,
+      ));
+      any = true;
+    }
+    if (any) {
+      await _db.recalculateAndSaveRecipeCost(productId);
+    }
+    await _ctrl.loadAll();
+  }
+}
+
+class _RecipeRowData {
+  int? ingredientId;
+  final TextEditingController qtyCtrl;
+  _RecipeRowData({this.ingredientId, required this.qtyCtrl});
 }
 
 // ─── Image Panel ──────────────────────────────────────────────────────────────

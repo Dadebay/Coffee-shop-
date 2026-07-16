@@ -51,11 +51,10 @@ class ProductsController extends GetxController {
   }
 
   Future<void> _calcMaxProducible() async {
-    final map = <int, int>{};
-    for (final p in products) {
-      map[p.id] = await _db.getMaxProducible(p.id);
-    }
-    maxProducible.value = map;
+    final maxMap = await _db.getMaxProducibleMap();
+    maxProducible.value = {
+      for (final p in products) p.id: maxMap[p.id] ?? -1,
+    };
   }
 
   // ── Image picking ──────────────────────────────────────────────────────────
@@ -148,7 +147,9 @@ class ProductsController extends GetxController {
 
   // ── Product CRUD ───────────────────────────────────────────────────────────
 
-  Future<void> save({
+  /// Returns the saved product's id (new or existing) so callers can attach
+  /// related rows — e.g. a fresh recipe — right after creation.
+  Future<int> save({
     Product? existing,
     required String name,
     required String sku,
@@ -162,8 +163,9 @@ class ProductsController extends GetxController {
     String? imagePath,
     DateTime? expireDate,
   }) async {
+    int productId;
     if (existing == null) {
-      await _db.createProduct(ProductsCompanion.insert(
+      productId = await _db.createProduct(ProductsCompanion.insert(
         name: name,
         sku: sku.isEmpty ? 'SKU-${DateTime.now().millisecondsSinceEpoch}' : sku,
         imagePath: drift.Value(imagePath),
@@ -193,8 +195,10 @@ class ProductsController extends GetxController {
         quantity: quantity,
         expireDate: drift.Value(expireDate),
       ));
+      productId = existing.id;
     }
     await loadAll();
+    return productId;
   }
 
   Future<void> delete(int id) async {

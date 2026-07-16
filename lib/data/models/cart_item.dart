@@ -1,3 +1,4 @@
+import '../../core/utils/pricing.dart';
 import '../database/app_database.dart';
 
 class CartItem {
@@ -11,15 +12,7 @@ class CartItem {
     this.extraDiscount = 0,
   });
 
-  double get unitPrice {
-    double p = product.price;
-    if (product.discountType == 'fixed') {
-      p = (p - product.discount).clamp(0, double.infinity);
-    } else if (product.discountType == 'percentage') {
-      p = (p - p * product.discount / 100).clamp(0, double.infinity);
-    }
-    return p;
-  }
+  double get unitPrice => product.discountedPrice;
 
   double get lineTotal => (unitPrice * quantity - extraDiscount).clamp(0, double.infinity);
 

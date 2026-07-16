@@ -24,8 +24,7 @@ Future<String?> showNumPad(
   );
   if (result != null) {
     controller.text = result;
-    controller.selection =
-        TextSelection.collapsed(offset: result.length);
+    controller.selection = TextSelection.collapsed(offset: result.length);
   }
   return result;
 }
@@ -109,7 +108,8 @@ class _NumPadDialogState extends State<_NumPadDialog> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               decoration: BoxDecoration(
                 color: surfaceBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
                 border: Border(bottom: BorderSide(color: borderColor)),
               ),
               child: Column(
@@ -177,23 +177,28 @@ class _NumPadDialogState extends State<_NumPadDialog> {
                   const SizedBox(height: 8),
                   Row(children: [
                     if (widget.allowPercent)
-                      _key('%', isDark, textColor, flex: 1, color: AppColors.orange)
+                      _key('%', isDark, textColor,
+                          flex: 1, color: AppColors.orange)
                     else if (widget.allowDecimal)
                       _key('.', isDark, textColor, flex: 1)
                     else
-                      _key('C', isDark, textColor, flex: 1, color: AppColors.red.withAlpha(180)),
+                      _key('C', isDark, textColor,
+                          flex: 1, color: AppColors.red.withAlpha(180)),
                     const SizedBox(width: 8),
                     _key('0', isDark, textColor, flex: 1),
                     const SizedBox(width: 8),
                     _key('⌫', isDark, textColor,
-                        flex: 1, color: AppColors.red.withAlpha(200), isIcon: true),
+                        flex: 1,
+                        color: AppColors.red.withAlpha(200),
+                        isIcon: true),
                   ]),
                   if (widget.allowDecimal && widget.allowPercent) ...[
                     const SizedBox(height: 8),
                     Row(children: [
                       _key('.', isDark, textColor, flex: 1),
                       const SizedBox(width: 8),
-                      _key('C', isDark, textColor, flex: 2, color: AppColors.textGrey),
+                      _key('C', isDark, textColor,
+                          flex: 2, color: AppColors.textGrey),
                     ]),
                   ],
                 ],
@@ -211,7 +216,8 @@ class _NumPadDialogState extends State<_NumPadDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary2,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                     elevation: 0,
                   ),
                   child: Text(
@@ -245,7 +251,8 @@ class _NumPadDialogState extends State<_NumPadDialog> {
   }
 
   // Returns a plain widget (no Expanded) — callers add Expanded themselves
-  Widget _keyBody(String label, bool isDark, Color textColor, {Color? color, bool isIcon = false}) {
+  Widget _keyBody(String label, bool isDark, Color textColor,
+      {Color? color, bool isIcon = false}) {
     final bg = isDark ? AppColors.bgSurface : const Color(0xFFF0F2F8);
     final fgColor = color ?? textColor;
     return GestureDetector(
@@ -253,7 +260,8 @@ class _NumPadDialogState extends State<_NumPadDialog> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 80),
         height: 56,
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+        decoration:
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
         child: Center(
           child: isIcon
               ? Icon(Icons.backspace_outlined, color: fgColor, size: 22)
@@ -272,7 +280,8 @@ class _NumPadDialogState extends State<_NumPadDialog> {
   }
 
   // Returns Expanded wrapping a key — for use directly inside Row
-  Widget _key(String label, bool isDark, Color textColor, {int flex = 1, Color? color, bool isIcon = false}) {
+  Widget _key(String label, bool isDark, Color textColor,
+      {int flex = 1, Color? color, bool isIcon = false}) {
     return Expanded(
       flex: flex,
       child: _keyBody(label, isDark, textColor, color: color, isIcon: isIcon),
@@ -287,6 +296,7 @@ class NumPadWidget extends StatefulWidget {
   final String? label;
   final String? suffix;
   final bool allowDecimal;
+  final bool allowPercent;
 
   const NumPadWidget({
     super.key,
@@ -294,6 +304,7 @@ class NumPadWidget extends StatefulWidget {
     this.label,
     this.suffix,
     this.allowDecimal = true,
+    this.allowPercent = false,
   });
 
   @override
@@ -314,11 +325,19 @@ class _NumPadWidgetState extends State<NumPadWidget> {
       switch (key) {
         case '⌫':
           if (_val.isNotEmpty) _val = _val.substring(0, _val.length - 1);
-        case '.':
-          if (!_val.contains('.')) _val = _val.isEmpty ? '0.' : '$_val.';
         case 'C':
           _val = '';
+        case '.':
+          if (!_val.contains('.') && !_val.contains('%')) {
+            _val = _val.isEmpty ? '0.' : '$_val.';
+          }
+        case '%':
+          // % goes at the end, only once, no decimal after it
+          final base = _val.replaceAll('%', '');
+          _val = '$base%';
         default:
+          // Don't add digits after %
+          if (_val.endsWith('%')) return;
           if (_val.length < 10) _val += key;
       }
       widget.controller.text = _val;
@@ -406,15 +425,30 @@ class _NumPadWidgetState extends State<NumPadWidget> {
         _kRow(['1', '2', '3'], textColor, btnColor),
         const SizedBox(height: 8),
         Row(children: [
-          if (widget.allowDecimal)
+          if (widget.allowPercent)
+            _kKey('%', textColor, btnColor, color: AppColors.orange)
+          else if (widget.allowDecimal)
             _kKey('.', textColor, btnColor)
           else
-            _kKey('C', textColor, btnColor, color: AppColors.red.withAlpha(180)),
+            _kKey('C', textColor, btnColor,
+                color: AppColors.red.withAlpha(180)),
           const SizedBox(width: 8),
           _kKey('0', textColor, btnColor),
           const SizedBox(width: 8),
           _kKey('⌫', textColor, btnColor, isBack: true),
         ]),
+        // Extra row for whichever key didn't fit above — always exposes a
+        // dedicated "clear all" (C) once '.' or '%' already took that slot.
+        if (widget.allowDecimal || widget.allowPercent) ...[
+          const SizedBox(height: 8),
+          Row(children: [
+            if (widget.allowDecimal && widget.allowPercent) ...[
+              _kKey('.', textColor, btnColor),
+              const SizedBox(width: 8),
+              _kKey('C', textColor, btnColor, color: AppColors.textGrey),
+            ]
+          ]),
+        ],
       ],
     );
   }
@@ -435,7 +469,8 @@ class _NumPadWidgetState extends State<NumPadWidget> {
   Widget _kKey(String label, Color textColor, Color btnColor,
       {Color? color, bool isBack = false}) {
     return Expanded(
-        child: _kBody(label, textColor, btnColor, color: color, isBack: isBack));
+        child:
+            _kBody(label, textColor, btnColor, color: color, isBack: isBack));
   }
 
   Widget _kBody(String label, Color textColor, Color btnColor,
@@ -448,11 +483,13 @@ class _NumPadWidgetState extends State<NumPadWidget> {
         decoration: BoxDecoration(
           color: isBack ? AppColors.red.withAlpha(20) : btnColor,
           borderRadius: BorderRadius.circular(10),
-          border: isBack ? Border.all(color: AppColors.red.withAlpha(60)) : null,
+          border:
+              isBack ? Border.all(color: AppColors.red.withAlpha(60)) : null,
         ),
         child: Center(
           child: isBack
-              ? const Icon(Icons.backspace_outlined, color: AppColors.red, size: 20)
+              ? const Icon(Icons.backspace_outlined,
+                  color: AppColors.red, size: 20)
               : Text(
                   label,
                   style: TextStyle(

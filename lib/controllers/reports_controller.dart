@@ -63,10 +63,13 @@ class ReportsController extends GetxController {
     double totalRev = 0, totalCost = 0, totalDisc = 0;
     final Map<int, ProductStat> map = {};
 
+    final itemsByOrder =
+        await _db.getOrderItemsForOrders(completed.map((o) => o.id).toList());
+
     for (final order in completed) {
       totalRev += order.total;
       totalDisc += order.discount;
-      final items = await _db.getOrderItems(order.id);
+      final items = itemsByOrder[order.id] ?? const [];
       for (final item in items) {
         totalCost += item.purchasePrice * item.quantity;
         map.update(

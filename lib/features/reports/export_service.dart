@@ -39,9 +39,12 @@ class ExportService {
     horizontalAlign: HorizontalAlign.Center,
     verticalAlign: VerticalAlign.Center,
     topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
-    bottomBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
-    leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
-    rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
+    bottomBorder:
+        Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
+    leftBorder:
+        Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
+    rightBorder:
+        Border(borderStyle: BorderStyle.Thin, borderColorHex: _headerBg),
   );
 
   static void _setCell(
@@ -66,7 +69,8 @@ class ExportService {
         bold: bold,
         fontColorHex: fontColor ?? ExcelColor.black,
         numberFormat: numberFormat,
-        bottomBorder: Border(borderStyle: BorderStyle.Hair, borderColorHex: _borderColor),
+        bottomBorder:
+            Border(borderStyle: BorderStyle.Hair, borderColorHex: _borderColor),
       );
 
   static void _writeTitleBlock(
@@ -142,7 +146,7 @@ class ExportService {
       'rep_orders_tab'.tr,
       columnCount,
       '${'exp_period'.tr}: ${DateFormat('dd.MM.yyyy').format(periodFrom)} – ${DateFormat('dd.MM.yyyy').format(periodTo)}  •  '
-          '${'exp_generated'.tr}: ${DateFormat('dd.MM.yyyy HH:mm').format(DateTime.now())}  •  ${'exp_no'.tr}: ${orders.length}',
+      '${'exp_generated'.tr}: ${DateFormat('dd.MM.yyyy HH:mm').format(DateTime.now())}  •  ${'exp_no'.tr}: ${orders.length}',
     );
 
     const headerRow = 2;
@@ -164,7 +168,8 @@ class ExportService {
     for (var i = 0; i < orders.length; i++) {
       final order = orders[i];
       final returned = order.isReturned;
-      final bg = returned ? _returnedBg : (i.isEven ? ExcelColor.white : _zebraBg);
+      final bg =
+          returned ? _returnedBg : (i.isEven ? ExcelColor.white : _zebraBg);
 
       _setCell(sheet, 0, row, IntCellValue(order.id),
           _rowStyle(bg, align: HorizontalAlign.Center));
@@ -192,21 +197,26 @@ class ExportService {
         4,
         row,
         DoubleCellValue(order.subTotal),
-        _rowStyle(bg, align: HorizontalAlign.Right, numberFormat: NumFormat.standard_4),
+        _rowStyle(bg,
+            align: HorizontalAlign.Right, numberFormat: NumFormat.standard_4),
       );
       _setCell(
         sheet,
         5,
         row,
         DoubleCellValue(order.discount),
-        _rowStyle(bg, align: HorizontalAlign.Right, numberFormat: NumFormat.standard_4),
+        _rowStyle(bg,
+            align: HorizontalAlign.Right, numberFormat: NumFormat.standard_4),
       );
       _setCell(
         sheet,
         6,
         row,
         DoubleCellValue(order.total),
-        _rowStyle(bg, align: HorizontalAlign.Right, bold: true, numberFormat: NumFormat.standard_4),
+        _rowStyle(bg,
+            align: HorizontalAlign.Right,
+            bold: true,
+            numberFormat: NumFormat.standard_4),
       );
       final hasDue = order.due > 0;
       _setCell(
@@ -245,13 +255,15 @@ class ExportService {
       backgroundColorHex: _totalBg,
       horizontalAlign: HorizontalAlign.Right,
       numberFormat: NumFormat.standard_4,
-      topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
+      topBorder:
+          Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
     );
     final totalLabelStyle = CellStyle(
       bold: true,
       backgroundColorHex: _totalBg,
       horizontalAlign: HorizontalAlign.Right,
-      topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
+      topBorder:
+          Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
     );
 
     final hasReturns = orders.any((o) => o.isReturned);
@@ -278,11 +290,19 @@ class ExportService {
         horizontalAlign: HorizontalAlign.Right,
         numberFormat: NumFormat.standard_4,
         fontColorHex: sumDue > 0 ? _redText : ExcelColor.black,
-        topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
+        topBorder:
+            Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
       ),
     );
-    _setCell(sheet, 8, row, TextCellValue(''),
-        CellStyle(backgroundColorHex: _totalBg, topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg)));
+    _setCell(
+        sheet,
+        8,
+        row,
+        TextCellValue(''),
+        CellStyle(
+            backgroundColorHex: _totalBg,
+            topBorder: Border(
+                borderStyle: BorderStyle.Medium, borderColorHex: _headerBg)));
 
     _setColumnWidths(sheet, [10, 16, 17, 14, 13, 12, 13, 13, 14]);
 
@@ -342,7 +362,8 @@ class ExportService {
         sheet,
         2,
         row,
-        TextCellValue(ingredientsMap[mov.ingredientId] ?? '#${mov.ingredientId}'),
+        TextCellValue(
+            ingredientsMap[mov.ingredientId] ?? '#${mov.ingredientId}'),
         _rowStyle(bg),
       );
       _setCell(
@@ -369,20 +390,25 @@ class ExportService {
         5,
         row,
         DoubleCellValue(mov.unitCost),
-        _rowStyle(bg, align: HorizontalAlign.Right, numberFormat: NumFormat.standard_4),
+        _rowStyle(bg,
+            align: HorizontalAlign.Right, numberFormat: NumFormat.standard_4),
       );
       _setCell(
         sheet,
         6,
         row,
         DoubleCellValue(lineTotal),
-        _rowStyle(bg, align: HorizontalAlign.Right, bold: true, numberFormat: NumFormat.standard_4),
+        _rowStyle(bg,
+            align: HorizontalAlign.Right,
+            bold: true,
+            numberFormat: NumFormat.standard_4),
       );
       _setCell(
         sheet,
         7,
         row,
-        TextCellValue('${mov.referenceType ?? ''} ${mov.referenceId ?? ''}'.trim()),
+        TextCellValue(
+            '${mov.referenceType ?? ''} ${mov.referenceId ?? ''}'.trim()),
         _rowStyle(bg, align: HorizontalAlign.Center),
       );
 
@@ -395,13 +421,15 @@ class ExportService {
       backgroundColorHex: _totalBg,
       horizontalAlign: HorizontalAlign.Right,
       numberFormat: NumFormat.standard_4,
-      topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
+      topBorder:
+          Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
     );
     final totalLabelStyle = CellStyle(
       bold: true,
       backgroundColorHex: _totalBg,
       horizontalAlign: HorizontalAlign.Right,
-      topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
+      topBorder:
+          Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg),
     );
 
     sheet.merge(
@@ -410,8 +438,15 @@ class ExportService {
     );
     _setCell(sheet, 0, row, TextCellValue('exp_total_row'.tr), totalLabelStyle);
     _setCell(sheet, 6, row, DoubleCellValue(sumTotal), totalStyle);
-    _setCell(sheet, 7, row, TextCellValue(''),
-        CellStyle(backgroundColorHex: _totalBg, topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: _headerBg)));
+    _setCell(
+        sheet,
+        7,
+        row,
+        TextCellValue(''),
+        CellStyle(
+            backgroundColorHex: _totalBg,
+            topBorder: Border(
+                borderStyle: BorderStyle.Medium, borderColorHex: _headerBg)));
 
     _setColumnWidths(sheet, [8, 17, 22, 16, 14, 13, 14, 16]);
 
@@ -434,12 +469,14 @@ class ExportService {
   /// cancelled the save dialog (or the download was handed off to the
   /// browser, on web).
   static Future<bool> _saveExcel(Excel excel, String baseName) async {
-    final fileName = '${baseName}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.xlsx';
+    final fileName =
+        '${baseName}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.xlsx';
     final bytes = excel.save();
     if (bytes == null) return false;
 
     if (kIsWeb) {
-      final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      final blob = html.Blob([bytes],
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       final url = html.Url.createObjectUrlFromBlob(blob);
       html.AnchorElement(href: url)
         ..setAttribute("download", fileName)

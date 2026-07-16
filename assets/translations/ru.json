@@ -173,15 +173,6 @@
   "exp_expired": "Срок истёк",
   "nav_stock_report": "Отчёт по складу",
   "stock_rep_title": "Состояние склада",
-  "stock_rep_summary": "Обзор",
-  "stock_rep_products": "Товаров",
-  "stock_rep_ingredients": "Ингредиентов",
-  "stock_rep_total_value": "Общая стоимость",
-  "stock_rep_critical": "Критический остаток",
-  "stock_rep_zero": "Нет в наличии",
-  "stock_rep_expiring": "Скоро испортятся",
-  "stock_rep_expired": "Испортились",
-  "stock_rep_export": "Экспорт Excel",
   "exp_order_no": "Заказ №",
   "exp_date": "Дата",
   "exp_status": "Статус",
@@ -308,5 +299,6 @@
   "exp_total_excl_returns": "без возвратов",
   "exp_due": "Долг",
   "set_restore_stock": "Возврат на склад при отмене",
-  "set_restore_stock_desc": "Вкл. — товары и ингредиенты возвращённого заказа добавляются обратно на склад. Выкл. — заказ просто помечается возвращённым, склад не меняется."
+  "set_restore_stock_desc": "Вкл. — товары и ингредиенты возвращённого заказа добавляются обратно на склад. Выкл. — заказ просто помечается возвращённым, склад не меняется.",
+  "ing_search": "Поиск ингредиента..."
 }

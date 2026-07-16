@@ -5,7 +5,6 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/ingredients_controller.dart';
 import '../../controllers/pos_controller.dart';
 import '../../controllers/products_controller.dart';
-import '../../controllers/stock_report_controller.dart';
 import '../../core/constants/color_constants.dart';
 import '../pos/pos_screen.dart';
 import '../products/products_screen.dart';
@@ -13,7 +12,6 @@ import '../ingredients/ingredients_screen.dart';
 import '../recipes/recipes_screen.dart';
 import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
-import '../stock/stock_report_screen.dart';
 
 const double _kCollapsedWidth = 72.0;
 const double _kExpandedWidth = 220.0;
@@ -38,7 +36,6 @@ class _AppShellState extends State<AppShell> {
     const RecipesScreen(),
     const ReportsScreen(),
     const SettingsScreen(),
-    const StockReportScreen(),
   ];
 
   static final _allIcons = [
@@ -48,7 +45,6 @@ class _AppShellState extends State<AppShell> {
     HugeIcons.strokeRoundedBook02,
     HugeIcons.strokeRoundedChartBarLine,
     HugeIcons.strokeRoundedSettings01,
-    HugeIcons.strokeRoundedAnalytics01,
   ];
 
   static const _allKeys = [
@@ -58,11 +54,10 @@ class _AppShellState extends State<AppShell> {
     'nav_recipes',
     'nav_reports',
     'nav_settings',
-    'nav_stock_report',
   ];
 
-  static const _adminOrder = [4, 0, 1, 6, 2, 3, 5];
-  static const _cashierOrder = [0, 1, 2, 6, 3, 4, 5];
+  static const _adminOrder = [4, 0, 1, 2, 3, 5];
+  static const _cashierOrder = [0, 1, 2, 3, 4, 5];
 
   List<int> get _order => _isAdmin ? _adminOrder : _cashierOrder;
   List<Widget> get _pages => _order.map((i) => _allPages[i]).toList();
@@ -90,10 +85,6 @@ class _AppShellState extends State<AppShell> {
       case 2:
         if (Get.isRegistered<IngredientsController>()) {
           IngredientsController.to.loadAll();
-        }
-      case 6:
-        if (Get.isRegistered<StockReportController>()) {
-          StockReportController.to.loadReportData();
         }
     }
   }

@@ -173,15 +173,6 @@
   "exp_expired": "Möhleti geçdi",
   "nav_stock_report": "Ammar hasabaty",
   "stock_rep_title": "Ammaryň ýagdaýy",
-  "stock_rep_summary": "Gysgaça syn",
-  "stock_rep_products": "Harytlar",
-  "stock_rep_ingredients": "Çig mallar",
-  "stock_rep_total_value": "Jemi baha",
-  "stock_rep_critical": "Kritiki galyndy",
-  "stock_rep_zero": "Ammarda ýok",
-  "stock_rep_expiring": "Möhleti golaýlaşanlar",
-  "stock_rep_expired": "Möhleti geçenler",
-  "stock_rep_export": "Excel Eksport",
   "exp_order_no": "Sargyt No",
   "exp_date": "Sene",
   "exp_status": "Ýagdaýy",
@@ -308,5 +299,6 @@
   "exp_total_excl_returns": "yzyna gaýtarylanlar hariç",
   "exp_due": "Bergi",
   "set_restore_stock": "Yzyna gaýtarylanda ammara goş",
-  "set_restore_stock_desc": "Açyk — gaýtarylan sargydyň harytlary we çig mallary ammara yzyna goşulýar. Öçük — sargyt diňe gaýtarylan diýip bellenýär, ammar üýtgemeýär."
+  "set_restore_stock_desc": "Açyk — gaýtarylan sargydyň harytlary we çig mallary ammara yzyna goşulýar. Öçük — sargyt diňe gaýtarylan diýip bellenýär, ammar üýtgemeýär.",
+  "ing_search": "Çig mal gözle..."
 }

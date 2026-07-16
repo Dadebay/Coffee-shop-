@@ -4,7 +4,9 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/pricing.dart';
 import '../../../core/widgets/numpad.dart';
+import '../../../data/models/cart_item.dart';
 
 class CartPanel extends StatelessWidget {
   final VoidCallback? onCheckout;
@@ -152,7 +154,7 @@ class CartPanel extends StatelessWidget {
 }
 
 class _CartTile extends StatelessWidget {
-  final dynamic item; // CartItem
+  final CartItem item;
   final Color cardColor;
   final Color borderColor;
 
@@ -163,109 +165,8 @@ class _CartTile extends StatelessWidget {
     required this.borderColor,
   });
 
-  void _showDiscountDialog(BuildContext context) {
-    final cart = CartController.to;
-    final ctrl = TextEditingController(
-      text: item.extraDiscount > 0 ? item.extraDiscount.toStringAsFixed(2) : '',
-    );
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final maxDiscount = item.unitPrice * item.quantity;
-
-    Get.dialog(
-      Dialog(
-        backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: SizedBox(
-          width: 380,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedPercentCircle,
-                      color: AppColors.primary2,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'pos_discount'.tr,
-                      style: const TextStyle(
-                        fontFamily: 'Gilroy',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  item.product.name,
-                  style: const TextStyle(
-                    fontFamily: 'Gilroy',
-                    color: AppColors.textGrey,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                NumPadField(
-                  controller: ctrl,
-                  numpadLabel: 'pos_discount'.tr,
-                  style: const TextStyle(
-                      fontFamily: 'Gilroy', fontWeight: FontWeight.w600),
-                  decoration: InputDecoration(
-                    labelText:
-                        '${'pos_discount'.tr} (max ${formatCurrency(maxDiscount)})',
-                    labelStyle:
-                        const TextStyle(fontFamily: 'Gilroy', fontSize: 13),
-                    prefixText: '- ',
-                    filled: true,
-                    fillColor:
-                        isDark ? AppColors.bgCard : const Color(0xFFF8FAFF),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                          color: isDark
-                              ? AppColors.bgBorder
-                              : const Color(0xFFE2E8F0)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Get.back(),
-                        child: Text('gen_cancel'.tr,
-                            style: const TextStyle(fontFamily: 'Gilroy')),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          final val = double.tryParse(ctrl.text) ?? 0;
-                          cart.setExtraDiscount(item.product.id, val);
-                          Get.back();
-                        },
-                        style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary2),
-                        child: Text('gen_save'.tr,
-                            style: const TextStyle(fontFamily: 'Gilroy')),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  void _showDiscountDialog() {
+    Get.dialog(_DiscountDialog(item: item));
   }
 
   @override
@@ -327,7 +228,7 @@ class _CartTile extends StatelessWidget {
               ),
               // Discount button
               GestureDetector(
-                onTap: () => _showDiscountDialog(context),
+                onTap: _showDiscountDialog,
                 child: Container(
                   width: 28,
                   height: 28,
@@ -431,6 +332,120 @@ class _CartTile extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Discount dialog ─────────────────────────────────────────────────────────
+class _DiscountDialog extends StatefulWidget {
+  final CartItem item;
+  const _DiscountDialog({required this.item});
+
+  @override
+  State<_DiscountDialog> createState() => _DiscountDialogState();
+}
+
+class _DiscountDialogState extends State<_DiscountDialog> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(
+      text: widget.item.extraDiscount > 0
+          ? widget.item.extraDiscount.toStringAsFixed(2)
+          : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  double _parseDiscount(double base) => parseDiscountInput(_ctrl.text, base);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final maxDiscount = widget.item.unitPrice * widget.item.quantity;
+
+    return Dialog(
+      backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: SizedBox(
+        width: 380,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedPercentCircle,
+                    color: AppColors.primary2,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'pos_discount'.tr,
+                    style: const TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                widget.item.product.name,
+                style: const TextStyle(
+                  fontFamily: 'Gilroy',
+                  color: AppColors.textGrey,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 16),
+              NumPadWidget(
+                controller: _ctrl,
+                label: '${'pos_discount'.tr} (max ${formatCurrency(maxDiscount)})',
+                allowPercent: true,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      child: Text('gen_cancel'.tr,
+                          style: const TextStyle(fontFamily: 'Gilroy')),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        final val = _parseDiscount(maxDiscount);
+                        CartController.to
+                            .setExtraDiscount(widget.item.product.id, val);
+                        Get.back();
+                      },
+                      style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary2),
+                      child: Text('gen_save'.tr,
+                          style: const TextStyle(fontFamily: 'Gilroy')),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

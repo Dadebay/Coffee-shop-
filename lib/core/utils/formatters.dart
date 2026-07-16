@@ -12,6 +12,10 @@ String formatDateTime(DateTime date) {
   return DateFormat('dd.MM.yyyy HH:mm').format(date);
 }
 
+String formatTime(DateTime date) {
+  return DateFormat('HH:mm').format(date);
+}
+
 String formatWeight(double value, String unit) {
   if (value >= 1000 && unit == 'g') {
     return '${(value / 1000).toStringAsFixed(2)} kg';

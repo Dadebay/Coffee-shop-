@@ -47,10 +47,8 @@ class _ReturnPanelState extends State<ReturnPanel> {
 
     final activeOrders = ordersInScope.where((o) => !o.isReturned).toList();
     final returnedOrders = ordersInScope.where((o) => o.isReturned).toList();
-    final map = <int, List<OrderItem>>{};
-    for (final o in activeOrders) {
-      map[o.id] = await _db.getOrderItems(o.id);
-    }
+    final map = await _db
+        .getOrderItemsForOrders(activeOrders.map((o) => o.id).toList());
     if (mounted) {
       setState(() {
         _orders = activeOrders;
@@ -340,7 +338,7 @@ class _ReturnPanelState extends State<ReturnPanel> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        _formatTime(order.createdAt),
+                                        formatTime(order.createdAt),
                                         style: const TextStyle(
                                           fontFamily: 'Gilroy',
                                           color: AppColors.textGrey,
@@ -424,11 +422,6 @@ class _ReturnPanelState extends State<ReturnPanel> {
     );
   }
 
-  String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
 }
 
 class _PayMethodBadge extends StatelessWidget {

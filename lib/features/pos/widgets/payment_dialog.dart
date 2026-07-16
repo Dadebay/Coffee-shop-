@@ -6,9 +6,11 @@ import '../../../controllers/pos_controller.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../controllers/database_controller.dart';
 import '../../../controllers/print_controller.dart';
+import '../../../data/database/app_database.dart';
 import '../../../controllers/stock_controller.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/pricing.dart';
 import '../../../core/permissions.dart';
 import '../../../core/widgets/touch_numpad.dart';
 import '../../../core/widgets/numpad.dart';
@@ -33,15 +35,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
     super.dispose();
   }
 
-  // "10" → 10 TMT;  "10%" → 10% of base
-  double _parseDiscount(double base) {
-    final t = _discCtrl.text.trim();
-    if (t.endsWith('%')) {
-      final pct = double.tryParse(t.substring(0, t.length - 1)) ?? 0;
-      return (base * pct / 100).clamp(0.0, base);
-    }
-    return (double.tryParse(t) ?? 0).clamp(0.0, base);
-  }
+  double _parseDiscount(double base) => parseDiscountInput(_discCtrl.text, base);
 
   void _onNumpadTap(String val) {
     if (val == '⌫') {

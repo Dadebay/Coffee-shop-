@@ -63,7 +63,9 @@
       "Bash(python scripts/_find_escapes.py)",
       "Bash(rm -rf scripts)",
       "Bash(python scratch_tr_fill.py)",
-      "Bash(rm scratch_missing.txt scratch_tr_fill.py)"
+      "Bash(rm scratch_missing.txt scratch_tr_fill.py)",
+      "Bash(rm lib/features/stock/stock_report_screen.dart lib/controllers/stock_report_controller.dart)",
+      "Bash(rmdir lib/features/stock)"
     ]
   }
 }

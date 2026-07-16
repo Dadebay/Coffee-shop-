@@ -14,9 +14,7 @@ void showOrderDetail(BuildContext context, Order order, String cashierName) {
   final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
 
   final dt = order.createdAt;
-  final dateStr =
-      '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}'
-      '  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  final dateStr = '${formatDate(dt)}  ${formatTime(dt)}';
 
   Get.dialog(Dialog(
     backgroundColor: cardColor,

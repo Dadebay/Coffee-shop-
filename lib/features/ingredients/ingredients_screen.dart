@@ -17,6 +17,14 @@ class IngredientsScreen extends StatefulWidget {
 
 class _IngredientsScreenState extends State<IngredientsScreen> {
   Ingredient? _selected;
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +37,10 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       body: Column(
         children: [
           _TopBar(),
+          _SearchBar(
+            controller: _search,
+            onChanged: (q) => setState(() => _query = q),
+          ),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -41,6 +53,16 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                               color: AppColors.primary2));
                     }
                     if (ctrl.ingredients.isEmpty) return _EmptyState();
+
+                    final list = _query.isEmpty
+                        ? ctrl.ingredients
+                        : ctrl.ingredients
+                            .where((i) => i.name
+                                .toLowerCase()
+                                .contains(_query.toLowerCase()))
+                            .toList();
+                    if (list.isEmpty) return _EmptyState();
+
                     return LayoutBuilder(
                       builder: (context, constraints) {
                         final w = constraints.maxWidth;
@@ -58,9 +80,9 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                             crossAxisSpacing: 12,
                             mainAxisExtent: 104,
                           ),
-                          itemCount: ctrl.ingredients.length,
+                          itemCount: list.length,
                           itemBuilder: (_, i) {
-                            final ing = ctrl.ingredients[i];
+                            final ing = list[i];
                             return IngredientTile(
                               ingredient: ing,
                               selected: _selected?.id == ing.id,
@@ -82,6 +104,74 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Search bar ─────────────────────────────────────────────────────────────
+
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  const _SearchBar({required this.controller, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark ? AppColors.bgCard : Colors.white;
+    final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF0F172A);
+    final hintColor = isDark ? AppColors.textDim : const Color(0xFFB0B8C8);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      color: isDark ? AppColors.bgSurface : Colors.white,
+      child: SizedBox(
+        width: double.infinity,
+        height: 40,
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: 'ing_search'.tr,
+            hintStyle:
+                TextStyle(fontFamily: 'Gilroy', color: hintColor, fontSize: 13),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedSearch01,
+                  color: hintColor,
+                  size: 14),
+            ),
+            suffixIcon: controller.text.isNotEmpty
+                ? IconButton(
+                    icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: hintColor,
+                        size: 14),
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                  )
+                : null,
+            filled: true,
+            fillColor: fillColor,
+            contentPadding: EdgeInsets.zero,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: borderColor)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: borderColor)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide:
+                    const BorderSide(color: AppColors.primary2, width: 1.5)),
+          ),
+        ),
       ),
     );
   }
@@ -129,6 +219,37 @@ class _TopBar extends StatelessWidget {
             ],
           ),
           const Spacer(),
+          FilledButton.icon(
+            onPressed: () async {
+              try {
+                final saved =
+                    await Get.find<IngredientsController>().exportMovements();
+                if (saved) {
+                  Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
+                      backgroundColor: AppColors.green, colorText: Colors.white);
+                }
+              } catch (e) {
+                Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',
+                    backgroundColor: AppColors.red, colorText: Colors.white);
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.green,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            ),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedFile01,
+                color: Colors.white,
+                size: 18),
+            label: const Text('Excel',
+                style: TextStyle(
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13)),
+          ),
+          const SizedBox(width: 10),
           FilledButton.icon(
             onPressed: () => Get.dialog(const IngredientFormDialog()),
             style: FilledButton.styleFrom(
