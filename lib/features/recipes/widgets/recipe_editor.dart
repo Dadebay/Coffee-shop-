@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/recipes_controller.dart';
 import '../../../data/database/app_database.dart';
+import '../../../core/constants/breakpoints.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/numpad.dart';
@@ -275,7 +276,7 @@ class RecipeEditor extends StatelessWidget {
           // content, which is much shorter than that.
           constraints: BoxConstraints(
             maxWidth: 380,
-            maxHeight: MediaQuery.of(ctx).size.height - 80,
+            maxHeight: dialogMaxHeight(ctx, margin: 80),
           ),
           child: Container(
             width: 380,
@@ -603,4 +604,3 @@ class RecipeEditor extends StatelessWidget {
     ));
   }
 }
-

@@ -62,6 +62,7 @@ class _ReturnPanelState extends State<ReturnPanel> {
 
   Future<void> _doReturn(Order order) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final restoreStock = SettingsController.to.restoreStockOnReturn.value;
     final confirmed = await Get.dialog<bool>(
       Dialog(
         backgroundColor: isDark ? AppColors.bgSurface : Colors.white,
@@ -118,7 +119,9 @@ class _ReturnPanelState extends State<ReturnPanel> {
               ),
               const SizedBox(height: 16),
               Text(
-                'pos_return_confirm'.tr,
+                restoreStock
+                    ? 'pos_return_confirm'.tr
+                    : 'pos_return_confirm_no_restore'.tr,
                 style: const TextStyle(
                   fontFamily: 'Gilroy',
                   fontSize: 14,
@@ -195,7 +198,6 @@ class _ReturnPanelState extends State<ReturnPanel> {
       }
       
       try {
-        final restoreStock = SettingsController.to.restoreStockOnReturn.value;
         await _db.cancelOrder(order.id, user.id, restoreStock: restoreStock);
         if (Get.isRegistered<StockController>()) StockController.to.loadIngredients();
         Get.snackbar(

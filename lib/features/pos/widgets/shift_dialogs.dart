@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../controllers/shift_controller.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../data/database/app_database.dart';
+import '../../../core/constants/breakpoints.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/numpad.dart';
@@ -203,276 +204,278 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
         width: 420,
-        height: MediaQuery.of(context).size.height - 80,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ──────────────────────────────────────────────
-              Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.red.withAlpha(20),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedClock01,
-                          color: AppColors.red,
-                          size: 20),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('shift_close'.tr,
-                          style: const TextStyle(
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18)),
-                      Row(
-                        children: [
-                          const HugeIcon(
-                              icon: HugeIcons.strokeRoundedUser,
-                              size: 12,
-                              color: AppColors.textGrey),
-                          const SizedBox(width: 4),
-                          Text(workerName,
-                              style: const TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  fontSize: 12,
-                                  color: AppColors.textGrey,
-                                  fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Container(
-                      width: 30,
-                      height: 30,
+        child: ConstrainedBox(
+          constraints:
+              BoxConstraints(maxHeight: dialogMaxHeight(context, margin: 80)),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ──────────────────────────────────────────────
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.bgBorder
-                            : const Color(0xFFEEF0F6),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.red.withAlpha(20),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                          child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedCancel01,
-                              size: 14,
-                              color: AppColors.textGrey)),
+                        child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedClock01,
+                            color: AppColors.red,
+                            size: 20),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // ── Time progress card ───────────────────────────────────
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: border),
-                ),
-                child: Column(
-                  children: [
-                    // Açılış → Şu an → Hedef
-                    Row(
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Açılış
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Text('shift_close'.tr,
+                            style: const TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18)),
+                        Row(
                           children: [
-                            Text(openTimeStr,
-                                style: TextStyle(
-                                    fontFamily: 'Gilroy',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 18,
-                                    color: textColor)),
-                            Text('shift_opened_at'.tr,
+                            const HugeIcon(
+                                icon: HugeIcons.strokeRoundedUser,
+                                size: 12,
+                                color: AppColors.textGrey),
+                            const SizedBox(width: 4),
+                            Text(workerName,
                                 style: const TextStyle(
                                     fontFamily: 'Gilroy',
-                                    fontSize: 10,
-                                    color: AppColors.textGrey)),
+                                    fontSize: 12,
+                                    color: AppColors.textGrey,
+                                    fontWeight: FontWeight.w600)),
                           ],
                         ),
-                        const Spacer(),
-                        // Geçen süre — ortada
-                        Column(
-                          children: [
-                            Text(
-                              '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w800,
-                                fontSize: 22,
-                                color: isOvertime
-                                    ? AppColors.red
-                                    : AppColors.primary2,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: (isOvertime
-                                        ? AppColors.red
-                                        : AppColors.primary2)
-                                    .withAlpha(15),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                isOvertime
-                                    ? 'Mesai aşıldı!'
-                                    : '${'shift_hours'.tr} 8:00',
+                      ],
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => Get.back(),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.bgBorder
+                              : const Color(0xFFEEF0F6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                            child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedCancel01,
+                                size: 14,
+                                color: AppColors.textGrey)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                // ── Time progress card ───────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: border),
+                  ),
+                  child: Column(
+                    children: [
+                      // Açılış → Şu an → Hedef
+                      Row(
+                        children: [
+                          // Açılış
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(openTimeStr,
+                                  style: TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                      color: textColor)),
+                              Text('shift_opened_at'.tr,
+                                  style: const TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontSize: 10,
+                                      color: AppColors.textGrey)),
+                            ],
+                          ),
+                          const Spacer(),
+                          // Geçen süre — ortada
+                          Column(
+                            children: [
+                              Text(
+                                '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
                                 style: TextStyle(
                                   fontFamily: 'Gilroy',
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 22,
                                   color: isOvertime
                                       ? AppColors.red
                                       : AppColors.primary2,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        // Hedef bitiş
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(targetTimeStr,
-                                style: TextStyle(
-                                    fontFamily: 'Gilroy',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 18,
-                                    color: textColor)),
-                            Text('8 saat',
-                                style: const TextStyle(
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: (isOvertime
+                                          ? AppColors.red
+                                          : AppColors.primary2)
+                                      .withAlpha(15),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  isOvertime
+                                      ? 'Mesai aşıldı!'
+                                      : '${'shift_hours'.tr} 8:00',
+                                  style: TextStyle(
                                     fontFamily: 'Gilroy',
                                     fontSize: 10,
-                                    color: AppColors.textGrey)),
-                          ],
+                                    fontWeight: FontWeight.w700,
+                                    color: isOvertime
+                                        ? AppColors.red
+                                        : AppColors.primary2,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          // Hedef bitiş
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(targetTimeStr,
+                                  style: TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                      color: textColor)),
+                              Text('8 saat',
+                                  style: const TextStyle(
+                                      fontFamily: 'Gilroy',
+                                      fontSize: 10,
+                                      color: AppColors.textGrey)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Progress bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 7,
+                          backgroundColor: isDark
+                              ? AppColors.bgBorder
+                              : const Color(0xFFE2E8F0),
+                          valueColor: AlwaysStoppedAnimation(
+                              isOvertime ? AppColors.red : AppColors.primary2),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 7,
-                        backgroundColor: isDark
-                            ? AppColors.bgBorder
-                            : const Color(0xFFE2E8F0),
-                        valueColor: AlwaysStoppedAnimation(
-                            isOvertime ? AppColors.red : AppColors.primary2),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(openTimeStr,
+                              style: const TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 10,
+                                  color: AppColors.textDim)),
+                          Text(nowTimeStr,
+                              style: TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: isOvertime
+                                      ? AppColors.red
+                                      : AppColors.primary2)),
+                          Text(targetTimeStr,
+                              style: const TextStyle(
+                                  fontFamily: 'Gilroy',
+                                  fontSize: 10,
+                                  color: AppColors.textDim)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // ── Info rows ───────────────────────────────────────────
+                _InfoRow('shift_opened_at'.tr,
+                    '${formatDate(widget.shift.openedAt)}  $openTimeStr'),
+                _InfoRow('shift_opening_cash'.tr,
+                    formatCurrency(widget.shift.openingCash)),
+                const SizedBox(height: 14),
+
+                // ── Closing cash input ──────────────────────────────────
+                NumPadWidget(
+                  controller: _ctrl,
+                  label: 'shift_closing_cash'.tr,
+                ),
+                const SizedBox(height: 16),
+
+                // ── Buttons ─────────────────────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: border),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text('gen_cancel'.tr,
+                            style: const TextStyle(
+                                fontFamily: 'Gilroy',
+                                fontWeight: FontWeight.w600)),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(openTimeStr,
-                            style: const TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontSize: 10,
-                                color: AppColors.textDim)),
-                        Text(nowTimeStr,
-                            style: TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: isOvertime
-                                    ? AppColors.red
-                                    : AppColors.primary2)),
-                        Text(targetTimeStr,
-                            style: const TextStyle(
-                                fontFamily: 'Gilroy',
-                                fontSize: 10,
-                                color: AppColors.textDim)),
-                      ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _loading ? null : _close,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.red,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2))
+                            : Text('shift_close'.tr,
+                                style: const TextStyle(
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w700)),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 14),
-
-              // ── Info rows ───────────────────────────────────────────
-              _InfoRow('shift_opened_at'.tr,
-                  '${formatDate(widget.shift.openedAt)}  $openTimeStr'),
-              _InfoRow('shift_opening_cash'.tr,
-                  formatCurrency(widget.shift.openingCash)),
-              const SizedBox(height: 14),
-
-              // ── Closing cash input ──────────────────────────────────
-              NumPadWidget(
-                controller: _ctrl,
-                label: 'shift_closing_cash'.tr,
-              ),
-              const SizedBox(height: 16),
-
-              // ── Buttons ─────────────────────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Get.back(),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: border),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text('gen_cancel'.tr,
-                          style: const TextStyle(
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _loading ? null : _close,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.red,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: _loading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2))
-                          : Text('shift_close'.tr,
-                              style: const TextStyle(
-                                  fontFamily: 'Gilroy',
-                                  fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
 }
 
 // ── Shift Summary ─────────────────────────────────────────────────────────────

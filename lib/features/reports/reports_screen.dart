@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/reports_controller.dart';
 import '../../controllers/shift_controller.dart';
 import '../../data/database/app_database.dart';
+import '../../core/constants/breakpoints.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_date_range_picker.dart';
@@ -70,7 +71,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 fontFamily: 'Gilroy')),
         actions: [
           Obx(() {
-            if (ctrl.activeTab.value == 'shifts') return const SizedBox.shrink();
+            if (ctrl.activeTab.value == 'shifts') {
+              return const SizedBox.shrink();
+            }
             return TextButton.icon(
               icon: const HugeIcon(
                   icon: HugeIcons.strokeRoundedCalendar03,
@@ -88,7 +91,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
             );
           }),
           Obx(() {
-            if (ctrl.activeTab.value == 'shifts') return const SizedBox.shrink();
+            if (ctrl.activeTab.value == 'shifts') {
+              return const SizedBox.shrink();
+            }
             return Padding(
               padding: const EdgeInsets.only(right: 12),
               child: FilledButton.icon(
@@ -280,7 +285,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             Expanded(child: table),
             if (_selectedShift != null)
               SizedBox(
-                width: (constraints.maxWidth * 0.36).clamp(320.0, 520.0),
+                width: responsiveWidth(constraints.maxWidth),
                 child: ShiftDetailPanel(
                   key: ValueKey(_selectedShift!.id),
                   shift: _selectedShift!,
@@ -349,8 +354,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 child: Center(
                     child: Text('pos_no_products'.tr,
                         style: const TextStyle(
-                            fontFamily: 'Gilroy',
-                            color: AppColors.textGrey))))
+                            fontFamily: 'Gilroy', color: AppColors.textGrey))))
             : RepProductTable(stats: ctrl.productStats),
       ],
     );
@@ -372,15 +376,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 child: Center(
                     child: Text('pos_no_products'.tr,
                         style: const TextStyle(
-                            fontFamily: 'Gilroy',
-                            color: AppColors.textGrey))))
+                            fontFamily: 'Gilroy', color: AppColors.textGrey))))
             : RepEmployeeTable(stats: ctrl.employeeSales),
       ],
     );
   }
 
-  Future<void> _pickRange(
-      BuildContext context, ReportsController ctrl) async {
+  Future<void> _pickRange(BuildContext context, ReportsController ctrl) async {
     final range = await showAppDateRangePicker(
       context: context,
       firstDate: DateTime(2024),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../controllers/ingredients_controller.dart';
+import '../../core/constants/breakpoints.dart';
 import '../../core/constants/color_constants.dart';
 import '../../data/database/app_database.dart';
 import 'widgets/ingredient_tile.dart';
@@ -65,12 +66,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
                     return LayoutBuilder(
                       builder: (context, constraints) {
-                        final w = constraints.maxWidth;
-                        final cols = w < 460
-                            ? 2
-                            : w < 700
-                                ? 3
-                                : 4;
+                        final cols = gridColumnsStepped(constraints.maxWidth);
                         return GridView.builder(
                           padding: const EdgeInsets.all(20),
                           gridDelegate:
@@ -133,7 +129,8 @@ class _SearchBar extends StatelessWidget {
         child: TextField(
           controller: controller,
           onChanged: onChanged,
-          style: TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
+          style:
+              TextStyle(fontFamily: 'Gilroy', color: textColor, fontSize: 13),
           decoration: InputDecoration(
             hintText: 'ing_search'.tr,
             hintStyle:
@@ -226,7 +223,8 @@ class _TopBar extends StatelessWidget {
                     await Get.find<IngredientsController>().exportMovements();
                 if (saved) {
                   Get.snackbar('gen_success'.tr, 'rep_excel_success'.tr,
-                      backgroundColor: AppColors.green, colorText: Colors.white);
+                      backgroundColor: AppColors.green,
+                      colorText: Colors.white);
                 }
               } catch (e) {
                 Get.snackbar('gen_error'.tr, '${'rep_excel_fail'.tr}$e',

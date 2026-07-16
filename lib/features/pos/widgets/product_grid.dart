@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../data/database/app_database.dart';
+import '../../../core/constants/breakpoints.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/pricing.dart';
@@ -27,7 +28,7 @@ class ProductGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final cols = (w / 160).floor().clamp(2, 10);
+        final cols = gridColumnsForTileWidth(w);
         final cardW = (w - 12 * 2 - 10 * (cols - 1)) / cols;
         final cardH = cardW / 0.82;
         final ratio = cardW / cardH;
@@ -56,7 +57,8 @@ class _ProductCard extends StatefulWidget {
   final int maxCount; // -1 = no recipe constraint
   final void Function(Product) onTap;
 
-  const _ProductCard({required this.product, required this.maxCount, required this.onTap});
+  const _ProductCard(
+      {required this.product, required this.maxCount, required this.onTap});
 
   @override
   State<_ProductCard> createState() => _ProductCardState();
@@ -84,7 +86,8 @@ class _ProductCardState extends State<_ProductCard> {
     return MouseRegion(
       onEnter: (_) => setState(() => _hov = true),
       onExit: (_) => setState(() => _hov = false),
-      cursor: _outOfStock ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+      cursor:
+          _outOfStock ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
       child: GestureDetector(
         onTap: _outOfStock ? null : () => widget.onTap(p),
         child: AnimatedOpacity(
@@ -226,7 +229,10 @@ class _IconHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [AppColors.primary.withAlpha(40), AppColors.primary2.withAlpha(20)]
+              ? [
+                  AppColors.primary.withAlpha(40),
+                  AppColors.primary2.withAlpha(20)
+                ]
               : [const Color(0xFFEEF3FF), const Color(0xFFDDE8FF)],
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -274,7 +280,9 @@ class _ImageHeader extends StatelessWidget {
 
   Widget _fallback() => Container(
         color: AppColors.bgSurface,
-        child: const HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01,
-            size: 28, color: AppColors.textDim),
+        child: const HugeIcon(
+            icon: HugeIcons.strokeRoundedImageNotFound01,
+            size: 28,
+            color: AppColors.textDim),
       );
 }

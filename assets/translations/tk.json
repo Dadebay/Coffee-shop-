@@ -300,5 +300,6 @@
   "exp_due": "Bergi",
   "set_restore_stock": "Yzyna gaýtarylanda ammara goş",
   "set_restore_stock_desc": "Açyk — gaýtarylan sargydyň harytlary we çig mallary ammara yzyna goşulýar. Öçük — sargyt diňe gaýtarylan diýip bellenýär, ammar üýtgemeýär.",
-  "ing_search": "Çig mal gözle..."
+  "ing_search": "Çig mal gözle...",
+  "pos_return_confirm_no_restore": "Bu sargydy ýatyrmalymy? Harytlar ammara DOLANMAZ (sazlamalarda öçürilen)."
 }

@@ -11,6 +11,7 @@ import '../../../controllers/auth_controller.dart';
 import '../../../controllers/database_controller.dart';
 import '../../../core/permissions.dart';
 import '../../../data/database/app_database.dart';
+import '../../../core/constants/breakpoints.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/utils/formatters.dart';
 
@@ -27,8 +28,8 @@ class ProductFormDialog extends StatefulWidget {
 class _ProductFormDialogState extends State<ProductFormDialog> {
   final _form = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.product?.name ?? '');
-  late final _sku = TextEditingController(
-      text: widget.product?.sku ?? _generateDefaultSku());
+  late final _sku =
+      TextEditingController(text: widget.product?.sku ?? _generateDefaultSku());
   late final _price = TextEditingController(
       text: widget.product?.price.toStringAsFixed(2) ?? '0');
   late final _disc = TextEditingController(
@@ -115,8 +116,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     final borderColor = isDark ? AppColors.bgBorder : const Color(0xFFE2E8F0);
     // The recipe + pricing sections make this dialog taller than most forms
     // — grow with the window instead of clipping content at a fixed height.
-    final maxDialogHeight =
-        (MediaQuery.of(context).size.height - 40).clamp(400.0, 860.0);
+    final maxDialogHeight = dialogMaxHeight(context);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -303,8 +303,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
             foregroundColor: AppColors.primary2,
             side: const BorderSide(color: AppColors.primary2, width: 1),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(9)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
           ),
           icon: const HugeIcon(
               icon: HugeIcons.strokeRoundedAdd01,
@@ -335,11 +335,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
   Widget _recipeRow(int index, bool isDark) {
     final row = _recipeRows[index];
-    final usedElsewhere = _recipeRows
-        .where((r) => r != row)
-        .map((r) => r.ingredientId)
-        .toSet();
-    final ing = _allIngredients.firstWhereOrNull((i) => i.id == row.ingredientId);
+    final usedElsewhere =
+        _recipeRows.where((r) => r != row).map((r) => r.ingredientId).toSet();
+    final ing =
+        _allIngredients.firstWhereOrNull((i) => i.id == row.ingredientId);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,7 +355,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 fontSize: 13),
             decoration: _inputDecoration('rec_ingredient'.tr, isDark),
             items: _allIngredients
-                .where((i) => i.id == row.ingredientId || !usedElsewhere.contains(i.id))
+                .where((i) =>
+                    i.id == row.ingredientId || !usedElsewhere.contains(i.id))
                 .map((i) => DropdownMenuItem(value: i.id, child: Text(i.name)))
                 .toList(),
             onChanged: (v) => setState(() => row.ingredientId = v),
@@ -372,7 +372,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 color: isDark ? AppColors.textWhite : const Color(0xFF0F172A),
                 fontSize: 13),
             decoration: _inputDecoration(
-                '${'rec_qty'.tr}${ing != null ? ' (${ing.unit})' : ''}', isDark),
+                '${'rec_qty'.tr}${ing != null ? ' (${ing.unit})' : ''}',
+                isDark),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() {}),
           ),
@@ -400,7 +401,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   double get _recipeCost {
     double sum = 0;
     for (final row in _recipeRows) {
-      final ing = _allIngredients.firstWhereOrNull((i) => i.id == row.ingredientId);
+      final ing =
+          _allIngredients.firstWhereOrNull((i) => i.id == row.ingredientId);
       if (ing == null) continue;
       final qty = double.tryParse(row.qtyCtrl.text) ?? 0;
       sum += ing.cost * qty;
@@ -433,7 +435,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => setState(() {}),
             ),
           ),

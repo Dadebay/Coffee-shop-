@@ -300,5 +300,6 @@
   "exp_due": "Borç",
   "set_restore_stock": "İptalde stoğa iade",
   "set_restore_stock_desc": "Açık — iade edilen siparişin ürünleri ve malzemeleri stoğa geri eklenir. Kapalı — sipariş sadece iade olarak işaretlenir, stok değişmez.",
-  "ing_search": "Malzeme ara..."
+  "ing_search": "Malzeme ara...",
+  "pos_return_confirm_no_restore": "Bu sipariş iptal edilsin mi? Ürünler stoğa geri EKLENMEYECEK (ayarlarda kapalı)."
 }

@@ -12,10 +12,7 @@ import '../ingredients/ingredients_screen.dart';
 import '../recipes/recipes_screen.dart';
 import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
-
-const double _kCollapsedWidth = 72.0;
-const double _kExpandedWidth = 220.0;
-const double _kDesktopBreak = 1000.0;
+import '../../core/constants/breakpoints.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -94,7 +91,7 @@ class _AppShellState extends State<AppShell> {
     if (target != -1) _onNavigate(target);
   }
 
-  bool _isDesktop(double width) => width >= _kDesktopBreak;
+  bool _isDesktop(double width) => width >= kDesktopBreakpoint;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +148,7 @@ class _AnimatedRail extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.bgSurface : Colors.white;
     final border = isDark ? AppColors.bgBorder : const Color(0xffE8E8EE);
-    final targetW = expanded ? _kExpandedWidth : _kCollapsedWidth;
+    final targetW = expanded ? kSidebarExpandedWidth : kSidebarCollapsedWidth;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -254,7 +251,7 @@ class _AnimatedRail extends StatelessWidget {
                           children: [
                             if (expanded)
                               SizedBox(
-                                width: _kCollapsedWidth - 24,
+                                width: kSidebarCollapsedWidth - 24,
                                 child: Center(
                                   child: HugeIcon(
                                     icon: navIcons[i],
